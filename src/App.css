@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+
+:root {
+  /* Shared Colors / Base Palette */
+  --accent-success: #34d399;
+  --accent-warning: #fbbf24;
+  --accent-error: #f87171;
+
+  /* Initial default (will be overridden) */
+  color-scheme: light dark;
+}
+
+[data-theme='light'] {
+  /* Core Colors - Light */
+  --color-primary: #F8FAFC;
+  --color-secondary: #FFFFFF;
+
+  /* Backgrounds */
+  --bg-primary: #F1F5F9;
+  /* Slate 100 - Main Page Background (Slightly darker for contrast) */
+  --bg-secondary: #FFFFFF;
+  /* Pure White - Cards/Containers (Pop out effect) */
+  --bg-tertiary: #E2E8F0;
+  /* Slate 200 - Inputs/Hovers */
+
+  /* Text */
+  --text-primary: #1E293B;
+  /* Slate 800 - Sharp, Professional Dark Blue-Gray */
+  --text-secondary: #64748B;
+  /* Slate 500 - Sophisticated Medium Gray */
+  --text-tertiary: #94A3B8;
+  /* Slate 400 - Subtle details */
+
+  /* Borders */
+  --border-primary: #CBD5E1;
+  /* Slate 300 - Distinct borders */
+  --border-secondary: #E2E8F0;
+
+  /* Accents */
+  --accent-primary: #0D9488;
+  /* Teal 600 - Darker tint for better light-mode visibility */
+  --accent-secondary: #0F766E;
+}
+
+[data-theme='dark'] {
+  /* Core Colors - Dark */
+  --color-primary: #1B3C53;
+  --color-secondary: #234C6A;
+
+  /* Backgrounds */
+  --bg-primary: #1B3C53;
+  /* Main - dark blue */
+  --bg-secondary: #0f2a3f;
+  /* Forms - darker blue */
+  --bg-tertiary: #234C6A;
+  /* Cards - medium blue */
+
+  /* Text */
+  --text-primary: #E3E3E3;
+  /* Light gray */
+  --text-secondary: #a8c6df;
+  /* Light blue-gray */
+  --text-tertiary: #8db3d1;
+  /* Lighter blue-gray */
+
+  /* Borders */
+  --border-primary: rgba(69, 104, 130, 0.4);
+  --border-secondary: #456882;
+
+  /* Accents */
+  --accent-primary: #00be9b;
+  --accent-secondary: #234C6A;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Premium Animations */
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
