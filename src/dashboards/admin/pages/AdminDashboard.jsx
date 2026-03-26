@@ -232,7 +232,7 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5">
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-1 h-4 bg-[var(--accent-primary)] rounded-full" />
-                        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Conversion Funnel • {activeFilter}</h2>
+                        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Overall Performance</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -287,7 +287,7 @@ export default function AdminDashboard() {
                 <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5">
                     <div className="flex items-center gap-2 mb-4">
                         <span className="text-lg">📊</span>
-                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Intelligence Summary</h3>
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Overall Summary</h3>
                     </div>
 
                     <div className="space-y-2">

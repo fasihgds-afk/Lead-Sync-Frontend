@@ -138,12 +138,9 @@ const UpsellModal = ({ isOpen, lead, onClose, onConfirm, upsellData, setUpsellDa
                         </button>
                         <button
                             onClick={onConfirm}
-                            className={`flex-[1.5] py-2 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg transition-all active:scale-[0.97] ${isAlreadyPaid
-                                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/10'
-                                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-900/10'
-                                }`}
+                            className={`flex-[1.5] py-2 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg transition-all active:scale-[0.97] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-900/20`}
                         >
-                            {isAlreadyPaid ? 'Confirm Upsell' : (upsellData.type === 'paid' ? 'Confirm Pay' : 'Initialize')}
+                            {isAlreadyPaid ? 'Confirm Upsell' : (upsellData.type === 'paid' ? 'Confirm Pay' : 'Submit')}
                         </button>
                     </div>
                 </div>

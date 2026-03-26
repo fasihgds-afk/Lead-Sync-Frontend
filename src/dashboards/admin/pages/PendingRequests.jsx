@@ -8,6 +8,7 @@ export default function PendingRequests() {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedRoles, setSelectedRoles] = useState({});
+  const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, comment: '' });
 
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -51,31 +52,25 @@ export default function PendingRequests() {
     }
   };
 
-  const handleReject = async (requestId) => {
+  const handleReject = (requestId) => {
+    setRejectModal({ isOpen: true, requestId, comment: '' });
+  };
+
+  const confirmRejection = async () => {
+    const { requestId, comment } = rejectModal;
+    
+    if (!comment || comment.trim() === "") {
+      setError("Please provide a rejection comment");
+      return;
+    }
+
     try {
-      const comment = prompt("Enter rejection comment:");
-
-      if (!comment) {
-        alert("Comment is required");
-        return;
-      }
-
       setActionLoading(requestId);
-
-      await adminAPI.decideRejectionRequest(
-        requestId,
-        "REJECT",
-        comment
-      );
-
+      await adminAPI.decideRejectionRequest(requestId);
       setRequests(prev => prev.filter(req => req._id !== requestId));
-
       setError(null);
-
-      window.dispatchEvent(
-        new CustomEvent('pendingRequestsUpdated', { detail: { change: -1 } })
-      );
-
+      setRejectModal({ isOpen: false, requestId: null, comment: '' });
+      window.dispatchEvent(new CustomEvent('pendingRequestsUpdated', { detail: { change: -1 } }));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to reject request');
       console.error('Error rejecting request:', err);
@@ -227,12 +222,72 @@ export default function PendingRequests() {
         </div>
       </div>
 
-      <style jsx>{`
+      {/* Reject Modal */}
+      {rejectModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-xl animate-fadeIn"
+            onClick={() => setRejectModal({ ...rejectModal, isOpen: false })}
+          />
+          <div className="bg-[var(--bg-secondary)] border border-red-500/20 rounded-[32px] p-8 max-w-md w-full shadow-2xl relative z-10 animate-modalIn overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
+            
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-red-500/10 rounded-2xl text-red-500">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-[var(--text-primary)]">Reject Access</h3>
+                <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">Security Protocol Verification</p>
+              </div>
+            </div>
+
+            <p className="text-xs font-bold text-[var(--text-secondary)] mb-4 px-1 italic">
+              Please specify the reason for access denial. This protocol will be logged in the system audit.
+            </p>
+
+            <textarea
+              value={rejectModal.comment}
+              onChange={(e) => setRejectModal({ ...rejectModal, comment: e.target.value })}
+              placeholder="System access denial reason..."
+              className="w-full h-32 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-2xl p-4 text-[13px] font-medium text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 focus:ring-2 focus:ring-red-500/50 outline-none transition-all resize-none mb-6"
+              autoFocus
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRejectModal({ ...rejectModal, isOpen: false })}
+                className="flex-1 px-4 py-3 rounded-2xl border border-[var(--border-primary)] text-[11px] font-black text-[var(--text-tertiary)] uppercase tracking-widest hover:bg-[var(--bg-tertiary)] transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRejection}
+                disabled={!rejectModal.comment.trim()}
+                className="flex-1 px-4 py-3 rounded-2xl bg-red-500 text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-red-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale disabled:hover:scale-100"
+              >
+                Confirm Denial
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
         .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        .animate-modalIn { animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.95) translateY(20px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes shake {
           10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -240,7 +295,7 @@ export default function PendingRequests() {
           30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
           40%, 60% { transform: translate3d(4px, 0, 0); }
         }
-      `}</style>
+      `}} />
     </div>
   );
 }

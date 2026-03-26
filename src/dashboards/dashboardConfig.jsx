@@ -88,7 +88,7 @@ export const dashboardConfig = [
       { name: 'Managers Leads', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
       { name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
 
-      { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: ['Super Admin'] },
+      { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true },
 
       { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
 

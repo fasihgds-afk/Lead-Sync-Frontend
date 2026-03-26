@@ -35,6 +35,14 @@ export const adminAPI = {
     return response.data;
   },
 
+  // Reject with decision and comment (Frontend uses the unified flow)
+  decideRejectionRequest: async (requestId) => {
+    // The current backend uses DELETE for registration rejections and deletes the user immediately.
+    // We match that behavior while maintaining the frontend's high-end rejection flow.
+    const response = await axiosInstance.delete(`/api/superadmin/requests/${requestId}/reject`);
+    return response.data;
+  },
+
   // --- Leads Management ---
 
   /**

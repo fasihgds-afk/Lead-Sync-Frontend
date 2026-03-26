@@ -371,21 +371,26 @@ const CombinedLeads = () => {
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2 border-b border-[var(--border-primary)]/20 pb-1.5">
                     <div className="p-1 px-1.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase">@</div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] opacity-70">Email Intelligence</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] opacity-70">Email </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2.5">
                     {selectedLead.emails?.map((email, idx) => {
                       const isSelected = selectedLead.responseSource?.emails?.some(re => re.value === email.value);
                       return (
-                        <div key={idx} className={`flex items-center justify-between p-3.5 rounded-xl border transition-all relative overflow-hidden ${isSelected ? 'bg-blue-500/10 border-blue-500/50 shadow-md ring-1 ring-blue-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-blue-500/30'
+                        <div key={idx} className={`flex items-center justify-between p-4 rounded-2xl border transition-all relative overflow-hidden ${isSelected ? 'bg-blue-500/10 border-blue-500/50 shadow-md ring-1 ring-blue-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-blue-500/30'
                           }`}>
-                          {isSelected && <div className="absolute top-0 right-0 px-3 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-xl shadow-md border-l border-b border-white/20">Selected Source</div>}
-
-                          <div className="flex flex-col gap-1.5 pr-10">
-                            <span className={`w-fit text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${email.status === 'DEAD' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'
-                              }`}>
-                              {email.status || 'VERIFIED'}
-                            </span>
+                          <div className="flex flex-col gap-2 flex-1 pr-4">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${email.status === 'DEAD' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'
+                                }`}>
+                                {email.status || 'VERIFIED'}
+                              </span>
+                              {isSelected && (
+                                <span className="bg-blue-600/10 text-blue-600 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-blue-600/20">
+                                  Selected Source
+                                </span>
+                              )}
+                            </div>
                             <span className="text-sm font-black text-[var(--text-primary)] break-all leading-tight">{email.value}</span>
                           </div>
 
@@ -414,17 +419,22 @@ const CombinedLeads = () => {
                     <div className="p-1 px-1.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase">#</div>
                     <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] opacity-70">Phone Numbers</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2.5">
                     {selectedLead.phones?.map((phone, idx) => {
                       const isSelected = selectedLead.responseSource?.phones?.some(rp => rp.value === phone);
                       return (
-                        <div key={idx} className={`flex items-center justify-between p-3.5 rounded-xl border transition-all relative overflow-hidden ${isSelected ? 'bg-emerald-500/10 border-emerald-500/50 shadow-md ring-1 ring-emerald-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-emerald-500/30'
+                        <div key={idx} className={`flex items-center justify-between p-4 rounded-2xl border transition-all relative overflow-hidden ${isSelected ? 'bg-emerald-500/10 border-emerald-500/50 shadow-md ring-1 ring-emerald-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-emerald-500/30'
                           }`}>
-                          {isSelected && <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-xl shadow-md border-l border-b border-white/20">Selected Source</div>}
-
-                          <div className="flex flex-col pr-10">
+                          <div className="flex flex-col gap-1.5 flex-1 pr-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest px-1.5 py-0.5 bg-emerald-500/10 rounded">Verified Line</span>
+                              {isSelected && (
+                                <span className="bg-emerald-600/10 text-emerald-600 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-emerald-600/20">
+                                  Selected Source
+                                </span>
+                              )}
+                            </div>
                             <span className="text-sm font-black text-[var(--text-primary)]">{phone}</span>
-                            <span className="text-[8px] font-bold text-[var(--text-tertiary)] opacity-60">Verified Line</span>
                           </div>
 
                           <button

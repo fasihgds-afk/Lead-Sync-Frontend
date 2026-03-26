@@ -53,6 +53,7 @@ export default function LeadQualifierLeads() {
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
+    const [transferError, setTransferError] = useState(null);
 
     const handleCopy = (text, id) => {
         navigator.clipboard.writeText(text);
@@ -227,7 +228,7 @@ export default function LeadQualifierLeads() {
                         <div className="inline-flex p-6 rounded-3xl bg-[var(--bg-tertiary)]/30 border border-dashed border-[var(--border-primary)] text-[var(--text-tertiary)] mb-4">
                             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
                         </div>
-                        <h3 className="text-xl font-black text-[var(--text-primary)]">Pipeline Empty</h3>
+                        <h3 className="text-xl font-black text-[var(--text-primary)]">No Leads</h3>
                         <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase mt-2 tracking-widest">No matching leads found for current criteria</p>
                     </div>
                 )}
@@ -291,16 +292,22 @@ export default function LeadQualifierLeads() {
 
             <AssignManagerModal
                 isOpen={isAssignModalOpen}
-                onClose={() => setIsAssignModalOpen(false)}
+                onClose={() => { setIsAssignModalOpen(false); setTransferError(null); }}
                 selectedLead={activeLead}
                 onAssign={async (data) => {
-                    const success = await assignLeadManager(
+                    const result = await assignLeadManager(
                         data.leadId,
                         data.selectedEmails,
                         data.selectedPhones
                     );
-                    if (success) setIsAssignModalOpen(false);
+                    if (result.success) {
+                        setIsAssignModalOpen(false);
+                        setTransferError(null);
+                    } else {
+                        setTransferError(result.message);
+                    }
                 }}
+                error={transferError}
             />
 
             <style dangerouslySetInnerHTML={{

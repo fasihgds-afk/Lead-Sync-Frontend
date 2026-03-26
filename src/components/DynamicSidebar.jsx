@@ -26,7 +26,7 @@ export default function DynamicSidebar({ isOpen, isCollapsed, onClose, onToggle,
       <div className={`
         fixed top-0 left-0 z-[70] h-full transform transition-all duration-500 ease-out
         border-r border-[var(--border-primary)] shadow-2xl
-        bg-[#0F2A3F]
+        bg-[var(--bg-sidebar)]
         backdrop-blur-xl
         sm:fixed sm:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -53,7 +53,7 @@ export default function DynamicSidebar({ isOpen, isCollapsed, onClose, onToggle,
 
         {/* Sidebar Header - Premium Design */}
         <div className={`h-24 border-b border-[var(--border-primary)]/50 flex items-center relative transition-all duration-300 
-          bg-[#0F2A3F]
+          bg-[var(--bg-sidebar)]
           ${isCollapsed ? 'justify-center px-1' : 'px-4 md:px-6'}`}>
 
           {!isCollapsed ? (

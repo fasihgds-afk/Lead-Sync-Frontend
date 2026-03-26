@@ -95,13 +95,16 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
             if (response.success) {
                 // Refresh leads to get updated count
                 fetchLeads(true);
-                return true;
+                return { success: true, message: response.message };
             }
+            return { success: false, message: response.message || "Transfer failed" };
         } catch (err) {
             console.error("Submit to manager error:", err);
-            return false;
+            return { 
+                success: false, 
+                message: err.response?.data?.message || err.message || "Failed to submit to manager" 
+            };
         }
-        return false;
     };
 
     return {

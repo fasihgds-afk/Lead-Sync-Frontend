@@ -36,6 +36,7 @@ const VerifierLeads = () => {
     const [pendingEmailChanges, setPendingEmailChanges] = useState({});
     const [processingLeads, setProcessingLeads] = useState(() => new Set());
     const [notification, setNotification] = useState(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -199,9 +200,8 @@ const VerifierLeads = () => {
 
 
     const handleProcessAllLeads = async () => {
-        if (!window.confirm('Distribute ALL verified leads to Lead Qualifiers?')) return;
-
         setIsProcessing(true);
+        setShowConfirmModal(false);
         try {
             const res = await dataMinorAPI.distributeVerifierLeadsToLQ();
 
@@ -287,9 +287,9 @@ const VerifierLeads = () => {
 
                 <div className="flex flex-wrap items-center gap-4">
                     <button
-                        onClick={handleProcessAllLeads}
+                        onClick={() => setShowConfirmModal(true)}
                         disabled={isProcessing}
-                        className="group px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-3"
+                        className="group px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-3"
                     >
                         {isProcessing ? (
                             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -719,6 +719,53 @@ const VerifierLeads = () => {
                     ) : (
                         `Showing ${leads.length} leads on page ${currentPage}`
                     )}
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
+                        onClick={() => setShowConfirmModal(false)}
+                    />
+                    <div className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-5 duration-300"
+                        style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}>
+                        {/* Modal Header/Icon */}
+                        <div className="p-8 text-center bg-gradient-to-b from-emerald-500/10 to-transparent">
+                            <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
+                                <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                                Distribute Leads?
+                            </h3>
+                            <p className="mt-2 text-sm font-medium opacity-60 px-4" style={{ color: 'var(--text-secondary)' }}>
+                                You are about to move all verified leads to Lead Qualifiers. This action cannot be undone.
+                            </p>
+                        </div>
+
+                        {/* Modal Actions */}
+                        <div className="p-6 flex flex-col gap-3">
+                            <button
+                                onClick={handleProcessAllLeads}
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Confirm Distribution
+                            </button>
+                            <button
+                                onClick={() => setShowConfirmModal(false)}
+                                className="w-full py-4 rounded-2xl border font-bold text-sm transition-all hover:bg-[var(--bg-tertiary)] active:scale-95"
+                                style={{ borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
