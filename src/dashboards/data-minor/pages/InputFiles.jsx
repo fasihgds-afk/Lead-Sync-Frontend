@@ -98,10 +98,17 @@ const InputFiles = () => {
             return;
         }
 
-        // Clear existing status while typing
+        // Only proceed with duplicate check if email has '@'
+        if (!formData.primaryEmail.includes("@")) {
+            return;
+        }
+
+        // Clear existing status while typing (if not already showing invalid error)
         setDuplicateStatuses(prev => {
             const next = { ...prev };
-            delete next['primaryEmail'];
+            if (!next.primaryEmail?.isInvalid) {
+                delete next['primaryEmail'];
+            }
             return next;
         });
 
@@ -140,6 +147,23 @@ const InputFiles = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
+        if (name === "primaryEmail") {
+            if (value && !value.includes("@")) {
+                setDuplicateStatuses(prev => ({
+                    ...prev,
+                    primaryEmail: { checked: true, isDuplicate: true, isInvalid: true, message: "Invalid email: '@' is missing" }
+                }));
+            } else {
+                setDuplicateStatuses(prev => {
+                    const next = { ...prev };
+                    if (next.primaryEmail?.isInvalid) {
+                        delete next.primaryEmail;
+                    }
+                    return next;
+                });
+            }
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: name === "primaryPhone"
@@ -176,22 +200,41 @@ const InputFiles = () => {
             ? value.replace(/\D/g, "").slice(0, 10)
             : value;
 
+        if (type === "email") {
+            if (cleaned && !cleaned.includes("@")) {
+                setDuplicateStatuses(prev => ({
+                    ...prev,
+                    [id]: { checked: true, isDuplicate: true, isInvalid: true, message: "Invalid email: '@' is missing" }
+                }));
+            } else {
+                setDuplicateStatuses(prev => {
+                    const next = { ...prev };
+                    if (next[id]?.isInvalid) {
+                        delete next[id];
+                    }
+                    return next;
+                });
+            }
+        }
+
         const setter = type === "email" ? setEmailFields : setPhoneFields;
 
         setter(prev =>
             prev.map(f => (f.id === id ? { ...f, value: cleaned } : f))
         );
 
-        // Clear existing duplicate status immediately when user types
+        // Clear existing duplicate status immediately when user types (if not invalid)
         setDuplicateStatuses(prev => {
             const next = { ...prev };
-            delete next[id];
+            if (!next[id]?.isInvalid) {
+                delete next[id];
+            }
             return next;
         });
 
         if (timers.current[id]) clearTimeout(timers.current[id]);
 
-        if (!cleaned) return;
+        if (!cleaned || (type === "email" && !cleaned.includes("@"))) return;
 
         timers.current[id] = setTimeout(() => {
             checkDuplicate(type, cleaned, id);
@@ -495,10 +538,10 @@ const InputFiles = () => {
                                                     type="email"
                                                     value={formData.primaryEmail}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, primaryEmail: e.target.value }))}
-                                                    className={`w-full px-4 py-2.5 rounded-lg border outline-none font-bold text-sm transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5 ${duplicateStatuses['primaryEmail']?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses['primaryEmail']?.checked ? 'border-emerald-500/50' : 'var(--border-primary)'}`}
+                                                    className={`w-full px-4 py-2.5 rounded-lg border outline-none font-bold text-sm transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5 ${duplicateStatuses['primaryEmail']?.isDuplicate || duplicateStatuses['primaryEmail']?.isInvalid ? 'border-rose-500/50' : duplicateStatuses['primaryEmail']?.checked ? 'border-emerald-500/50' : 'var(--border-primary)'}`}
                                                     placeholder="john@leadsync.com"
                                                     style={{
-                                                        borderColor: duplicateStatuses['primaryEmail']?.isDuplicate
+                                                        borderColor: (duplicateStatuses['primaryEmail']?.isDuplicate || duplicateStatuses['primaryEmail']?.isInvalid)
                                                             ? '#f43f5e'
                                                             : duplicateStatuses['primaryEmail']?.checked
                                                                 ? '#10b981'
@@ -557,10 +600,10 @@ const InputFiles = () => {
                                                         type="email"
                                                         value={field.value}
                                                         onChange={(e) => handleAdditionalFieldChange(field.id, 'email', e.target.value)}
-                                                        className={`w-full px-4 py-2.5 rounded-lg border border-dashed outline-none font-bold text-sm bg-white/5 transition-all focus:ring-4 focus:ring-[#00BE9B]/10 ${duplicateStatuses[field.id]?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses[field.id]?.checked ? 'border-emerald-500/50' : ''}`}
+                                                        className={`w-full px-4 py-2.5 rounded-lg border border-dashed outline-none font-bold text-sm bg-white/5 transition-all focus:ring-4 focus:ring-[#00BE9B]/10 ${duplicateStatuses[field.id]?.isDuplicate || duplicateStatuses[field.id]?.isInvalid ? 'border-rose-500/50' : duplicateStatuses[field.id]?.checked ? 'border-emerald-500/50' : ''}`}
                                                         placeholder={field.placeholder}
                                                         style={{
-                                                            borderColor: duplicateStatuses[field.id]?.isDuplicate
+                                                            borderColor: (duplicateStatuses[field.id]?.isDuplicate || duplicateStatuses[field.id]?.isInvalid)
                                                                 ? '#f43f5e'
                                                                 : duplicateStatuses[field.id]?.checked
                                                                     ? '#10b981'
