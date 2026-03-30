@@ -98,15 +98,19 @@ const InputFiles = () => {
             return;
         }
 
-        // Only proceed with duplicate check if email has '@'
+        // Show real-time invalid message if '@' is missing
         if (!formData.primaryEmail.includes("@")) {
+            setDuplicateStatuses(prev => ({
+                ...prev,
+                primaryEmail: { checked: true, isDuplicate: true, isInvalid: true, message: "Invalid email: '@' is missing" }
+            }));
             return;
         }
 
-        // Clear existing status while typing (if not already showing invalid error)
+        // Clear existing 'Invalid' status while typing if '@' is now present
         setDuplicateStatuses(prev => {
             const next = { ...prev };
-            if (!next.primaryEmail?.isInvalid) {
+            if (next.primaryEmail?.isInvalid) {
                 delete next['primaryEmail'];
             }
             return next;
@@ -146,23 +150,6 @@ const InputFiles = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        if (name === "primaryEmail") {
-            if (value && !value.includes("@")) {
-                setDuplicateStatuses(prev => ({
-                    ...prev,
-                    primaryEmail: { checked: true, isDuplicate: true, isInvalid: true, message: "Invalid email: '@' is missing" }
-                }));
-            } else {
-                setDuplicateStatuses(prev => {
-                    const next = { ...prev };
-                    if (next.primaryEmail?.isInvalid) {
-                        delete next.primaryEmail;
-                    }
-                    return next;
-                });
-            }
-        }
 
         setFormData(prev => ({
             ...prev,
@@ -488,13 +475,13 @@ const InputFiles = () => {
                                                     <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
                                                 </div>
                                                 {duplicateStatuses[field.id]?.checked && (
-                                                    <div className={`mt-1.5 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-1.5 w-fit ${duplicateStatuses[field.id].isDuplicate ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
-                                                        {duplicateStatuses[field.id].isDuplicate ? (
+                                                    <div className={`mt-1.5 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-1.5 w-fit ${duplicateStatuses[field.id].isDuplicate || duplicateStatuses[field.id].isInvalid ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                                                        {duplicateStatuses[field.id].isDuplicate || duplicateStatuses[field.id].isInvalid ? (
                                                             <>
                                                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                                                 </svg>
-                                                                <span>{duplicateStatuses[field.id].isLocal ? 'Already in form' : 'Already Exists'}</span>
+                                                                <span>{duplicateStatuses[field.id].isInvalid ? duplicateStatuses[field.id].message : (field.isLocal ? 'Already in form' : 'Already Exists')}</span>
                                                             </>
                                                         ) : (
                                                             <>
@@ -558,13 +545,13 @@ const InputFiles = () => {
                                                 <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-[#00BE9B] to-[#00a082] scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
                                             </div>
                                             {duplicateStatuses['primaryEmail']?.checked && (
-                                                <div className={`mt-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-2 ${duplicateStatuses['primaryEmail'].isDuplicate ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
-                                                    {duplicateStatuses['primaryEmail'].isDuplicate ? (
+                                                <div className={`mt-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-2 ${duplicateStatuses['primaryEmail'].isDuplicate || duplicateStatuses['primaryEmail'].isInvalid ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                                                    {duplicateStatuses['primaryEmail'].isDuplicate || duplicateStatuses['primaryEmail'].isInvalid ? (
                                                         <>
                                                             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                                             </svg>
-                                                            <span>{duplicateStatuses['primaryEmail'].message}{duplicateStatuses['primaryEmail'].match ? ` : ${duplicateStatuses['primaryEmail'].match}` : ''}</span>
+                                                            <span>{duplicateStatuses['primaryEmail'].message || (duplicateStatuses['primaryEmail'].match ? `Already Exists : ${duplicateStatuses['primaryEmail'].match}` : 'Already Exists')}</span>
                                                         </>
                                                     ) : (
                                                         <>
@@ -620,13 +607,13 @@ const InputFiles = () => {
                                                     <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
                                                 </div>
                                                 {duplicateStatuses[field.id]?.checked && (
-                                                    <div className={`mt-1.5 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-1.5 w-fit ${duplicateStatuses[field.id].isDuplicate ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
-                                                        {duplicateStatuses[field.id].isDuplicate ? (
+                                                    <div className={`mt-1.5 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-1.5 w-fit ${duplicateStatuses[field.id].isDuplicate || duplicateStatuses[field.id].isInvalid ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                                                        {duplicateStatuses[field.id].isDuplicate || duplicateStatuses[field.id].isInvalid ? (
                                                             <>
                                                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                                                 </svg>
-                                                                <span>{duplicateStatuses[field.id].isLocal ? 'Already in form' : 'Already Exists'}</span>
+                                                                <span>{duplicateStatuses[field.id].isInvalid ? duplicateStatuses[field.id].message : 'Already Exists'}</span>
                                                             </>
                                                         ) : (
                                                             <>
