@@ -25,7 +25,7 @@ export default function ManagerLeads() {
             console.log('🎯 ManagerLeads: Fetching all relevant leads');
 
             // Fetch all leads in one call instead of 5 separate calls for each stage
-            const response = await adminAPI.getAllLeads(2000, 0);
+            const response = await adminAPI.getAllLeads(30, 0);
 
             if (response.success) {
                 const managerStages = ['MANAGER', 'DONE', 'COMPLETED', 'REJECTED', 'MANAGER_APPROVED'];
