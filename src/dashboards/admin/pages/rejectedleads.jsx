@@ -289,8 +289,8 @@ export default function RejectedLeads() {
                                                         className="appearance-none bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[9px] font-black uppercase text-emerald-500 rounded-lg px-3 py-1.5 outline-none cursor-pointer hover:border-emerald-500/40 hover:bg-[var(--bg-secondary)] transition-all w-full pr-8 shadow-sm"
                                                     >
                                                         <option value="" disabled>Review</option>
-                                                        <option value="APPROVE" className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">Finalize</option>
-                                                        <option value="REJECT" className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">Return</option>
+                                                        <option value="APPROVE" className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">Approved Rejection</option>
+                                                        <option value="REJECT" className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">Reject</option>
                                                     </select>
                                                     <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-emerald-500">
                                                         <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
