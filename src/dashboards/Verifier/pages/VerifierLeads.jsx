@@ -37,6 +37,7 @@ const VerifierLeads = () => {
     const [processingLeads, setProcessingLeads] = useState(() => new Set());
     const [notification, setNotification] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -168,6 +169,17 @@ const VerifierLeads = () => {
             }));
     }, [leads, filterDate]);
 
+    const searchedLeads = useMemo(() => {
+        if (!searchTerm.trim()) return filteredLeads;
+        const term = searchTerm.toLowerCase();
+        return filteredLeads.filter(lead => {
+            return lead.displayEmails.some(emailObj => {
+                const email = (emailObj.normalized || emailObj.value || '').toLowerCase();
+                return email.includes(term);
+            });
+        });
+    }, [filteredLeads, searchTerm]);
+
     // ─── Lead Actions ──────────────────────────────────
     const markEmailStatus = (leadId, email, status) => {
         if (!email) return;
@@ -270,64 +282,146 @@ const VerifierLeads = () => {
         }
     };
 
+    const copyAllEmailsOnPage = () => {
+        const allEmails = [];
+        filteredLeads.forEach(lead => {
+            (lead.displayEmails || []).forEach(emailObj => {
+                const email = emailObj.normalized || emailObj.value;
+                if (email) {
+                    allEmails.push(email);
+                }
+            });
+        });
+
+        if (allEmails.length === 0) {
+            showNotification('No emails found on this page.', 'info');
+            return;
+        }
+
+        const joinedEmails = allEmails.join('\n');
+        navigator.clipboard.writeText(joinedEmails)
+            .then(() => {
+                showNotification(`Copied ${allEmails.length} emails to clipboard!`, 'success');
+            })
+            .catch(err => {
+                console.error('Failed to copy emails:', err);
+                showNotification('Failed to copy emails to clipboard.', 'error');
+            });
+    };
+
+    const totalEmailsOnPage = useMemo(() => {
+        return searchedLeads.reduce((acc, lead) => acc + (lead.displayEmails?.length || 0), 0);
+    }, [searchedLeads]);
+
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-8 min-h-screen animate-in fade-in slide-in-from-bottom-5 duration-700"
             style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
 
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                        Verifier Leads
-                    </h1>
-                    <p className="text-sm font-medium mt-1 opacity-80" style={{ color: 'var(--text-secondary)' }}>
-                        Review and verify submitted leads
-                    </p>
+            <div className="space-y-4">
+                {/* Row 1: Utility and Filter Toolbar */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                            Verifier Leads
+                        </h1>
+                        <p className="text-sm font-medium mt-1 opacity-80" style={{ color: 'var(--text-secondary)' }}>
+                            Review and verify submitted leads
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-[var(--bg-secondary)] p-2 rounded-2xl border border-[var(--border-primary)] shadow-sm">
+                        {/* Action Group */}
+                        <div className="flex items-center gap-2 pr-4 border-r border-[var(--border-primary)]">
+                            <button
+                                onClick={copyAllEmailsOnPage}
+                                className="group px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                            >
+                                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                <span>Copy Emails ({totalEmailsOnPage})</span>
+                            </button>
+                        </div>
+
+                        {/* Filter Group */}
+                        <div className="flex items-center gap-3 pl-2">
+                            <div className="relative group/search">
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    placeholder="Search by email..."
+                                    className="pl-9 pr-8 py-2.5 w-48 rounded-xl border text-[13px] focus:outline-none focus:ring-4 focus:ring-[var(--accent-primary)]/20 font-bold transition-all focus:w-64"
+                                    style={{
+                                        backgroundColor: 'var(--bg-primary)',
+                                        borderColor: 'var(--border-primary)',
+                                        color: 'var(--text-primary)'
+                                    }}
+                                />
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within/search:text-[var(--accent-primary)]">
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-gray-500/10 text-gray-400"
+                                    >
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    value={filterDate}
+                                    onChange={e => setFilterDate(e.target.value)}
+                                    className="pl-3 pr-2 py-2.5 rounded-xl border text-[13px] focus:outline-none focus:ring-4 focus:ring-[var(--accent-primary)]/20 font-bold w-36 uppercase tracking-tighter"
+                                    style={{
+                                        backgroundColor: 'var(--bg-primary)',
+                                        borderColor: 'var(--border-primary)',
+                                        color: 'var(--text-primary)'
+                                    }}
+                                />
+                            </div>
+
+                            <button
+                                onClick={() => fetchLeads()}
+                                disabled={loading}
+                                className="px-4 py-2.5 rounded-xl border transition-all flex items-center justify-center gap-2 text-[13px] font-bold disabled:opacity-50 hover:bg-[var(--bg-primary)] active:scale-95 border-[var(--border-primary)] shadow-sm"
+                                style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                            >
+                                <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
-                    <button
-                        onClick={() => setShowConfirmModal(true)}
-                        disabled={isProcessing}
-                        className="group px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-3"
-                    >
-                        {isProcessing ? (
-                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        )}
-                        <span>{isProcessing ? 'Processing...' : 'Process & Move All'}</span>
-                    </button>
-
-                    <input
-                        type="date"
-                        value={filterDate}
-                        onChange={e => setFilterDate(e.target.value)}
-                        className="px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/40 font-bold"
-                        style={{
-                            backgroundColor: 'var(--bg-secondary)',
-                            borderColor: 'var(--border-primary)',
-                            color: 'var(--text-primary)'
-                        }}
-                    />
-
-                    <button
-                        onClick={() => fetchLeads()}
-                        disabled={loading}
-                        className="px-6 py-3 rounded-xl border transition-all flex items-center gap-2 text-sm font-bold disabled:opacity-50 hover:brightness-110 active:scale-95 shadow-lg"
-                        style={{
-                            backgroundColor: 'var(--bg-tertiary)',
-                            borderColor: 'var(--border-primary)',
-                            color: 'var(--text-primary)'
-                        }}
-                    >
-                        <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {loading ? 'Refreshing...' : 'Refresh'}
-                    </button>
+                {/* Row 2: Sensitive Batch Action centered separately */}
+                <div className="flex justify-center py-4 pt-2">
+                    <div className="p-2.5 px-3 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm inline-flex items-center">
+                        <button
+                            onClick={() => setShowConfirmModal(true)}
+                            disabled={isProcessing}
+                            className="group px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-3 border border-emerald-400/20"
+                        >
+                            {isProcessing ? (
+                                <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <svg className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            )}
+                            <span>Process All Verified</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -348,10 +442,12 @@ const VerifierLeads = () => {
                         <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                         </svg>
-                        <p style={{ color: 'var(--text-secondary)' }}>No leads found for verification</p>
+                        <p style={{ color: 'var(--text-secondary)' }}>
+                            {searchTerm ? `No leads match "${searchTerm}" on this page` : 'No leads found for verification'}
+                        </p>
                     </div>
                 ) : (
-                    filteredLeads.map((lead, index) => {
+                    searchedLeads.map((lead, index) => {
                         const isExpanded = expandedNames.has(lead._id);
                         const source = lead.sources?.[0];
                         const sourceText = source?.name || 'Local Upload';
@@ -714,7 +810,9 @@ const VerifierLeads = () => {
             {/* Pagination Summary */}
             {!loading && leads.length > 0 && (
                 <div className="text-center text-xs font-bold opacity-50 pb-10" style={{ color: 'var(--text-tertiary)' }}>
-                    {totalLeads > 0 ? (
+                    {searchTerm ? (
+                        `Matched ${searchedLeads.length} of ${filteredLeads.length} leads on this page`
+                    ) : totalLeads > 0 ? (
                         `Showing ${Math.min((currentPage - 1) * itemsPerPage + 1, totalLeads)} - ${Math.min(currentPage * itemsPerPage, totalLeads)} of ${totalLeads} leads`
                     ) : (
                         `Showing ${leads.length} leads on page ${currentPage}`
