@@ -32,6 +32,7 @@ export default function ManagerDashboard() {
     const [statsData, setStatsData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
+    const [isFiltered, setIsFiltered] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -48,6 +49,9 @@ export default function ManagerDashboard() {
                 from: dateRange.from || undefined,
                 to: dateRange.to || undefined
             };
+            
+            setIsFiltered(!isInitial && (!!dateRange.from || !!dateRange.to));
+            
             const response = await managerAPI.getStats(params);
             if (response.success) {
                 setStatsData(response.stats);
@@ -163,10 +167,14 @@ export default function ManagerDashboard() {
                     <div className="px-6 py-3 rounded-2xl bg-[var(--accent-primary)]/5 border border-[var(--accent-primary)]/20 flex items-center gap-4 shadow-sm backdrop-blur-sm whitespace-nowrap">
                         <span className="text-[10px] font-black text-[var(--accent-primary)] uppercase tracking-widest flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
-                            Today's Stats
+                            {isFiltered ? 'Filtered Stats' : "Today's Stats"}
                         </span>
-                        <div className="w-px h-3 bg-[var(--accent-primary)]/20" />
-                        <span className="text-[9px] font-bold text-[var(--text-tertiary)]">Use date filters for weekly or monthly stats</span>
+                        {!isFiltered && (
+                            <>
+                                <div className="w-px h-3 bg-[var(--accent-primary)]/20" />
+                                <span className="text-[9px] font-bold text-[var(--text-tertiary)]">Use date filters for weekly or monthly stats</span>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
