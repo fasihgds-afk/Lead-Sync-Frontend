@@ -2,12 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import dataMinorAPI from '../../../api/data-minor';
 
 // ────────────────────────────────────────────────
-// Cookie Helpers (could be moved to utils/cookies.js later)
+// Cookie Helpers
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length !== 2) return null;
-
     try {
         return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
     } catch {
@@ -17,9 +16,7 @@ const getCookie = (name) => {
 
 const setCookie = (name, value, days = 7) => {
     const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-    document.cookie = `${name}=${encodeURIComponent(
-        JSON.stringify(value)
-    )}; expires=${expires.toUTCString()}; path=/`;
+    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires.toUTCString()}; path=/`;
 };
 
 const deleteCookie = (name) => {
@@ -28,6 +25,7 @@ const deleteCookie = (name) => {
 
 // ────────────────────────────────────────────────
 const VerifierLeads = () => {
+    // ─── State ─────────────────────────────────────
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -38,19 +36,22 @@ const VerifierLeads = () => {
     const [notification, setNotification] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [copiedEmail, setCopiedEmail] = useState(null);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [totalLeads, setTotalLeads] = useState(0);
     const itemsPerPage = 15;
 
-    // ─── Helpers ───────────────────────────────────────
+    const hasInitiallyLoadedRef = useRef(false);
+
+    // ─── Helpers ───────────────────────────────────
     const showNotification = useCallback((message, type = 'success') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 4000);
     }, []);
 
-    // ─── Cookie Sync ───────────────────────────────────
+    // ─── Cookie Sync ───────────────────────────────
     useEffect(() => {
         const saved = getCookie('verifier_email_changes');
         if (saved) setPendingEmailChanges(saved);
@@ -64,79 +65,67 @@ const VerifierLeads = () => {
         }
     }, [pendingEmailChanges]);
 
-    // ─── Data Fetching ─────────────────────────────────
+    // ─── Data Fetching ─────────────────────────────
     const fetchLeads = useCallback(async (pageArg) => {
         const page = pageArg ?? currentPage;
         setLoading(true);
-
-        const startTime = Date.now();
 
         try {
             const skip = (page - 1) * itemsPerPage;
             const res = await dataMinorAPI.getVerifierLeads(itemsPerPage, skip);
 
             if (res.success || Array.isArray(res.leads)) {
-                // Remove the frontend filter as it was causing "random" counts and breaking pagination alignment.
-                // The API should handle filtering if needed. Now we show exactly itemsPerPage (15) leads.
-                const fetchedLeads = (res.leads ?? []).slice(0, itemsPerPage);
+                const fetchedLeads = res.leads ?? [];
                 const total = res.totalLeads ?? res.total ?? res.count ?? 0;
 
-                // Update totalLeads first so UI knows the max page count
                 setTotalLeads(total);
 
-                // Handle the case where the current page exceeds total pages now (e.g., after processing)
+                // Handle page overflow (e.g. after processing leads)
                 const totalPages = Math.ceil(total / itemsPerPage);
-                if (page > 1 && (fetchedLeads.length === 0 || page > totalPages) && total > 0) {
-                    const targetPage = Math.min(page - 1, totalPages > 0 ? totalPages : 1);
+                if (page > totalPages && total > 0) {
+                    const targetPage = Math.max(1, totalPages);
                     setCurrentPage(targetPage);
                     return fetchLeads(targetPage);
                 }
-
-                // Add a small delay if the request was too fast for a professional "loading" feel
-                const elapsed = Date.now() - startTime;
-                if (elapsed < 500) await new Promise(r => setTimeout(r, 500 - elapsed));
 
                 setLeads(fetchedLeads);
             }
         } catch (err) {
             console.error('Failed to fetch leads:', err);
+            showNotification('Failed to load leads', 'error');
         } finally {
             setLoading(false);
         }
-    }, [currentPage]);
+    }, [currentPage, showNotification]);
 
-
-    const hasInitiallyLoadedRef = useRef(false);
-
+    // Initial Load
     useEffect(() => {
         if (!hasInitiallyLoadedRef.current) {
             hasInitiallyLoadedRef.current = true;
-            fetchLeads();
+            fetchLeads(1);
         }
-    }, []);
+    }, [fetchLeads]);
 
-    // Also fetch when currentPage changes to ensure data stays in sync
+    // Fetch on page change
     useEffect(() => {
         if (hasInitiallyLoadedRef.current) {
             fetchLeads(currentPage);
         }
-    }, [currentPage]);
+    }, [currentPage, fetchLeads]);
 
-    const handlePageChange = (newPage) => {
-        fetchLeads(newPage);
+    const handlePageChange = useCallback((newPage) => {
         setCurrentPage(newPage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    }, []);
 
-    // ─── UI Interactions ───────────────────────────────
-    const toggleExpand = (id) => {
+    // ─── UI Interactions ───────────────────────────
+    const toggleExpand = useCallback((id) => {
         setExpandedNames((prev) => {
             const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
+            next.has(id) ? next.delete(id) : next.add(id);
             return next;
         });
-    };
+    }, []);
 
     const getStatusBadge = (status) => {
         const s = (status ?? '').toUpperCase();
@@ -154,14 +143,13 @@ const VerifierLeads = () => {
         return '…';
     };
 
-    // ─── Computed Data ─────────────────────────────────
+    // ─── Computed Data ─────────────────────────────
     const filteredLeads = useMemo(() => {
         return leads
             .filter((lead) => {
                 if (!filterDate) return true;
                 const d = new Date(lead.submittedDate || lead.createdAt);
-                if (isNaN(d.getTime())) return false;
-                return d.toISOString().split('T')[0] === filterDate;
+                return !isNaN(d.getTime()) && d.toISOString().split('T')[0] === filterDate;
             })
             .map((lead) => ({
                 ...lead,
@@ -171,17 +159,22 @@ const VerifierLeads = () => {
 
     const searchedLeads = useMemo(() => {
         if (!searchTerm.trim()) return filteredLeads;
+
         const term = searchTerm.toLowerCase();
-        return filteredLeads.filter(lead => {
-            return lead.displayEmails.some(emailObj => {
+        return filteredLeads.filter((lead) =>
+            lead.displayEmails.some((emailObj) => {
                 const email = (emailObj.normalized || emailObj.value || '').toLowerCase();
                 return email.includes(term);
-            });
-        });
+            })
+        );
     }, [filteredLeads, searchTerm]);
 
-    // ─── Lead Actions ──────────────────────────────────
-    const markEmailStatus = (leadId, email, status) => {
+    const totalEmailsOnPage = useMemo(() => {
+        return searchedLeads.reduce((acc, lead) => acc + (lead.displayEmails?.length || 0), 0);
+    }, [searchedLeads]);
+
+    // ─── Lead Actions ───────────────────────────────
+    const markEmailStatus = useCallback((leadId, email, status) => {
         if (!email) return;
 
         setPendingEmailChanges((prev) => ({
@@ -192,28 +185,24 @@ const VerifierLeads = () => {
             },
         }));
 
-
         setLeads((prev) =>
             prev.map((lead) =>
                 lead._id === leadId
                     ? {
                         ...lead,
                         emails: lead.emails?.map((e) =>
-                            e.normalized === email ? { ...e, status } : e
+                            (e.normalized || e.value) === email ? { ...e, status } : e
                         ) ?? [],
                     }
                     : lead
             )
         );
-    };
-
-
-
-
+    }, []);
 
     const handleProcessAllLeads = async () => {
         setIsProcessing(true);
         setShowConfirmModal(false);
+
         try {
             const res = await dataMinorAPI.distributeVerifierLeadsToLQ();
 
@@ -222,16 +211,16 @@ const VerifierLeads = () => {
                     showNotification(res.message || 'No leads to distribute.', 'info');
                 } else {
                     showNotification(res.message || 'Leads distributed successfully!', 'success');
-                    fetchLeads();
+                    setCurrentPage(1);
+                    fetchLeads(1);
                 }
             }
         } catch (err) {
             console.error('Batch distribute failed:', err);
-            const msg = err.response?.data?.message || err.message;
             showNotification(
                 err.response?.status === 404
                     ? 'No verified leads found.'
-                    : `Batch process failed: ${msg}`,
+                    : `Batch process failed: ${err.response?.data?.message || err.message}`,
                 'error'
             );
         } finally {
@@ -243,7 +232,7 @@ const VerifierLeads = () => {
         const lead = leads.find((l) => l._id === leadId);
         if (!lead) return;
 
-        setProcessingLeads((s) => new Set([...s, leadId]));
+        setProcessingLeads((prev) => new Set([...prev, leadId]));
 
         try {
             const pending = pendingEmailChanges[leadId] ?? {};
@@ -269,56 +258,47 @@ const VerifierLeads = () => {
             fetchLeads();
         } catch (err) {
             console.error('Manual done failed:', err);
-            showNotification(
-                'Failed to complete lead: ' + (err.response?.data?.message || err.message),
-                'error'
-            );
+            showNotification('Failed to complete lead: ' + (err.response?.data?.message || err.message), 'error');
         } finally {
-            setProcessingLeads((s) => {
-                const next = new Set(s);
+            setProcessingLeads((prev) => {
+                const next = new Set(prev);
                 next.delete(leadId);
                 return next;
             });
         }
     };
 
-    const copyAllEmailsOnPage = () => {
-        const allEmails = [];
-        filteredLeads.forEach(lead => {
-            (lead.displayEmails || []).forEach(emailObj => {
-                const email = emailObj.normalized || emailObj.value;
-                if (email) {
-                    allEmails.push(email);
-                }
-            });
-        });
+    const copyAllEmailsOnPage = async () => {
+        const allEmails = searchedLeads.flatMap((lead) =>
+            (lead.displayEmails || [])
+                .map((emailObj) => emailObj.normalized || emailObj.value)
+                .filter(Boolean)
+        );
 
         if (allEmails.length === 0) {
             showNotification('No emails found on this page.', 'info');
             return;
         }
 
-        const joinedEmails = allEmails.join('\n');
-        navigator.clipboard.writeText(joinedEmails)
-            .then(() => {
-                showNotification(`Copied ${allEmails.length} emails to clipboard!`, 'success');
-            })
-            .catch(err => {
-                console.error('Failed to copy emails:', err);
-                showNotification('Failed to copy emails to clipboard.', 'error');
-            });
+        try {
+            await navigator.clipboard.writeText(allEmails.join('\n'));
+            showNotification(`Copied ${allEmails.length} emails to clipboard!`, 'success');
+        } catch (err) {
+            console.error('Failed to copy emails:', err);
+            showNotification('Failed to copy emails to clipboard.', 'error');
+        }
     };
 
-    const totalEmailsOnPage = useMemo(() => {
-        return searchedLeads.reduce((acc, lead) => acc + (lead.displayEmails?.length || 0), 0);
-    }, [searchedLeads]);
+    // ─── Render Helpers ─────────────────────────────
+    const isDM = (lead) => lead.stage === 'DM';
+    const isVerifierStage = (lead) => lead.stage === 'Verifier';
 
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-8 min-h-screen animate-in fade-in slide-in-from-bottom-5 duration-700"
             style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
 
             <div className="space-y-4">
-                {/* Row 1: Utility and Filter Toolbar */}
+                {/* Header + Toolbar */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
@@ -327,10 +307,25 @@ const VerifierLeads = () => {
                         <p className="text-sm font-medium mt-1 opacity-80" style={{ color: 'var(--text-secondary)' }}>
                             Review and verify submitted leads
                         </p>
+
+                        {totalLeads > 0 && (
+                            <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl shadow-lg transition-all hover:scale-105"
+                                style={{
+                                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                                    boxShadow: '0 4px 20px -8px var(--accent-primary)/50'
+                                }}>
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <span className="text-sm font-black text-white tracking-wide">
+                                    Total Leads: {totalLeads.toLocaleString()}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-3 bg-[var(--bg-secondary)] p-2 rounded-2xl border border-[var(--border-primary)] shadow-sm">
-                        {/* Action Group */}
+                        {/* Copy Emails Button */}
                         <div className="flex items-center gap-2 pr-4 border-r border-[var(--border-primary)]">
                             <button
                                 onClick={copyAllEmailsOnPage}
@@ -343,13 +338,13 @@ const VerifierLeads = () => {
                             </button>
                         </div>
 
-                        {/* Filter Group */}
+                        {/* Filters */}
                         <div className="flex items-center gap-3 pl-2">
                             <div className="relative group/search">
                                 <input
                                     type="text"
                                     value={searchTerm}
-                                    onChange={e => setSearchTerm(e.target.value)}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Search by email..."
                                     className="pl-9 pr-8 py-2.5 w-48 rounded-xl border text-[13px] focus:outline-none focus:ring-4 focus:ring-[var(--accent-primary)]/20 font-bold transition-all focus:w-64"
                                     style={{
@@ -375,19 +370,17 @@ const VerifierLeads = () => {
                                 )}
                             </div>
 
-                            <div className="relative">
-                                <input
-                                    type="date"
-                                    value={filterDate}
-                                    onChange={e => setFilterDate(e.target.value)}
-                                    className="pl-3 pr-2 py-2.5 rounded-xl border text-[13px] focus:outline-none focus:ring-4 focus:ring-[var(--accent-primary)]/20 font-bold w-36 uppercase tracking-tighter"
-                                    style={{
-                                        backgroundColor: 'var(--bg-primary)',
-                                        borderColor: 'var(--border-primary)',
-                                        color: 'var(--text-primary)'
-                                    }}
-                                />
-                            </div>
+                            <input
+                                type="date"
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                className="pl-3 pr-2 py-2.5 rounded-xl border text-[13px] focus:outline-none focus:ring-4 focus:ring-[var(--accent-primary)]/20 font-bold w-36 uppercase tracking-tighter"
+                                style={{
+                                    backgroundColor: 'var(--bg-primary)',
+                                    borderColor: 'var(--border-primary)',
+                                    color: 'var(--text-primary)'
+                                }}
+                            />
 
                             <button
                                 onClick={() => fetchLeads()}
@@ -404,7 +397,7 @@ const VerifierLeads = () => {
                     </div>
                 </div>
 
-                {/* Row 2: Sensitive Batch Action centered separately */}
+                {/* Process All Button */}
                 <div className="flex justify-center py-4 pt-2">
                     <div className="p-2.5 px-3 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm inline-flex items-center">
                         <button
@@ -425,7 +418,7 @@ const VerifierLeads = () => {
                 </div>
             </div>
 
-            {/* List Content */}
+            {/* Leads List */}
             <div
                 key={currentPage}
                 className={`space-y-4 transition-all duration-500 ease-in-out ${loading ? 'opacity-40 scale-[0.99] blur-[2px] pointer-events-none' : 'opacity-100 scale-100 blur-0'} animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both`}
@@ -436,7 +429,7 @@ const VerifierLeads = () => {
                             style={{ borderColor: 'var(--border-primary)', borderTopColor: 'var(--accent-primary)' }}></div>
                         <p style={{ color: 'var(--text-secondary)' }}>Loading leads...</p>
                     </div>
-                ) : filteredLeads.length === 0 ? (
+                ) : searchedLeads.length === 0 ? (
                     <div className="p-20 text-center opacity-60 flex flex-col items-center justify-center rounded-3xl border border-dashed"
                         style={{ borderColor: 'var(--border-primary)' }}>
                         <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -456,30 +449,28 @@ const VerifierLeads = () => {
                             const status = pendingEmailChanges[lead._id]?.[email] || emailObj.status || 'PENDING';
                             return String(status).toUpperCase() === 'PENDING';
                         }).length;
+
                         const totalCount = lead.displayEmails.length;
-                        const isDM = lead.stage === 'DM';
-                        const isVerifier = lead.stage === 'Verifier';
+                        const isDMLead = isDM(lead);
+                        const isVerifierLead = isVerifierStage(lead);
 
                         return (
                             <div
                                 key={lead._id}
-                                className={`group rounded-2xl border transition-all duration-300 overflow-hidden hover:shadow-2xl ${isVerifier ? 'ring-1 ring-emerald-500/30 shadow-emerald-500/5' : ''}`}
+                                className={`group rounded-2xl border transition-all duration-300 overflow-hidden hover:shadow-2xl ${isVerifierLead ? 'ring-1 ring-emerald-500/30 shadow-emerald-500/5' : ''}`}
                                 style={{
                                     backgroundColor: 'var(--bg-secondary)',
-                                    borderColor: isVerifier ? '#10b98144' : (isExpanded ? 'var(--accent-primary)' : 'var(--border-primary)'),
+                                    borderColor: isVerifierLead ? '#10b98144' : (isExpanded ? 'var(--accent-primary)' : 'var(--border-primary)'),
                                     boxShadow: isExpanded ? '0 10px 40px -10px rgba(0,0,0,0.5)' : 'none'
                                 }}
                             >
-                                {/* Card Header (Lead Summary) */}
+                                {/* Card Header */}
                                 <div
                                     onClick={() => toggleExpand(lead._id)}
                                     className="px-6 py-5 flex items-center justify-between cursor-pointer transition-colors"
-                                    style={{
-                                        backgroundColor: isExpanded ? 'var(--bg-tertiary)' : 'transparent',
-                                    }}
+                                    style={{ backgroundColor: isExpanded ? 'var(--bg-tertiary)' : 'transparent' }}
                                 >
                                     <div className="flex items-center gap-5 flex-1">
-                                        {/* Serial Number and Icon */}
                                         <div className="relative">
                                             <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-[var(--accent-primary)] text-[var(--bg-primary)] text-[10px] font-black flex items-center justify-center shadow-lg z-10 border-2 border-[var(--bg-secondary)]">
                                                 {((currentPage - 1) * itemsPerPage) + index + 1}
@@ -488,7 +479,7 @@ const VerifierLeads = () => {
                                                 style={{
                                                     background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
                                                     border: '1px solid var(--border-primary)',
-                                                    color: 'white' // Forced white for the icon on a brand gradient
+                                                    color: 'white'
                                                 }}>
                                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -501,13 +492,13 @@ const VerifierLeads = () => {
                                                 <h3 className="font-bold text-lg truncate tracking-tight" style={{ color: 'var(--text-primary)' }}>
                                                     Lead #{((currentPage - 1) * itemsPerPage) + index + 1}
                                                 </h3>
-                                                {isVerifier && (
+                                                {isVerifierLead && (
                                                     <span className="text-[9px] uppercase font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30 flex items-center gap-1.5">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                                         Ready for LQ
                                                     </span>
                                                 )}
-                                                {isExpanded && !isVerifier && (
+                                                {isExpanded && !isVerifierLead && (
                                                     <span className="text-[10px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full"
                                                         style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-tertiary)' }}>
                                                         Viewing Details
@@ -533,8 +524,6 @@ const VerifierLeads = () => {
                                                     </svg>
                                                     <span>{pendingCount} Pending / {totalCount} Total</span>
                                                 </div>
-
-
                                             </div>
                                         </div>
                                     </div>
@@ -569,14 +558,14 @@ const VerifierLeads = () => {
                                     </div>
                                 </div>
 
-                                {/* Expanded Details Panel */}
+                                {/* Expanded Details */}
                                 {isExpanded && (
                                     <div className="animate-in slide-in-from-top-2 duration-300">
                                         <div className="px-6 pb-6 pt-2">
                                             <div className="rounded-xl overflow-hidden border"
                                                 style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)' }}>
 
-                                                {/* Inner Table Header */}
+                                                {/* Table Header */}
                                                 <div className="grid grid-cols-12 gap-4 px-5 py-3 text-[10px] uppercase font-black tracking-widest"
                                                     style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>
                                                     <div className="col-span-5">Email Address</div>
@@ -584,147 +573,146 @@ const VerifierLeads = () => {
                                                     <div className="col-span-4 text-right">Verification</div>
                                                 </div>
 
-                                                {/* Inner Table Body */}
+                                                {/* Emails List */}
                                                 <div className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
-                                                    <div className="group/lead relative">
-                                                        {/* Lead Emails */}
-                                                        <div className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
-                                                            {lead.displayEmails.map((emailObj, idx) => {
-                                                                const email = emailObj.normalized || emailObj.value;
-                                                                const originalStatus = emailObj.status || 'PENDING';
-                                                                const pendingStatus = pendingEmailChanges[lead._id]?.[email];
-                                                                const status = pendingStatus || originalStatus;
-                                                                const hasPendingChange = !!pendingStatus;
+                                                    {lead.displayEmails.map((emailObj, idx) => {
+                                                        const email = emailObj.normalized || emailObj.value;
+                                                        const originalStatus = emailObj.status || 'PENDING';
+                                                        const pendingStatus = pendingEmailChanges[lead._id]?.[email];
+                                                        const status = pendingStatus || originalStatus;
+                                                        const hasPendingChange = !!pendingStatus;
 
-                                                                return (
-                                                                    <div key={`${lead._id}-${idx}`}
-                                                                        className="grid grid-cols-12 gap-4 px-5 py-4 items-center transition-colors hover:bg-[var(--bg-tertiary)]/20">
+                                                        return (
+                                                            <div key={`${lead._id}-${idx}`}
+                                                                className="grid grid-cols-12 gap-4 px-5 py-4 items-center transition-colors hover:bg-[var(--bg-tertiary)]/20">
 
-                                                                        {/* Email Column */}
-                                                                        <div className="col-span-5 flex items-center gap-2 group/copy">
-                                                                            <span className="font-mono text-sm break-all font-medium" style={{ color: 'var(--text-primary)' }}>
-                                                                                {email}
-                                                                            </span>
-                                                                            <button
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    navigator.clipboard.writeText(email);
-                                                                                }}
-                                                                                className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-white/10 text-gray-400 hover:text-white"
-                                                                                title="Copy Email"
-                                                                            >
-                                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-
-                                                                        {/* Status Column */}
-                                                                        <div className="col-span-3">
-                                                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(status).split(' ').join(' ')} ${hasPendingChange ? 'ring-2 ring-yellow-400/50' : ''}`}>
-                                                                                <span className="text-xs">{getStatusIcon(status)}</span>
-                                                                                <span>{status}</span>
-                                                                                {hasPendingChange && (
-                                                                                    <span className="text-[8px] bg-yellow-400 text-black px-1 rounded">PENDING</span>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Action Column */}
-                                                                        <div className="col-span-4 flex justify-end">
-                                                                            <div className="relative w-36 group/select">
-                                                                                <select
-                                                                                    value={status}
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                                    onChange={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        markEmailStatus(lead._id, email, e.target.value);
-                                                                                    }}
-                                                                                    className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-xs font-bold border outline-none cursor-pointer transition-all shadow-sm hover:shadow-md"
-                                                                                    style={{
-                                                                                        backgroundColor: 'var(--bg-secondary)',
-                                                                                        borderColor: 'var(--border-primary)',
-                                                                                        color: 'var(--text-primary)'
-                                                                                    }}
-                                                                                >
-                                                                                    <option value="PENDING">Pending Check</option>
-                                                                                    <option value="ACTIVE">Mark Active</option>
-                                                                                    <option value="BOUNCED">Mark Bounced</option>
-                                                                                    <option value="DEAD">Mark Dead</option>
-                                                                                </select>
-                                                                                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform group-hover/select:translate-x-0.5"
-                                                                                    style={{ color: 'var(--text-secondary)' }}>
-                                                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                                                                                    </svg>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-
-                                                        {/* Lead Action Footer */}
-                                                        <div className="px-5 py-4 bg-[var(--bg-tertiary)]/10 border-t border-[var(--border-primary)] flex items-center justify-between">
-                                                            <div className="flex gap-3">
-                                                                {/* Quick Action: Mark All Active (Only for DM leads) */}
-                                                                {isDM && pendingCount > 0 && (
+                                                                {/* Email */}
+                                                                <div className="col-span-5 flex items-center gap-2 group/copy">
+                                                                    <span className="font-mono text-sm break-all font-medium" style={{ color: 'var(--text-primary)' }}>
+                                                                        {email}
+                                                                    </span>
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            lead.displayEmails.forEach(emailObj => {
-                                                                                const email = emailObj.normalized || emailObj.value;
-                                                                                if (!emailObj.status || emailObj.status.toUpperCase() === 'PENDING') {
-                                                                                    markEmailStatus(lead._id, email, 'ACTIVE');
-                                                                                }
+                                                                            navigator.clipboard.writeText(email).then(() => {
+                                                                                setCopiedEmail(email);
+                                                                                setTimeout(() => setCopiedEmail(null), 3000);
                                                                             });
                                                                         }}
-                                                                        className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg text-xs font-bold transition-all flex items-center gap-2 border border-blue-500/20"
+                                                                        className={`opacity-0 group-hover/copy:opacity-100 transition-all p-1.5 rounded-md ${copiedEmail === email ? 'bg-green-500/20 text-green-400' : 'hover:bg-white/10 text-gray-400 hover:text-white'}`}
+                                                                        title={copiedEmail === email ? 'Copied!' : 'Copy Email'}
                                                                     >
-                                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                                        </svg>
-                                                                        Mark All Active
-                                                                    </button>
-                                                                )}
-                                                            </div>
-
-                                                            <div className="flex gap-3">
-                                                                {/* Mark as Done: Only show for DM leads when all emails are marked */}
-                                                                {isDM && pendingCount === 0 && (
-                                                                    <button
-                                                                        onClick={() => handleDoneManual(lead._id)}
-                                                                        disabled={processingLeads.has(lead._id)}
-                                                                        className="px-5 py-2 bg-gradient-to-r from-[var(--accent-primary)] to-indigo-600 text-white rounded-lg text-xs font-black shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                                                    >
-                                                                        {processingLeads.has(lead._id) ? (
-                                                                            <>
-                                                                                <div className="w-3 h-3 border border-white/20 border-t-white rounded-full animate-spin" />
-                                                                                Processing...
-                                                                            </>
+                                                                        {copiedEmail === email ? (
+                                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                            </svg>
                                                                         ) : (
-                                                                            <>
-                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                                                                                </svg>
-                                                                                Mark as Done
-                                                                            </>
+                                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                                            </svg>
                                                                         )}
                                                                     </button>
-                                                                )}
+                                                                </div>
 
-                                                                {/* Indicator for already verified leads */}
-                                                                {isVerifier && (
-                                                                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                                        </svg>
-                                                                        Lead Verified (Use Process Button at Top)
+                                                                {/* Status */}
+                                                                <div className="col-span-3">
+                                                                    <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(status)} ${hasPendingChange ? 'ring-2 ring-yellow-400/50' : ''}`}>
+                                                                        <span className="text-xs">{getStatusIcon(status)}</span>
+                                                                        <span>{status}</span>
+                                                                        {hasPendingChange && <span className="text-[8px] bg-yellow-400 text-black px-1 rounded">PENDING</span>}
                                                                     </div>
-                                                                )}
+                                                                </div>
+
+                                                                {/* Actions */}
+                                                                <div className="col-span-4 flex justify-end">
+                                                                    <div className="relative w-36 group/select">
+                                                                        <select
+                                                                            value={status}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            onChange={(e) => {
+                                                                                e.stopPropagation();
+                                                                                markEmailStatus(lead._id, email, e.target.value);
+                                                                            }}
+                                                                            className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-xs font-bold border outline-none cursor-pointer transition-all shadow-sm hover:shadow-md"
+                                                                            style={{
+                                                                                backgroundColor: 'var(--bg-secondary)',
+                                                                                borderColor: 'var(--border-primary)',
+                                                                                color: 'var(--text-primary)'
+                                                                            }}
+                                                                        >
+                                                                            <option value="PENDING">Pending Check</option>
+                                                                            <option value="ACTIVE">Mark Active</option>
+                                                                            <option value="BOUNCED">Mark Bounced</option>
+                                                                            <option value="DEAD">Mark Dead</option>
+                                                                        </select>
+                                                                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform group-hover/select:translate-x-0.5"
+                                                                            style={{ color: 'var(--text-secondary)' }}>
+                                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                                                                            </svg>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Footer Actions */}
+                                                <div className="px-5 py-4 bg-[var(--bg-tertiary)]/10 border-t border-[var(--border-primary)] flex items-center justify-between">
+                                                    <div className="flex gap-3">
+                                                        {isDMLead && pendingCount > 0 && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    lead.displayEmails.forEach(emailObj => {
+                                                                        const email = emailObj.normalized || emailObj.value;
+                                                                        if (!emailObj.status || emailObj.status.toUpperCase() === 'PENDING') {
+                                                                            markEmailStatus(lead._id, email, 'ACTIVE');
+                                                                        }
+                                                                    });
+                                                                }}
+                                                                className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg text-xs font-bold transition-all flex items-center gap-2 border border-blue-500/20"
+                                                            >
+                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Mark All Active
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex gap-3">
+                                                        {isDMLead && pendingCount === 0 && (
+                                                            <button
+                                                                onClick={() => handleDoneManual(lead._id)}
+                                                                disabled={processingLeads.has(lead._id)}
+                                                                className="px-5 py-2 bg-gradient-to-r from-[var(--accent-primary)] to-indigo-600 text-white rounded-lg text-xs font-black shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                            >
+                                                                {processingLeads.has(lead._id) ? (
+                                                                    <>
+                                                                        <div className="w-3 h-3 border border-white/20 border-t-white rounded-full animate-spin" />
+                                                                        Processing...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                        Mark as Done
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        )}
+
+                                                        {isVerifierLead && (
+                                                            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Lead Verified (Use Process Button at Top)
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -737,8 +725,8 @@ const VerifierLeads = () => {
                 )}
             </div>
 
-            {/* Pagination UI */}
-            {!loading && leads.length > 0 && (totalLeads > itemsPerPage || (totalLeads === 0 && leads.length === itemsPerPage) || currentPage > 1) && (
+            {/* Pagination */}
+            {!loading && leads.length > 0 && (totalLeads > itemsPerPage || currentPage > 1) && (
                 <div className="flex items-center justify-center gap-2 mt-8 pb-8">
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
@@ -752,51 +740,33 @@ const VerifierLeads = () => {
                     </button>
 
                     <div className="flex items-center gap-1">
-                        {totalLeads > 0 && (
-                            [...Array(Math.max(1, Math.ceil(totalLeads / itemsPerPage)))].map((_, i) => {
-                                const pageNum = i + 1;
-                                // Basic logic to show only few page numbers if there are too many
-                                const totalPages = Math.ceil(totalLeads / itemsPerPage);
-                                if (
-                                    totalPages > 7 &&
-                                    pageNum !== 1 &&
-                                    pageNum !== totalPages &&
-                                    Math.abs(pageNum - currentPage) > 1
-                                ) {
-                                    if (Math.abs(pageNum - currentPage) === 2) return <span key={pageNum} className="px-2 opacity-50">...</span>;
-                                    return null;
-                                }
+                        {totalLeads > 0 && [...Array(Math.ceil(totalLeads / itemsPerPage))].map((_, i) => {
+                            const pageNum = i + 1;
+                            const totalPages = Math.ceil(totalLeads / itemsPerPage);
 
-                                return (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => handlePageChange(pageNum)}
-                                        className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === pageNum
-                                            ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20 scale-110'
-                                            : 'border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
-                                            }`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                );
-                            })
-                        )}
-                        {totalLeads === 0 && leads.length > 0 && (
-                            <button
-                                className="w-10 h-10 rounded-xl font-bold text-xs transition-all bg-[var(--accent-primary)] text-white"
-                            >
-                                {currentPage}
-                            </button>
-                        )}
+                            if (totalPages > 7 && pageNum !== 1 && pageNum !== totalPages && Math.abs(pageNum - currentPage) > 1) {
+                                if (Math.abs(pageNum - currentPage) === 2) return <span key={pageNum} className="px-2 opacity-50">...</span>;
+                                return null;
+                            }
+
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === pageNum
+                                        ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20 scale-110'
+                                        : 'border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <button
                         onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={
-                            totalLeads > 0
-                                ? currentPage >= Math.ceil(totalLeads / itemsPerPage)
-                                : leads.length < itemsPerPage
-                        }
+                        disabled={totalLeads > 0 ? currentPage >= Math.ceil(totalLeads / itemsPerPage) : leads.length < itemsPerPage}
                         className="p-3 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] disabled:opacity-50 transition-all font-bold text-xs flex items-center gap-2"
                     >
                         Next
@@ -823,28 +793,21 @@ const VerifierLeads = () => {
             {/* Confirmation Modal */}
             {showConfirmModal && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
-                        onClick={() => setShowConfirmModal(false)}
-                    />
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" onClick={() => setShowConfirmModal(false)} />
                     <div className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-5 duration-300"
                         style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}>
-                        {/* Modal Header/Icon */}
                         <div className="p-8 text-center bg-gradient-to-b from-emerald-500/10 to-transparent">
                             <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
                                 <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
-                            <h3 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                                Distribute Leads?
-                            </h3>
+                            <h3 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Distribute Leads?</h3>
                             <p className="mt-2 text-sm font-medium opacity-60 px-4" style={{ color: 'var(--text-secondary)' }}>
                                 You are about to move all verified leads to Lead Qualifiers. This action cannot be undone.
                             </p>
                         </div>
 
-                        {/* Modal Actions */}
                         <div className="p-6 flex flex-col gap-3">
                             <button
                                 onClick={handleProcessAllLeads}
@@ -871,28 +834,14 @@ const VerifierLeads = () => {
             {notification && (
                 <div className="fixed bottom-8 right-8 z-[100] animate-in slide-in-from-right-10 duration-500">
                     <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border backdrop-blur-xl ${notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                        notification.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-                            'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                        notification.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                         }`}>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${notification.type === 'success' ? 'bg-emerald-500 text-white' :
-                            notification.type === 'error' ? 'bg-rose-500 text-white' :
-                                'bg-blue-500 text-white'
+                            notification.type === 'error' ? 'bg-rose-500 text-white' : 'bg-blue-500 text-white'
                             }`}>
-                            {notification.type === 'success' && (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                </svg>
-                            )}
-                            {notification.type === 'error' && (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            )}
-                            {notification.type === 'info' && (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            )}
+                            {notification.type === 'success' && <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                            {notification.type === 'error' && <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>}
+                            {notification.type === 'info' && <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                         </div>
                         <div>
                             <p className="font-black text-sm tracking-tight">{notification.message}</p>

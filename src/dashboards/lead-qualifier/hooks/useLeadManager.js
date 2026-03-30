@@ -7,6 +7,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
     const [leadsError, setLeadsError] = useState(null);
     const [total, setTotal] = useState(0);
     const [filtersApplied, setFiltersApplied] = useState({});
+    const [refreshing, setRefreshing] = useState(false);
 
     // Use refs to prevent redundant/parallel overlapping fetches
     const isFetchingLeads = useRef(false);
@@ -16,7 +17,11 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
 
         try {
             isFetchingLeads.current = true;
-            setLoading(true);
+            if (force) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
 
             const skip = (currentPage - 1) * itemsPerPage;
             console.log('Fetching leads with filters:', { filters, currentPage, itemsPerPage, skip });
@@ -42,6 +47,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
         } finally {
             isFetchingLeads.current = false;
             setLoading(false);
+            setRefreshing(false);
         }
     }, [filters, currentPage, itemsPerPage]);
 
@@ -107,15 +113,21 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
         }
     };
 
+    const refreshLeads = useCallback(() => {
+        console.log('Refresh leads called');
+        fetchLeads(true);
+    }, [fetchLeads]);
+
     return {
         leads,
         loading,
         error: leadsError,
         total,
         filtersApplied,
+        refreshing,
         updateLeadStatus,
         addLeadComment,
         assignLeadManager,
-        refreshLeads: () => fetchLeads(true)
+        refreshLeads
     };
 };

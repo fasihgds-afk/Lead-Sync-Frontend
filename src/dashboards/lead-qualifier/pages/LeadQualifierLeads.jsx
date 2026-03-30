@@ -41,6 +41,7 @@ export default function LeadQualifierLeads() {
         error,
         total,
         filtersApplied,
+        refreshing,
         updateLeadStatus,
         addLeadComment,
         assignLeadManager,
@@ -154,18 +155,26 @@ export default function LeadQualifierLeads() {
                                 <button
                                     type="button"
                                     onClick={(e) => {
+                                        console.log('Leads refresh button clicked');
                                         e.preventDefault();
                                         e.stopPropagation();
                                         refreshLeads();
                                     }}
-                                    className="flex items-center gap-2 px-3 py-2.5 bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)] rounded-xl text-[var(--accent-primary)] hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm group cursor-pointer relative z-10"
-                                    title="Refresh leads"
+                                    disabled={refreshing}
+                                    className={`flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 ${
+                                        refreshing 
+                                            ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] opacity-75 cursor-not-allowed' 
+                                            : 'bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
+                                    }`}
+                                    title={refreshing ? "Refreshing..." : "Refresh leads"}
                                 >
-                                    <svg className="w-5 h-5 text-[var(--accent-primary)] group-hover:text-white transition-colors pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className={`w-5 h-5 transition-colors pointer-events-none ${refreshing ? 'animate-spin text-white' : 'text-[var(--accent-primary)] group-hover:text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-[var(--accent-primary)] group-hover:text-white transition-all pointer-events-none select-none">
-                                        Refresh
+                                    <span className={`text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none ${
+                                        refreshing ? 'text-white' : 'text-[var(--accent-primary)] group-hover:text-white'
+                                    }`}>
+                                        {refreshing ? 'Refreshing...' : 'Refresh'}
                                     </span>
                                 </button>
                             </div>

@@ -6,6 +6,7 @@ import StatCard from '../components/StatCard';
 
 export default function LeadQualifierDashboard() {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalReceived: 0,
@@ -19,9 +20,13 @@ export default function LeadQualifierDashboard() {
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
       let filters = {};
@@ -51,6 +56,7 @@ export default function LeadQualifierDashboard() {
       setError("Network error while loading dashboard. Please ensure the backend is running.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [dateFilter, customFrom, customTo]);
 
@@ -116,17 +122,28 @@ export default function LeadQualifierDashboard() {
 
           <button
             onClick={() => {
+              console.log('Dashboard refresh clicked');
               setDateFilter('all');
               setCustomFrom('');
               setCustomTo('');
               // Small delay to allow state to settle before fetch
-              setTimeout(fetchDashboardData, 0);
+              setTimeout(() => {
+                console.log('Fetching dashboard data after reset');
+                fetchDashboardData(true);
+              }, 100);
             }}
-            className="px-5 py-2 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] text-sm font-bold hover:bg-[var(--border-primary)] active:scale-95 transition-all duration-300 flex items-center gap-2 border border-transparent hover:border-[var(--border-primary)]"
-            title="Reset to All Time and Refresh"
+            disabled={refreshing}
+            className={`px-5 py-2 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 border ${
+              refreshing 
+                ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] opacity-75 cursor-not-allowed' 
+                : 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-primary)] active:scale-95 border-transparent hover:border-[var(--border-primary)]'
+            }`}
+            title={refreshing ? "Refreshing..." : "Reset to All Time and Refresh"}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            Refresh
+            <svg className={`w-4 h-4 transition-colors ${refreshing ? 'animate-spin text-white' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
