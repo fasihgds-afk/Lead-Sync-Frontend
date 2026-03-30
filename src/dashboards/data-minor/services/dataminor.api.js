@@ -176,6 +176,17 @@ const dataMinerService = {
             };
         } catch (err) {
             console.error("Duplicate check failed:", err);
+            // Handle backend validation errors (e.g., 400 Bad Request with "Invalid email")
+            const backendErrorMsg = err.response?.data?.message;
+            if (backendErrorMsg && (backendErrorMsg.toLowerCase().includes("invalid") || backendErrorMsg.toLowerCase().includes("domain"))) {
+                return {
+                    checked: true,
+                    isDuplicate: true,
+                    isInvalid: true,
+                    message: backendErrorMsg
+                };
+            }
+
             return {
                 checked: true,
                 isDuplicate: false,
