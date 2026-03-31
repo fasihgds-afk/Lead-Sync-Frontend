@@ -71,6 +71,22 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
         return false;
     };
 
+    const updateBulkLeadStatus = async (leadIds, newStatus) => {
+        if (!leadIds || leadIds.length === 0) return false;
+        try {
+            const response = await lqAPI.updateBulkStatus(leadIds, newStatus);
+            if (response.success) {
+                // Update leads in local state
+                setLeads(prev => prev.map(l => leadIds.includes(l._id) ? { ...l, lqStatus: newStatus } : l));
+                return true;
+            }
+        } catch (err) {
+            console.error("Update bulk status error:", err);
+            return false;
+        }
+        return false;
+    };
+
     const addLeadComment = async (leadId, commentText) => {
         try {
             const response = await lqAPI.addComment(leadId, commentText);
@@ -126,6 +142,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
         filtersApplied,
         refreshing,
         updateLeadStatus,
+        updateBulkLeadStatus,
         addLeadComment,
         assignLeadManager,
         refreshLeads

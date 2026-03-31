@@ -22,7 +22,19 @@ export const lqAPI = {
     // Update the status of a lead (IN_CONVERSATION, DEAD, QUALIFIED)
     updateStatus: async (leadId, lqStatus) => {
         const token = tokenManager.getToken();
-        const response = await axiosInstance.patch(`/api/lq/leads/${leadId}/status`, { lqStatus }, {
+        const response = await axiosInstance.patch(`/api/lq/leads/${leadId}/status`, { lqStatus, leadIds: [leadId] }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    },
+
+    // Bulk update the status of multiple leads
+    updateBulkStatus: async (leadIds, lqStatus) => {
+        const token = tokenManager.getToken();
+        // We use 'bulk' as the ID to bypass any router parameter requirement and hit the same controller
+        const response = await axiosInstance.patch(`/api/lq/leads/bulk/status`, { lqStatus, leadIds }, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
