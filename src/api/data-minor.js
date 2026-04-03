@@ -65,9 +65,9 @@ export const dataMinorAPI = {
 
 
 
-    distributeVerifierLeadsToLQ: async () => {
+    moveVerifierLeadsToLQ: async () => {
         const token = tokenManager.getToken();
-        const response = await axiosInstance.post('/api/verifier/leads/distribute-verifier-to-lq', {}, {
+        const response = await axiosInstance.post('/api/verifier/leads/move-all-to-lq', {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
