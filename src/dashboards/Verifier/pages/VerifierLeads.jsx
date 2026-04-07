@@ -49,18 +49,19 @@ const VerifierLeads = () => {
             : deleteCookie('verifier_email_changes');
     }, [pendingChanges]);
 
-    const fetchLeads = useCallback(async (sTerm = searchTerm) => {
+    const fetchLeads = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await dataMinorAPI.getVerifierLeads(sTerm);
+            // Fetch a larger batch for frontend searching if needed, 
+            // or just use the default.
+            const res = await dataMinorAPI.getVerifierLeads(100, 0);
             if (res.success) setLeads(res.leads || []);
         } catch (err) {
             notify(err.response?.data?.message || 'Failed to load leads', 'error');
         } finally {
             setLoading(false);
         }
-    }, [notify, searchTerm]);
-
+    }, [notify]);
     useEffect(() => {
         if (!initialLoadDone.current) {
             initialLoadDone.current = true;
@@ -68,15 +69,27 @@ const VerifierLeads = () => {
         }
     }, [fetchLeads]);
 
-    useEffect(() => {
-        if (!initialLoadDone.current) return;
-        const timer = setTimeout(() => fetchLeads(searchTerm), 500);
-        return () => clearTimeout(timer);
-    }, [searchTerm, fetchLeads]);
+    // Frontend filter logic
+    const filteredLeads = useMemo(() => {
+        if (!searchTerm) return leads;
+        const lowSearch = searchTerm.toLowerCase().trim();
+        return leads.filter((lead) => {
+            const companyMatch = lead.companyName?.toLowerCase().includes(lowSearch);
+            const personMatch = lead.personName?.toLowerCase().includes(lowSearch);
+            const websiteMatch = lead.website?.toLowerCase().includes(lowSearch);
+            const emailMatch = (lead.emails ?? []).some((e) => {
+                const val = (e.normalized || e.value || '').toLowerCase();
+                return val.includes(lowSearch);
+            });
+            const linkedinMatch = lead.linkedinUrl?.toLowerCase().includes(lowSearch);
+            
+            return companyMatch || personMatch || websiteMatch || emailMatch || linkedinMatch;
+        });
+    }, [leads, searchTerm]);
 
     const totalEmailsOnPage = useMemo(
-        () => leads.reduce((n, l) => n + (l.emails?.length ?? 0), 0),
-        [leads]
+        () => filteredLeads.reduce((n, l) => n + (l.emails?.length ?? 0), 0),
+        [filteredLeads]
     );
 
     const toggleExpand = useCallback((id) => {
@@ -95,13 +108,13 @@ const VerifierLeads = () => {
     }, []);
 
     const copyAllEmails = useCallback(async () => {
-        const all = leads.flatMap((l) =>
+        const all = filteredLeads.flatMap((l) =>
             (l.emails ?? []).map((e) => e.normalized || e.value).filter(Boolean)
         );
         if (!all.length) { notify('No emails on this page.', 'info'); return; }
         await navigator.clipboard.writeText(all.join('\n'));
         notify(`Copied ${all.length} emails!`);
-    }, [leads, notify]);
+    }, [filteredLeads, notify]);
 
     const changeEmailStatus = useCallback((leadId, email, status) => {
         setLeads((prev) =>
@@ -135,8 +148,11 @@ const VerifierLeads = () => {
     const markAllLeadsActive = useCallback(() => {
         let count = 0;
         const nextPending = { ...pendingChanges };
+        const filteredIds = new Set(filteredLeads.map(l => l._id));
 
         const nextLeads = leads.map((lead) => {
+            if (!filteredIds.has(lead._id)) return lead;
+
             const leadPending = { ...(nextPending[lead._id] ?? {}) };
             let modified = false;
 
@@ -164,11 +180,11 @@ const VerifierLeads = () => {
         if (count > 0) {
             setLeads(nextLeads);
             setPendingChanges(nextPending);
-            notify(`Marked ${count} emails as ACTIVE across all leads!`);
+            notify(`Marked ${count} emails as ACTIVE across ${searchTerm ? 'filtered' : 'all'} leads!`);
         } else {
-            notify('No pending emails found.', 'info');
+            notify('No pending emails found in the current view.', 'info');
         }
-    }, [leads, pendingChanges, notify]);
+    }, [leads, filteredLeads, pendingChanges, notify, searchTerm]);
 
     const handleDone = useCallback(async (leadId) => {
         const lead = leads.find((l) => l._id === leadId);
@@ -242,7 +258,7 @@ const VerifierLeads = () => {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                {leads.length.toLocaleString()} Leads
+                                {filteredLeads.length.toLocaleString()} Leads {searchTerm && `Found (of ${leads.length})`}
                             </div>
                         </div>
                     )}
@@ -329,7 +345,7 @@ const VerifierLeads = () => {
                         </p>
                     </div>
                 ) : (
-                    leads.map((lead, i) => (
+                    filteredLeads.map((lead, i) => (
                         <LeadCard
                             key={lead._id}
                             lead={lead}
