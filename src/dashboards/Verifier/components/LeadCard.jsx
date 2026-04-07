@@ -4,7 +4,7 @@ import LeadEmailTable from './LeadEmailTable';
 const LeadCard = React.memo(({
     lead, index, globalIndex, isExpanded, onToggle,
     pendingChanges, processingLeads, copiedEmail,
-    onCopy, onChangeStatus, onMarkAllActive, onDone,
+    onCopy, onChangeStatus, onMarkAllActive, onDone, searchTerm,
 }) => {
     const emails = lead.emails ?? [];
     const isVerified = (lead.stage || 'DM').toUpperCase() === 'VERIFIER';
@@ -85,6 +85,7 @@ const LeadCard = React.memo(({
                     onChangeStatus={onChangeStatus}
                     onMarkAllActive={onMarkAllActive}
                     onDone={onDone}
+                    searchTerm={searchTerm}
                 />
             )}
         </div>

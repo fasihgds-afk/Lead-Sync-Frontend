@@ -360,6 +360,7 @@ const VerifierLeads = () => {
                             onChangeStatus={changeEmailStatus}
                             onMarkAllActive={markAllActive}
                             onDone={handleDone}
+                            searchTerm={searchTerm}
                         />
                     ))
                 )}

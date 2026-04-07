@@ -1,7 +1,30 @@
 import React from 'react';
 import { VALID_STATUSES, getStatusStyle, getStatusIcon } from './VerifierUI';
 
-export const EmailRow = React.memo(({ email, status, hasPending, onChangeStatus, copiedEmail, onCopy }) => {
+// Helper: highlight matching portion of text
+const HighlightText = ({ text, search }) => {
+    if (!search || !text) return <span>{text}</span>;
+    const idx = text.toLowerCase().indexOf(search.toLowerCase());
+    if (idx === -1) return <span>{text}</span>;
+    return (
+        <span>
+            {text.slice(0, idx)}
+            <mark style={{
+                background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+                color: '#fff',
+                borderRadius: '3px',
+                padding: '0 2px',
+                boxShadow: '0 0 6px rgba(245,158,11,0.6)',
+                fontWeight: 'inherit',
+            }}>
+                {text.slice(idx, idx + search.length)}
+            </mark>
+            {text.slice(idx + search.length)}
+        </span>
+    );
+};
+
+export const EmailRow = React.memo(({ email, status, hasPending, onChangeStatus, copiedEmail, onCopy, searchTerm }) => {
     const norm = email;
     const upperStatus = (status || 'PENDING').toUpperCase();
 
@@ -9,7 +32,7 @@ export const EmailRow = React.memo(({ email, status, hasPending, onChangeStatus,
         <div className="grid grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-[var(--bg-tertiary)]/20 transition-colors">
             <div className="col-span-5 flex items-center gap-2 group/copy">
                 <span className="font-mono text-sm break-all font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {norm}
+                    <HighlightText text={norm} search={searchTerm} />
                 </span>
                 <button
                     onClick={(e) => { e.stopPropagation(); onCopy(norm); }}
@@ -57,7 +80,7 @@ export const EmailRow = React.memo(({ email, status, hasPending, onChangeStatus,
 
 const LeadEmailTable = React.memo(({
     lead, pendingChanges, processingLeads,
-    copiedEmail, onCopy, onChangeStatus, onMarkAllActive, onDone,
+    copiedEmail, onCopy, onChangeStatus, onMarkAllActive, onDone, searchTerm,
 }) => {
     const emails = lead.emails ?? [];
     const isVerified = (lead.stage || 'DM').toUpperCase() === 'VERIFIER';
@@ -97,6 +120,7 @@ const LeadEmailTable = React.memo(({
                                 onChangeStatus={(e, s) => onChangeStatus(lead._id, e, s)}
                                 copiedEmail={copiedEmail}
                                 onCopy={onCopy}
+                                searchTerm={searchTerm}
                             />
                         );
                     })}
