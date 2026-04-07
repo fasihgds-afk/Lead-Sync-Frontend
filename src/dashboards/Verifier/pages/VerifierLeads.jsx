@@ -4,6 +4,7 @@ import LeadCard from '../components/LeadCard';
 import ConfirmModal from '../components/ConfirmModal';
 import { Toast, VALID_STATUSES } from '../components/VerifierUI';
 
+
 // ── Cookie helpers ──────────────────────────────────────────────────────────
 const getCookie = (name) => {
     const parts = `; ${document.cookie}`.split(`; ${name}=`);
