@@ -123,7 +123,7 @@ export default function PendingRequests() {
                 <FiUsers className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-emerald-500">
+                <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)] whitespace-nowrap leading-tight">
                   Pending Requests
                 </h1>
 
@@ -258,14 +258,14 @@ export default function PendingRequests() {
                         <select
                           value={selectedRoles[req._id] || ''}
                           onChange={(e) => setSelectedRoles({ ...selectedRoles, [req._id]: e.target.value })}
-                          className="w-40 bg-transparent border border-black/10 rounded-xl px-3 py-2 text-[11px] font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all cursor-pointer"
+                          className="w-40 bg-[var(--bg-secondary)] border border-gray-500/30 rounded-xl px-3 py-2 text-[11px] font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer"
                         >
-                          <option value="" disabled>Select Role</option>
-                          <option value="Data Minors">Data Minors</option>
-                          <option value="Lead Qualifiers">Lead Qualifiers</option>
-                          <option value="Verifier">Verifier</option>
-                          <option value="Manager">Manager</option>
-                          <option value="Admin">Admin</option>
+                          <option className="bg-[var(--bg-secondary)]" value="" disabled>Select Role</option>
+                          <option className="bg-[var(--bg-secondary)]" value="Data Minors">Data Minors</option>
+                          <option className="bg-[var(--bg-secondary)]" value="Lead Qualifiers">Lead Qualifiers</option>
+                          <option className="bg-[var(--bg-secondary)]" value="Verifier">Verifier</option>
+                          <option className="bg-[var(--bg-secondary)]" value="Manager">Manager</option>
+                          <option className="bg-[var(--bg-secondary)]" value="Admin">Admin</option>
                         </select>
                       </div>
                     </td>
