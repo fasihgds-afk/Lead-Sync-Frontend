@@ -123,7 +123,7 @@ export default function PendingRequests() {
                 <FiUsers className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-emerald-500">
                   Pending Requests
                 </h1>
 
@@ -173,8 +173,8 @@ export default function PendingRequests() {
       {/* Content */}
       <div className="bg-[var(--bg-secondary)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
         {/* Table Header Stats */}
-        <div className="px-6 py-3 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-gray-900/50 dark:to-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+        <div className="px-6 py-3 bg-black/5 dark:bg-white/5 border-b border-gray-200/50 dark:border-gray-700">
+          <div className="flex items-center justify-between text-[10px] font-semibold opacity-70">
             <span>Total: {requests.length} requests awaiting approval</span>
             <span>Last 7 days: {requests.filter(r => new Date(r.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</span>
           </div>
@@ -215,7 +215,7 @@ export default function PendingRequests() {
                           </div>
                           <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-800"></div>
                         </div>
-                        <div className="text-sm font-bold text-gray-900 dark:text-white">{req.name}</div>
+                        <div className="text-sm font-bold">{req.name}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -241,7 +241,7 @@ export default function PendingRequests() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <FiCalendar className="w-3.5 h-3.5 text-gray-400" />
-                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                          <span className="text-xs font-medium opacity-80 whitespace-nowrap">
                             {new Date(req.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
                         </div>
@@ -258,7 +258,7 @@ export default function PendingRequests() {
                         <select
                           value={selectedRoles[req._id] || ''}
                           onChange={(e) => setSelectedRoles({ ...selectedRoles, [req._id]: e.target.value })}
-                          className="w-40 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-[11px] font-medium text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all cursor-pointer"
+                          className="w-40 bg-transparent border border-gray-200/50 dark:border-gray-700 rounded-xl px-3 py-2 text-[11px] font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all cursor-pointer"
                         >
                           <option value="" disabled>Select Role</option>
                           <option value="Data Minors">Data Minors</option>
