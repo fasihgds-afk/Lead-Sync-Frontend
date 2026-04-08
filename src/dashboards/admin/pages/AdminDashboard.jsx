@@ -2,6 +2,15 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../../api/admin.api';
 import SharedLoader from '../../../components/SharedLoader';
+import {
+    FiFolder,
+    FiEdit,
+    FiCheckCircle,
+    FiClock,
+    FiTarget,
+    FiDollarSign,
+} from "react-icons/fi";
+
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
@@ -124,6 +133,17 @@ export default function AdminDashboard() {
     if (loading && !data) return <SharedLoader />;
 
     const { totals, conversions, leaderboards } = data;
+
+    const safeTotals = {
+        totalLeads: totals.totalLeads || 0,
+        dmCount: totals.dmCount || 0,
+        lqCount: totals.lqCount || 0,
+        verifierCount: totals.verifierCount || 0,
+        managerCount: totals.managerCount || 0,
+        qualifiedCount: totals.qualifiedCount || 0,
+        unpaidCount: totals.unpaidCount || 0,
+        paidCount: totals.paidCount || 0,
+    };
 
     return (
         <div className="p-4 md:p-6 space-y-5 max-w-[1200px] mx-auto animate-fadeIn min-h-screen">
@@ -283,32 +303,132 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Intelligence Summary */}
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                        <span className="text-lg">📊</span>
-                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Overall Summary</h3>
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-5">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center">
+                                <span className="text-base">📊</span>
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-[var(--text-primary)]">Overall Summary</h3>
+
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-3">
                         {[
-                            { icon: '📁', label: 'Total Leads', value: totals.totalLeads, color: 'text-blue-600' },
-                            { icon: '📝', label: 'Data Mining', value: totals.dmCount, color: 'text-indigo-600' },
-                            { icon: '✅', label: 'Verified Leads', value: totals.lqCount, color: 'text-purple-600' },
-                            { icon: '⏳', label: 'Manager Queue', value: totals.managerCount, color: 'text-amber-600' },
-                            { icon: '🎯', label: 'Qualified Leads', value: totals.qualifiedCount, color: 'text-emerald-600' },
-                            { icon: '⏰', label: 'Pending Payment', value: totals.unpaidCount, color: 'text-rose-600' },
-                            { icon: '💰', label: 'Completed Sales', value: totals.paidCount, color: 'text-emerald-700' }
+                            {
+                                icon: <FiFolder />,
+                                label: "Total Leads",
+                                value: safeTotals.totalLeads,
+                                bgGradient: "from-blue-500/10 to-blue-600/5",
+                                iconBg: "bg-blue-500/15",
+                                iconColor: "text-blue-500",
+                                textColor: "text-blue-600 dark:text-blue-400"
+                            },
+                            {
+                                icon: <FiEdit />,
+                                label: "Data Mining",
+                                value: safeTotals.dmCount,
+                                bgGradient: "from-indigo-500/10 to-indigo-600/5",
+                                iconBg: "bg-indigo-500/15",
+                                iconColor: "text-indigo-500",
+                                textColor: "text-indigo-600 dark:text-indigo-400"
+                            },
+                            {
+                                icon: <FiTarget />,
+                                label: "Verifier Leads",
+                                value: safeTotals.verifierCount,
+                                bgGradient: "from-emerald-500/10 to-emerald-600/5",
+                                iconBg: "bg-emerald-500/15",
+                                iconColor: "text-emerald-500",
+                                textColor: "text-emerald-600 dark:text-emerald-400"
+                            },
+                            {
+                                icon: <FiCheckCircle />,
+                                label: "LQ Leads",
+                                value: safeTotals.lqCount,
+                                bgGradient: "from-purple-500/10 to-purple-600/5",
+                                iconBg: "bg-purple-500/15",
+                                iconColor: "text-purple-500",
+                                textColor: "text-purple-600 dark:text-purple-400"
+                            },
+                            {
+                                icon: <FiClock />,
+                                label: "Manager Leads",
+                                value: safeTotals.managerCount,
+                                bgGradient: "from-amber-500/10 to-amber-600/5",
+                                iconBg: "bg-amber-500/15",
+                                iconColor: "text-amber-500",
+                                textColor: "text-amber-600 dark:text-amber-400"
+                            },
+
+                            {
+                                icon: <FiClock />,
+                                label: "Unpaid Leads",
+                                value: safeTotals.unpaidCount,
+                                bgGradient: "from-rose-500/10 to-rose-600/5",
+                                iconBg: "bg-rose-500/15",
+                                iconColor: "text-rose-500",
+                                textColor: "text-rose-600 dark:text-rose-400"
+                            },
+                            {
+                                icon: <FiDollarSign />,
+                                label: "Paid Leads",
+                                value: safeTotals.paidCount,
+                                bgGradient: "from-teal-500/10 to-teal-600/5",
+                                iconBg: "bg-teal-500/15",
+                                iconColor: "text-teal-500",
+                                textColor: "text-teal-600 dark:text-teal-400"
+                            },
                         ].map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between py-1.5 border-b border-[var(--border-primary)]/10 last:border-0">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-base">{item.icon}</span>
-                                    <span className="text-xs text-[var(--text-secondary)]">{item.label}</span>
+                            <div
+                                key={idx}
+                                className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${item.bgGradient} p-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-md`}
+                            >
+                                {/* Subtle background pattern */}
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200">
+                                    <div className="absolute -top-1 -right-1 w-12 h-12 rounded-full bg-white/20 blur-xl"></div>
                                 </div>
-                                <span className={`text-sm font-semibold ${item.color}`}>{item.value}</span>
+
+                                <div className="relative flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className={`w-7 h-7 rounded-lg ${item.iconBg} flex items-center justify-center ${item.iconColor}`}>
+                                                <span className="text-sm">{item.icon}</span>
+                                            </div>
+                                            <span className="text-[11px] font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className={`text-xl font-bold ${item.textColor}`}>
+                                                {item.value?.toLocaleString() || 0}
+                                            </span>
+
+                                        </div>
+                                    </div>
+
+                                    {/* Decorative element */}
+                                    <div className={`absolute bottom-1 right-1 text-2xl opacity-5 group-hover:opacity-10 transition-opacity duration-200`}>
+                                        {item.icon}
+                                    </div>
+                                </div>
+
+                                {/* Progress bar (optional) */}
+                                <div className="relative mt-2 h-0.5 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                        className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${item.iconColor.replace('text', 'to')} opacity-30 group-hover:opacity-50 transition-opacity duration-200`}
+                                        style={{ width: `${(item.value / safeTotals.totalLeads) * 100}%` }}
+                                    ></div>
+                                </div>
                             </div>
                         ))}
                     </div>
+
+
                 </div>
             </div>
 
