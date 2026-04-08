@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../../../api/admin.api';
 import SharedLoader from '../../../components/SharedLoader';
+import {
+  FiUserCheck,
+  FiShield,
+  FiXCircle,
+  FiCheckCircle,
+  FiRefreshCw,
+  FiClock,
+  FiMail,
+  FiBriefcase,
+  FiCalendar,
+  FiAlertTriangle,
+  FiSend,
+  FiUsers
+} from 'react-icons/fi';
 
 export default function PendingRequests() {
   const [requests, setRequests] = useState([]);
@@ -9,6 +23,7 @@ export default function PendingRequests() {
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedRoles, setSelectedRoles] = useState({});
   const [rejectModal, setRejectModal] = useState({ isOpen: false, requestId: null, comment: '' });
+  const [confirmApprove, setConfirmApprove] = useState({ isOpen: false, requestId: null, role: null });
 
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -37,12 +52,22 @@ export default function PendingRequests() {
     }
   };
 
-  const handleApprove = async (requestId, role = 'User') => {
+  const openApproveConfirmation = (requestId, role) => {
+    if (!role) {
+      setError("Please select a role before approving");
+      return;
+    }
+    setConfirmApprove({ isOpen: true, requestId, role });
+  };
+
+  const handleApprove = async () => {
+    const { requestId, role } = confirmApprove;
     try {
       setActionLoading(requestId);
       await adminAPI.approveRequest(requestId, role);
       setRequests(prev => prev.filter(req => req._id !== requestId));
       setError(null);
+      setConfirmApprove({ isOpen: false, requestId: null, role: null });
       window.dispatchEvent(new CustomEvent('pendingRequestsUpdated', { detail: { change: -1 } }));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to approve request');
@@ -58,7 +83,7 @@ export default function PendingRequests() {
 
   const confirmRejection = async () => {
     const { requestId, comment } = rejectModal;
-    
+
     if (!comment || comment.trim() === "") {
       setError("Please provide a rejection comment");
       return;
@@ -84,133 +109,196 @@ export default function PendingRequests() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto animate-fadeIn min-h-screen">
+    <div className="p-4 md:p-6 space-y-5 max-w-[1400px] mx-auto animate-fadeIn min-h-screen">
+
       {/* Header */}
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-6 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-success)] opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
+      <div className="border bg-[var(--bg-secondary)] border-emerald-100 dark:border-gray-700 rounded-2xl p-6 shadow-xl shadow-emerald-500/5 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full blur-[100px] -mr-36 -mt-36" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full blur-[100px] -ml-36 -mb-36" />
 
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
-          <div className="flex flex-wrap items-center gap-8">
+          <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-[var(--accent-success)]/10 rounded-2xl text-[var(--accent-success)] shadow-inner">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl shadow-lg shadow-emerald-500/25">
+                <FiUsers className="w-6 h-6 text-white" />
               </div>
-              <div className="flex flex-col">
-                <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)] whitespace-nowrap leading-tight">
-                  Pending <span className="text-[var(--accent-success)]">Requests</span>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                  Pending Requests
                 </h1>
-                <p className="text-[10px] font-bold text-[var(--text-secondary)] opacity-40 italic tracking-tight hidden sm:block">
-                  Global authentication bridge and system access management
-                </p>
+
               </div>
             </div>
 
-            <div className="h-8 w-[1px] bg-[var(--border-primary)] opacity-20 hidden md:block" />
+            <div className="h-8 w-px bg-gradient-to-b from-emerald-200 to-transparent dark:from-gray-700 hidden md:block" />
 
-            {/* Minimalist Sync Block */}
-            <div className="flex items-center bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)]/40 rounded-full pl-1 pr-3 py-1 gap-3 hover:border-[var(--accent-success)]/40 transition-all group/sync-badge">
+            {/* Sync Status */}
+            <div className="flex items-center gap-3 bg-emerald-50 dark:bg-gray-900/50 border border-emerald-200 dark:border-gray-700 rounded-full px-3 py-1.5">
               <button
                 onClick={() => fetchPendingRequests(true)}
                 disabled={refreshing}
-                className="w-7 h-7 flex items-center justify-center bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-full hover:bg-[var(--accent-success)] hover:text-white hover:border-[var(--accent-success)] transition-all shadow-sm"
+                className="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-800 border border-emerald-200 dark:border-gray-600 rounded-full hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm disabled:opacity-50"
               >
-                <svg className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : 'group-hover/sync-badge:rotate-180 transition-transform duration-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+                <FiRefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
-              <div className="flex flex-col leading-none">
+              <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1 h-1 rounded-full bg-[var(--accent-success)] animate-pulse" />
-                  <span className="text-[7px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Synchronized</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Live Sync</span>
                 </div>
-                <span className="text-[9px] font-black text-[var(--text-primary)] tabular-nums mt-0.5">{lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                <span className="text-[10px] font-mono text-gray-600 dark:text-gray-300">
+                  {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
               </div>
             </div>
           </div>
+
+
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="mx-2 p-4 rounded-xl border animate-shake" style={{ backgroundColor: 'rgba(248, 113, 113, 0.1)', borderColor: 'rgba(248, 113, 113, 0.2)' }}>
+        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 animate-shake">
           <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span className="text-red-500 text-[10px] font-black uppercase tracking-widest">{error}</span>
+            <FiAlertTriangle className="w-5 h-5 text-red-500" />
+            <span className="text-xs font-medium text-red-700 dark:text-red-400">{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">
+              <FiXCircle className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
 
       {/* Content */}
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-sm overflow-hidden animate-fadeIn">
-        <div className="overflow-x-auto">
+      <div className="bg-[var(--bg-secondary)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+        {/* Table Header Stats */}
+        <div className="px-6 py-3 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 dark:from-gray-900/50 dark:to-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+            <span>Total: {requests.length} requests awaiting approval</span>
+            <span>Last 7 days: {requests.filter(r => new Date(r.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</span>
+          </div>
+        </div>
+
+        <div className="w-full overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-[var(--bg-tertiary)] border-b border-[var(--border-primary)]">
+            <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 bg-[var(--bg-secondary)]">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">User Details</th>
-                <th className="px-6 py-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Target Department</th>
-                <th className="px-6 py-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Date Logged</th>
-                <th className="px-6 py-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest text-right">Verification</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Department</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Requested</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role Assignment</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border-primary)]/30">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {requests.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-12 text-center text-[var(--text-tertiary)] font-bold text-xs uppercase tracking-widest opacity-50">
-                    No pending registration sequences detected
+                  <td colSpan="5" className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                        <FiUserCheck className="w-8 h-8 text-emerald-500" />
+                      </div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No pending requests</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">All user requests have been processed</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
-                requests.map(req => (
-                  <tr key={req._id} className="hover:bg-[var(--bg-tertiary)]/30 transition-colors group">
+                requests.map((req, idx) => (
+                  <tr key={req._id} className="group hover:bg-emerald-50/30 dark:hover:bg-gray-700/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--accent-success)]/10 border border-[var(--accent-success)]/20 flex items-center justify-center font-black text-[var(--accent-success)] text-sm group-hover:rotate-6 transition-transform">
-                          {req.name?.charAt(0).toUpperCase()}
+                        <div className="relative">
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-500/20 dark:to-teal-500/20 flex items-center justify-center font-bold text-emerald-600 dark:text-emerald-400 text-sm group-hover:scale-110 transition-transform`}>
+                            {req.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-800"></div>
                         </div>
-                        <div>
-                          <div className="text-[13px] font-black text-[var(--text-primary)] group-hover:text-[var(--accent-success)] transition-colors">{req.name}</div>
-                          <div className="text-[10px] font-bold text-[var(--text-tertiary)] opacity-60 uppercase tracking-tighter">{req.email}</div>
+                        <div className="text-sm font-bold text-gray-900 dark:text-white">{req.name}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <FiBriefcase className="w-3.5 h-3.5 text-emerald-500" />
+                        <span
+                          className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider"
+                          title={req.department || ''}
+                        >
+                          {req.department ? (
+                            {
+                              'Data Minors': 'DM',
+                              'Lead Qualifiers': 'LQ',
+                              'Verifier': 'VER',
+                              'Manager': 'MGR',
+                              'Admin': 'ADM'
+                            }[req.department] || req.department.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase()
+                          ) : 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <FiCalendar className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            {new Date(req.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FiClock className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-[10px] text-gray-400">
+                            {new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
-                        {req.department}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-[11px] font-bold text-[var(--text-tertiary)]">
-                      {new Date(req.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="relative">
                         <select
+                          value={selectedRoles[req._id] || ''}
                           onChange={(e) => setSelectedRoles({ ...selectedRoles, [req._id]: e.target.value })}
-                          className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-3 py-1.5 text-[10px] font-black text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-success)] outline-none transition-all uppercase tracking-widest"
+                          className="w-40 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-[11px] font-medium text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all cursor-pointer"
                         >
-                          <option value="">Role Assignment</option>
+                          <option value="" disabled>Select Role</option>
                           <option value="Data Minors">Data Minors</option>
                           <option value="Lead Qualifiers">Lead Qualifiers</option>
+                          <option value="Verifier">Verifier</option>
                           <option value="Manager">Manager</option>
                           <option value="Admin">Admin</option>
-                          <option value="Verifier">Verifier</option>
                         </select>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        {/* Approve Button with Confirmation */}
                         <button
-                          onClick={() => handleApprove(req._id, selectedRoles[req._id])}
+                          onClick={() => openApproveConfirmation(req._id, selectedRoles[req._id])}
                           disabled={actionLoading === req._id || !selectedRoles[req._id]}
-                          className="p-2 rounded-xl bg-[var(--accent-success)] text-white shadow-lg shadow-[var(--accent-success)]/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-30"
+                          className="group relative px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] font-bold uppercase tracking-wider shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          <div className="flex items-center gap-2">
+                            {actionLoading === req._id ? (
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <FiCheckCircle className="w-3.5 h-3.5" />
+                                <span>Approve</span>
+                              </>
+                            )}
+                          </div>
                         </button>
+
+                        {/* Reject Button with better visibility */}
                         <button
                           onClick={() => handleReject(req._id)}
                           disabled={actionLoading === req._id}
-                          className="p-2 rounded-xl bg-red-500 text-white shadow-lg shadow-red-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-30"
+                          className="group px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border-2 border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-[11px] font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white hover:border-red-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                          <div className="flex items-center gap-2">
+                            <FiXCircle className="w-3.5 h-3.5" />
+                            <span>Reject</span>
+                          </div>
                         </button>
                       </div>
                     </td>
@@ -222,53 +310,98 @@ export default function PendingRequests() {
         </div>
       </div>
 
-      {/* Reject Modal */}
-      {rejectModal.isOpen && (
+      {/* Approve Confirmation Modal */}
+      {confirmApprove.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-xl animate-fadeIn"
-            onClick={() => setRejectModal({ ...rejectModal, isOpen: false })}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
+            onClick={() => setConfirmApprove({ isOpen: false, requestId: null, role: null })}
           />
-          <div className="bg-[var(--bg-secondary)] border border-red-500/20 rounded-[32px] p-8 max-w-md w-full shadow-2xl relative z-10 animate-modalIn overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-            
+          <div className="bg-white dark:bg-gray-800 border border-emerald-200 dark:border-gray-700 rounded-2xl p-6 max-w-md w-full shadow-2xl relative z-10 animate-modalIn">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500 to-teal-500 opacity-10 rounded-full blur-3xl -mr-16 -mt-16" />
+
             <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-red-500/10 rounded-2xl text-red-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl shadow-lg">
+                <FiShield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-[var(--text-primary)]">Reject Access</h3>
-                <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">Security Protocol Verification</p>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white">Confirm Approval</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This action will grant system access</p>
               </div>
             </div>
 
-            <p className="text-xs font-bold text-[var(--text-secondary)] mb-4 px-1 italic">
-              Please specify the reason for access denial. This protocol will be logged in the system audit.
+            <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-4 mb-6">
+              <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                Role: <span className="font-bold">{confirmApprove.role}</span>
+              </p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                User will receive access permissions for {confirmApprove.role} department
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmApprove({ isOpen: false, requestId: null, role: null })}
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApprove}
+                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                Confirm Approval
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {rejectModal.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn"
+            onClick={() => setRejectModal({ ...rejectModal, isOpen: false })}
+          />
+          <div className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl relative z-10 animate-modalIn">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-10 rounded-full blur-3xl -mr-16 -mt-16" />
+
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 bg-red-500/10 rounded-2xl">
+                <FiAlertTriangle className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white">Reject Request</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              Please provide a reason for rejecting this access request:
             </p>
 
             <textarea
               value={rejectModal.comment}
               onChange={(e) => setRejectModal({ ...rejectModal, comment: e.target.value })}
-              placeholder="System access denial reason..."
-              className="w-full h-32 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-2xl p-4 text-[13px] font-medium text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 focus:ring-2 focus:ring-red-500/50 outline-none transition-all resize-none mb-6"
+              placeholder="Enter rejection reason..."
+              className="w-full h-28 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all resize-none mb-6"
               autoFocus
             />
 
             <div className="flex gap-3">
               <button
                 onClick={() => setRejectModal({ ...rejectModal, isOpen: false })}
-                className="flex-1 px-4 py-3 rounded-2xl border border-[var(--border-primary)] text-[11px] font-black text-[var(--text-tertiary)] uppercase tracking-widest hover:bg-[var(--bg-tertiary)] transition-all"
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmRejection}
                 disabled={!rejectModal.comment.trim()}
-                className="flex-1 px-4 py-3 rounded-2xl bg-red-500 text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-red-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale disabled:hover:scale-100"
+                className="flex-1 px-4 py-3 rounded-xl bg-red-500 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-500/30 hover:bg-red-600 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                Confirm Denial
+                Confirm Rejection
               </button>
             </div>
           </div>
@@ -277,9 +410,9 @@ export default function PendingRequests() {
 
       <style dangerouslySetInnerHTML={{
         __html: `
-        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
-        .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-        .animate-modalIn { animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-shake { animation: shake 0.4s ease-out both; }
+        .animate-modalIn { animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -290,12 +423,12 @@ export default function PendingRequests() {
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes shake {
-          10%, 90% { transform: translate3d(-1px, 0, 0); }
-          20%, 80% { transform: translate3d(2px, 0, 0); }
-          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-          40%, 60% { transform: translate3d(4px, 0, 0); }
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
         }
-      `}} />
+        `
+      }} />
     </div>
   );
 }

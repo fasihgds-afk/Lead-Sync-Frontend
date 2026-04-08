@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                 id: 'mining',
                 title: 'Data Mining',
                 value: totals.dmCount,
-                subtitle: 'Raw Leads Collected',
+
                 trend: conversions.dm_to_lq,
                 path: 'combined-leads',
                 icon: (
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
                 id: 'qualification',
                 title: 'Verified Leads',
                 value: totals.lqCount,
-                subtitle: 'Qualified by Verifiers',
+
                 trend: conversions.lq_to_manager,
                 path: 'combined-leads',
                 icon: (
@@ -103,8 +103,8 @@ export default function AdminDashboard() {
                 id: 'qualified',
                 title: 'Qualified Leads',
                 value: totals.qualifiedCount,
-                subtitle: 'Ready for Managers',
-                trend: ((totals.qualifiedCount / totals.lqCount) * 100).toFixed(1),
+
+                trend: totals.lqCount > 0 ? ((totals.qualifiedCount / totals.lqCount) * 100).toFixed(1) : 0,
                 path: 'manager-leads',
                 icon: (
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
                 id: 'deals',
                 title: 'Paid Sales',
                 value: totals.paidCount,
-                subtitle: 'Completed Deals',
+
                 trend: conversions.manager_paid,
                 path: 'manager-leads',
                 icon: (
@@ -162,7 +162,6 @@ export default function AdminDashboard() {
                             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
                                 Admin Dashboard
                             </h1>
-                            <p className="text-xs text-[var(--text-secondary)] opacity-60">Real-time overview</p>
                         </div>
                     </div>
 
@@ -229,19 +228,20 @@ export default function AdminDashboard() {
                             <div className="p-1.5 bg-[var(--accent-primary)]/10 rounded-lg text-[var(--accent-primary)]">
                                 {card.icon}
                             </div>
-
                         </div>
 
                         <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">{card.title}</h3>
 
                         <div className="flex items-end justify-between gap-2">
-                            <span className="text-2xl font-black text-[var(--text-primary)] leading-none">{card.value}</span>
+                            <span className="text-2xl font-black text-[var(--text-primary)] leading-none">{card.value || 0}</span>
 
                         </div>
 
-                        <p className="text-[10px] text-[var(--text-secondary)] opacity-50 mt-2 pt-2 border-t border-[var(--border-primary)]/10 truncate">
-                            {card.subtitle}
-                        </p>
+                        {card.subtitle && (
+                            <p className="text-[10px] text-[var(--text-secondary)] opacity-50 mt-2 pt-2 border-t border-[var(--border-primary)]/10 truncate">
+                                {card.subtitle}
+                            </p>
+                        )}
                     </div>
                 ))}
             </div>
@@ -432,8 +432,7 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* Leaderboards - 3 columns */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {/* Data Minors */}
                 <LeaderboardCard
                     title="Top Data Minors"
@@ -451,8 +450,7 @@ export default function AdminDashboard() {
                     color="purple"
                     data={leaderboards.leadQualifiers}
                     valueKey="leadsUpdated"
-                    valueLabel="Verified"
-                />
+                    valueLabel="Verified" />
 
                 {/* Managers */}
                 <LeaderboardCard
@@ -463,11 +461,13 @@ export default function AdminDashboard() {
                     valueKey="leadsInManager"
                     valueLabel="Leads"
                     renderExtra={(user) => (
-                        <div className="flex gap-1 mt-1">
-                            <span className="text-[9px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                        <div className="flex gap-1.5 mt-1.5">
+                            <span className="text-[9px] font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
                                 {user.paidCount} Paid
                             </span>
-                            <span className="text-[9px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                            <span className="text-[9px] font-medium text-amber-700 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-amber-500"></span>
                                 {user.unpaidCount} Pending
                             </span>
                         </div>
@@ -488,69 +488,186 @@ export default function AdminDashboard() {
 }
 
 // Simplified Leaderboard Component
+// Enhanced Leaderboard Component
 function LeaderboardCard({ title, icon, color, data, valueKey, valueLabel, renderExtra }) {
-    // Explicit color mapping to ensure Tailwind picks up the classes
+    // Extended color mapping with modern gradients
     const colorMap = {
         blue: {
-            bg: 'bg-blue-50',
-            text: 'text-blue-700',
-            avatar: 'bg-blue-100'
+            text: 'text-blue-700 dark:text-blue-400',
+            avatar: 'bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-500/20 dark:to-blue-600/20',
+            border: 'border-blue-200 dark:border-blue-500/20',
+            medal: ['from-amber-400 to-yellow-500', 'from-gray-300 to-gray-400', 'from-amber-600 to-amber-700'],
+            shadow: 'shadow-blue-500/5',
+            progress: 'bg-blue-500'
         },
         purple: {
-            bg: 'bg-purple-50',
-            text: 'text-purple-700',
-            avatar: 'bg-purple-100'
+            text: 'text-purple-700 dark:text-purple-400',
+            avatar: 'bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-500/20 dark:to-purple-600/20',
+            border: 'border-purple-200 dark:border-purple-500/20',
+            medal: ['from-amber-400 to-yellow-500', 'from-gray-300 to-gray-400', 'from-amber-600 to-amber-700'],
+            shadow: 'shadow-purple-500/5',
+            progress: 'bg-purple-500'
         },
         amber: {
-            bg: 'bg-amber-50',
-            text: 'text-amber-700',
-            avatar: 'bg-amber-100'
+            text: 'text-amber-700 dark:text-amber-400',
+            avatar: 'bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-500/20 dark:to-amber-600/20',
+            border: 'border-amber-200 dark:border-amber-500/20',
+            medal: ['from-amber-400 to-yellow-500', 'from-gray-300 to-gray-400', 'from-amber-600 to-amber-700'],
+            shadow: 'shadow-amber-500/5',
+            progress: 'bg-amber-500'
         }
     };
 
     const colors = colorMap[color] || colorMap.blue;
+    const total = data.reduce((sum, user) => sum + (user[valueKey] || 0), 0);
+
+    // Medal icons instead of plain numbers
+    const getMedalIcon = (idx) => {
+        if (idx === 0) return '🥇';
+        if (idx === 1) return '🥈';
+        if (idx === 2) return '🥉';
+        return null;
+    };
 
     return (
-        <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl overflow-hidden shadow-sm">
-            <div className="p-3 border-b border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30">
+        <div className={`bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 ${colors.shadow}`}>
+            {/* Header with gradient accent */}
+            <div className={`relative p-4 border-b ${colors.border} bg-gradient-to-r ${colors.bg} from-transparent to-transparent`}>
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-lg">{icon}</span>
-                        <h3 className="text-xs font-semibold text-[var(--text-primary)]">{title}</h3>
+                    <div className="flex items-center gap-2.5">
+                        <div className={`w-9 h-9 rounded-xl ${colors.avatar} flex items-center justify-center text-lg shadow-sm`}>
+                            {icon}
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-[var(--text-primary)]">{title}</h3>
+                            <p className="text-[10px] text-[var(--text-secondary)] opacity-60">Performance Ranking</p>
+                        </div>
                     </div>
-                    <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[var(--text-secondary)]">
-                        {data.length} Active
-                    </span>
+                    <div className="text-right">
+                        <div className={`text-lg font-black ${colors.text} tabular-nums`}>{data.length}</div>
+                        <div className="text-[8px] font-medium text-[var(--text-secondary)] uppercase tracking-wider">Active Members</div>
+                    </div>
                 </div>
             </div>
 
-            <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
-                {data.map((user, idx) => (
-                    <div key={user.userId} className="p-3 hover:bg-[var(--bg-tertiary)]/20 border-b border-[var(--border-primary)]/10 last:border-0 transition-colors">
-                        <div className="flex items-center gap-3">
-                            <span className={`w-5 h-5 flex items-center justify-center text-[9px] font-bold rounded ${idx < 3 ? `${colors.bg} ${colors.text}` : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
-                                }`}>
-                                {idx + 1}
-                            </span>
-
-                            <div className={`w-7 h-7 rounded-lg ${colors.avatar} flex items-center justify-center ${colors.text} font-bold text-xs`}>
-                                {user.name?.[0] || 'U'}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-[var(--text-primary)] truncate">{user.name}</p>
-                                <p className="text-[9px] text-[var(--text-secondary)] truncate opacity-60">{user.email}</p>
-                                {renderExtra && renderExtra(user)}
-                            </div>
-
-                            <div className="text-right border-l border-[var(--border-primary)]/10 pl-3 ml-1">
-                                <span className="text-sm font-black text-[var(--text-primary)] tabular-nums">{user[valueKey]}</span>
-                                <p className="text-[8px] font-black text-[var(--text-secondary)] uppercase tracking-tighter opacity-50">{valueLabel}</p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+            {/* Stats Summary Bar */}
+            <div className="px-4 py-2 bg-[var(--bg-tertiary)]/30 border-b border-[var(--border-primary)]/10">
+                <div className="flex items-center justify-between text-[9px]">
+                    <span className="text-[var(--text-secondary)]">Total {valueLabel}</span>
+                    <span className={`font-bold ${colors.text}`}>{total.toLocaleString()}</span>
+                </div>
+                <div className="mt-1 h-1 w-full bg-[var(--border-primary)]/20 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${colors.progress}`} style={{ width: '100%' }}></div>
+                </div>
             </div>
+
+            {/* Leaderboard List */}
+            <div className="max-h-[360px] overflow-y-auto custom-scrollbar">
+                {data.length === 0 ? (
+                    <div className="py-12 text-center">
+                        <div className="text-3xl opacity-20 mb-2">🏆</div>
+                        <p className="text-xs text-[var(--text-secondary)] opacity-50">No data available</p>
+                    </div>
+                ) : (
+                    data.map((user, idx) => {
+                        const percentage = total > 0 ? ((user[valueKey] || 0) / total) * 100 : 0;
+                        const medalIcon = getMedalIcon(idx);
+
+                        return (
+                            <div
+                                key={user.userId}
+                                className={`group relative p-3 hover:bg-[var(--bg-tertiary)]/30 border-b border-[var(--border-primary)]/10 last:border-0 transition-all duration-200 ${idx < 3 ? 'bg-gradient-to-r from-transparent via-transparent to-transparent' : ''
+                                    }`}
+                            >
+                                {/* Animated progress bar on hover */}
+                                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:from-current group-hover:to-current opacity-0 group-hover:opacity-20 transition-all duration-300"></div>
+
+                                <div className="flex items-center gap-3 relative">
+                                    {/* Rank with medal or number */}
+                                    <div className="relative w-8">
+                                        {medalIcon ? (
+                                            <div className="text-xl transform group-hover:scale-110 transition-transform duration-200">
+                                                {medalIcon}
+                                            </div>
+                                        ) : (
+                                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${idx < 3 ? `${colors.bg} ${colors.text}` : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
+                                                } group-hover:scale-105 transition-transform duration-200`}>
+                                                {idx + 1}
+                                            </div>
+                                        )}
+
+                                        {/* Rank badge line for top 3 */}
+                                        {idx < 3 && (
+                                            <div className={`absolute -right-1 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full ${colors.progress} opacity-40`}></div>
+                                        )}
+                                    </div>
+
+                                    {/* Avatar with online indicator */}
+                                    <div className="relative">
+                                        <div className={`w-8 h-8 rounded-xl ${colors.avatar} flex items-center justify-center ${colors.text} font-bold text-sm shadow-sm group-hover:scale-105 transition-transform duration-200`}>
+                                            {user.name?.[0]?.toUpperCase() || 'U'}
+                                        </div>
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-[var(--bg-secondary)]"></div>
+                                    </div>
+
+                                    {/* User Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                                                {user.name}
+                                            </p>
+                                            {idx === 0 && (
+                                                <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400/20 to-yellow-500/20 text-amber-700 dark:text-amber-400">
+                                                    TOP
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-[9px] text-[var(--text-secondary)] truncate opacity-60">
+                                            {user.email?.split('@')[0]}@{user.email?.split('@')[1]?.substring(0, 2)}...
+                                        </p>
+                                        {renderExtra && renderExtra(user)}
+                                    </div>
+
+                                    {/* Score with visual bar */}
+                                    <div className="text-right">
+                                        <div className="flex items-baseline gap-1">
+                                            <span className={`text-base font-black ${colors.text} tabular-nums`}>
+                                                {user[valueKey]?.toLocaleString() || 0}
+                                            </span>
+                                            <span className="text-[8px] font-medium text-[var(--text-secondary)] opacity-50">
+                                                {valueLabel}
+                                            </span>
+                                        </div>
+                                        <div className="mt-1 w-12 h-0.5 bg-[var(--border-primary)]/20 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full ${colors.progress} transition-all duration-500`}
+                                                style={{ width: `${percentage}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Contribution hint on hover */}
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                                    <div className="text-[8px] font-medium px-1.5 py-0.5 rounded bg-[var(--bg-secondary)] shadow-sm border border-[var(--border-primary)]/20">
+                                        {percentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+            </div>
+
+            {/* Footer with view more */}
+            {data.length > 5 && (
+                <div className="p-2 border-t border-[var(--border-primary)]/10 bg-[var(--bg-tertiary)]/20">
+                    <button className="w-full text-center text-[9px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-1 flex items-center justify-center gap-1 group">
+                        <span>View All Members</span>
+                        <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
