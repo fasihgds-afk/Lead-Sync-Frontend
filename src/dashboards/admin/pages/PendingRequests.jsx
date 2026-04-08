@@ -112,7 +112,7 @@ export default function PendingRequests() {
     <div className="p-4 md:p-6 space-y-5 max-w-[1400px] mx-auto animate-fadeIn min-h-screen">
 
       {/* Header */}
-      <div className="border bg-[var(--bg-secondary)] border-emerald-100 dark:border-gray-700 rounded-2xl p-6 shadow-xl shadow-emerald-500/5 relative overflow-hidden">
+      <div className="border bg-[var(--bg-secondary)] border-black/10 rounded-2xl p-6 shadow-xl shadow-emerald-500/5 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-72 h-72 rounded-full blur-[100px] -mr-36 -mt-36" />
         <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full blur-[100px] -ml-36 -mb-36" />
 
@@ -133,11 +133,11 @@ export default function PendingRequests() {
             <div className="h-8 w-px bg-gradient-to-b from-emerald-200 to-transparent dark:from-gray-700 hidden md:block" />
 
             {/* Sync Status */}
-            <div className="flex items-center gap-3 bg-emerald-50 dark:bg-gray-900/50 border border-emerald-200 dark:border-gray-700 rounded-full px-3 py-1.5">
+            <div className="flex items-center gap-3 bg-transparent border border-black/10 rounded-full px-3 py-1.5">
               <button
                 onClick={() => fetchPendingRequests(true)}
                 disabled={refreshing}
-                className="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-800 border border-emerald-200 dark:border-gray-600 rounded-full hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm disabled:opacity-50"
+                className="w-7 h-7 flex items-center justify-center bg-transparent border border-black/10 rounded-full hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm disabled:opacity-50"
               >
                 <FiRefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
@@ -171,9 +171,9 @@ export default function PendingRequests() {
       )}
 
       {/* Content */}
-      <div className="bg-[var(--bg-secondary)] dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl shadow-sm overflow-hidden">
         {/* Table Header Stats */}
-        <div className="px-6 py-3 bg-black/5 dark:bg-white/5 border-b border-gray-200/50 dark:border-gray-700">
+        <div className="px-6 py-3 bg-black/5 border-b border-black/10">
           <div className="flex items-center justify-between text-[10px] font-semibold opacity-70">
             <span>Total: {requests.length} requests awaiting approval</span>
             <span>Last 7 days: {requests.filter(r => new Date(r.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</span>
@@ -182,7 +182,7 @@ export default function PendingRequests() {
 
         <div className="w-full overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 bg-[var(--bg-secondary)]">
+            <thead className="bg-[var(--bg-secondary)] border-b border-black/10 opacity-80">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Department</th>
@@ -191,7 +191,7 @@ export default function PendingRequests() {
                 <th className="px-6 py-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-black/10">
               {requests.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-16 text-center">
@@ -222,7 +222,7 @@ export default function PendingRequests() {
                       <div className="flex items-center gap-2">
                         <FiBriefcase className="w-3.5 h-3.5 text-emerald-500" />
                         <span
-                          className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider"
+                          className="px-2.5 py-1 rounded-lg bg-black/5 border border-black/10 text-[10px] font-bold text-emerald-500 uppercase tracking-wider"
                           title={req.department || ''}
                         >
                           {req.department ? (
@@ -258,7 +258,7 @@ export default function PendingRequests() {
                         <select
                           value={selectedRoles[req._id] || ''}
                           onChange={(e) => setSelectedRoles({ ...selectedRoles, [req._id]: e.target.value })}
-                          className="w-40 bg-transparent border border-gray-200/50 dark:border-gray-700 rounded-xl px-3 py-2 text-[11px] font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all cursor-pointer"
+                          className="w-40 bg-transparent border border-black/10 rounded-xl px-3 py-2 text-[11px] font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all cursor-pointer"
                         >
                           <option value="" disabled>Select Role</option>
                           <option value="Data Minors">Data Minors</option>
@@ -293,7 +293,7 @@ export default function PendingRequests() {
                         <button
                           onClick={() => handleReject(req._id)}
                           disabled={actionLoading === req._id}
-                          className="group px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border-2 border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-[11px] font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white hover:border-red-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="group px-4 py-2 rounded-xl bg-transparent border-2 border-red-500/50 text-red-500 text-[11px] font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <div className="flex items-center gap-2">
                             <FiXCircle className="w-3.5 h-3.5" />
