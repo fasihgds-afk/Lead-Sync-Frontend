@@ -9,6 +9,12 @@ import {
     FiClock,
     FiTarget,
     FiDollarSign,
+    FiUsers,
+    FiAward,
+    FiTrendingUp,
+    FiActivity,
+    FiAlertCircle,
+    FiRefreshCw,
 } from "react-icons/fi";
 
 
@@ -86,8 +92,21 @@ export default function AdminDashboard() {
                 )
             },
             {
-                id: 'qualification',
+                id: 'deals',
                 title: 'Verified Leads',
+                value: totals.verifierCount,
+
+                trend: conversions.verifier_to_lq,
+                path: 'manager-leads',
+                icon: (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                    </svg>
+                )
+            },
+            {
+                id: 'qualification',
+                title: 'LQ Leads',
                 value: totals.lqCount,
 
                 trend: conversions.lq_to_manager,
@@ -111,19 +130,6 @@ export default function AdminDashboard() {
                         <path d="M9 12l2 2 4-4" />
                         <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         <path d="M12 8v8M8 12h8" />
-                    </svg>
-                )
-            },
-            {
-                id: 'deals',
-                title: 'Paid Sales',
-                value: totals.paidCount,
-
-                trend: conversions.manager_paid,
-                path: 'manager-leads',
-                icon: (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                     </svg>
                 )
             }
@@ -211,7 +217,14 @@ export default function AdminDashboard() {
                             )}
                         </div>
 
-
+                        <button
+                            onClick={fetchDashboardData}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl text-xs font-bold hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-sm disabled:opacity-50"
+                        >
+                            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+                            {loading && data ? 'Refreshing...' : 'Refresh'}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -306,8 +319,8 @@ export default function AdminDashboard() {
                 <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center">
-                                <span className="text-base">📊</span>
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-[var(--accent-primary)]/10 flex items-center justify-center text-[var(--accent-primary)]">
+                                <FiActivity className="w-5 h-5" />
                             </div>
                             <div>
                                 <h3 className="text-sm font-semibold text-[var(--text-primary)]">Overall Summary</h3>
@@ -356,7 +369,7 @@ export default function AdminDashboard() {
                                 textColor: "text-purple-600 dark:text-purple-400"
                             },
                             {
-                                icon: <FiClock />,
+                                icon: <FiUsers />,
                                 label: "Manager Leads",
                                 value: safeTotals.managerCount,
                                 bgGradient: "from-amber-500/10 to-amber-600/5",
@@ -366,7 +379,7 @@ export default function AdminDashboard() {
                             },
 
                             {
-                                icon: <FiClock />,
+                                icon: <FiAlertCircle />,
                                 label: "Unpaid Leads",
                                 value: safeTotals.unpaidCount,
                                 bgGradient: "from-rose-500/10 to-rose-600/5",
@@ -432,47 +445,60 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Conditional Leaderboards Grid */}
+            <div className={`grid grid-cols-1 ${[leaderboards.dataMinors, leaderboards.leadQualifiers, leaderboards.managers].filter(d => d?.length > 0).length === 1
+                ? 'md:grid-cols-1'
+                : [leaderboards.dataMinors, leaderboards.leadQualifiers, leaderboards.managers].filter(d => d?.length > 0).length === 2
+                    ? 'md:grid-cols-2'
+                    : 'md:grid-cols-3'
+                } gap-5`}>
                 {/* Data Minors */}
-                <LeaderboardCard
-                    title="Top Data Minors"
-                    icon="📄"
-                    color="blue"
-                    data={leaderboards.dataMinors}
-                    valueKey="leadsCreated"
-                    valueLabel="Leads"
-                />
+                {leaderboards.dataMinors?.length > 0 && (
+                    <LeaderboardCard
+                        title="Top Data Minors"
+                        icon={<FiEdit />}
+                        color="blue"
+                        data={leaderboards.dataMinors}
+                        valueKey="leadsCreated"
+                        valueLabel="Leads"
+                    />
+                )}
 
-                {/* Verifiers */}
-                <LeaderboardCard
-                    title="Top Verifiers"
-                    icon="✅"
-                    color="purple"
-                    data={leaderboards.leadQualifiers}
-                    valueKey="leadsUpdated"
-                    valueLabel="Verified" />
+                {/* Lead Qualifiers */}
+                {leaderboards.leadQualifiers?.length > 0 && (
+                    <LeaderboardCard
+                        title="Top Lead Qualifiers"
+                        icon={<FiTarget />}
+                        color="purple"
+                        data={leaderboards.leadQualifiers}
+                        valueKey="leadsUpdated"
+                        valueLabel="Qualified"
+                    />
+                )}
 
                 {/* Managers */}
-                <LeaderboardCard
-                    title="Manager Performance"
-                    icon="💰"
-                    color="amber"
-                    data={leaderboards.managers}
-                    valueKey="leadsInManager"
-                    valueLabel="Leads"
-                    renderExtra={(user) => (
-                        <div className="flex gap-1.5 mt-1.5">
-                            <span className="text-[9px] font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
-                                {user.paidCount} Paid
-                            </span>
-                            <span className="text-[9px] font-medium text-amber-700 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <span className="w-1 h-1 rounded-full bg-amber-500"></span>
-                                {user.unpaidCount} Pending
-                            </span>
-                        </div>
-                    )}
-                />
+                {leaderboards.managers?.length > 0 && (
+                    <LeaderboardCard
+                        title="Manager Performance"
+                        icon={<FiAward />}
+                        color="amber"
+                        data={leaderboards.managers}
+                        valueKey="leadsInManager"
+                        valueLabel="Leads"
+                        renderExtra={(user) => (
+                            <div className="flex gap-1.5 mt-1.5">
+                                <span className="text-[9px] font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
+                                    {user.paidCount} Paid
+                                </span>
+                                <span className="text-[9px] font-medium text-amber-700 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-amber-500"></span>
+                                    {user.unpaidCount} Pending
+                                </span>
+                            </div>
+                        )}
+                    />
+                )}
             </div>
 
             {/* Footer */}
@@ -540,7 +566,9 @@ function LeaderboardCard({ title, icon, color, data, valueKey, valueLabel, rende
                         </div>
                         <div>
                             <h3 className="text-sm font-bold text-[var(--text-primary)]">{title}</h3>
-                            <p className="text-[10px] text-[var(--text-secondary)] opacity-60">Performance Ranking</p>
+                            <p className="text-[10px] text-[var(--text-secondary)] opacity-60 flex items-center gap-1">
+                                <FiTrendingUp className="text-[var(--accent-primary)]" /> Performance Ranking
+                            </p>
                         </div>
                     </div>
                     <div className="text-right">
@@ -647,12 +675,7 @@ function LeaderboardCard({ title, icon, color, data, valueKey, valueLabel, rende
                                     </div>
                                 </div>
 
-                                {/* Contribution hint on hover */}
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                                    <div className="text-[8px] font-medium px-1.5 py-0.5 rounded bg-[var(--bg-secondary)] shadow-sm border border-[var(--border-primary)]/20">
-                                        {percentage.toFixed(1)}%
-                                    </div>
-                                </div>
+
                             </div>
                         );
                     })

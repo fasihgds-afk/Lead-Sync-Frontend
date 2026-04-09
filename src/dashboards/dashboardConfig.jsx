@@ -70,6 +70,7 @@ const AdminCombinedLeads = lazy(() => import("../dashboards/admin/pages/Combined
 const AdminPendingRequests = lazy(() => import("../dashboards/admin/pages/PendingRequests"));
 const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersManagement"));
 const AdminRejectedLeads = lazy(() => import("../dashboards/admin/pages/rejectedleads"));
+const AdminPerformance = lazy(() => import("../dashboards/admin/pages/PerformanceDetails"));
 const SuperAdminPortal = lazy(() => import("../dashboards/admin/pages/SuperAdminPortal"));
 
 // Centralized Configuration
@@ -93,6 +94,7 @@ export const dashboardConfig = [
       { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
 
       { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false },
+      { name: 'Performance', path: 'performance', component: AdminPerformance, icon: <AnalyticsIcon />, showInSidebar: true },
     ],
   },
   {
