@@ -23,6 +23,22 @@ const InputFiles = () => {
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
 
+    const handleReset = () => {
+        setFormData({
+            firstName: "",
+            location: "",
+            primaryPhone: "",
+            primaryEmail: "",
+            leadSource: "",
+            sourceUrl: "",
+            customSourceName: ""
+        });
+        setEmailFields([]);
+        setPhoneFields([]);
+        setDuplicateStatuses({});
+        setMessage({ type: "", text: "" });
+    };
+
     /* ----------------------------- Refs ------------------------------ */
     const formValuesRef = useRef({
         primaryPhone: "",
@@ -317,15 +333,28 @@ const InputFiles = () => {
                             {message.type === 'success' ? '✅' : '⚠️'} {message.text}
                         </div>
                     )}
-                    <div className="flex items-center gap-5 mb-8">
-                        <div className="p-3 rounded-[1rem] bg-gradient-to-br from-[#00BE9B] to-[#00a082] text-white shadow-xl shadow-[#00BE9B]/20">
-                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                        <div className="flex items-center gap-5">
+                            <div className="p-3 rounded-[1.2rem] bg-gradient-to-br from-[#00BE9B] to-[#00a082] text-white shadow-xl shadow-[#00BE9B]/20 transition-transform hover:scale-105 duration-300">
+                                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Leads Data Input Form</h2>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleReset}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-[1rem] text-[10px] uppercase tracking-widest font-black hover:bg-[#00BE9B] hover:text-white transition-all shadow-sm group active:scale-95"
+                        >
+                            <svg className="w-4 h-4 group-active:animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
                             </svg>
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Leads Data Input Form</h2>
-                        </div>
+                            Refresh Form
+                        </button>
                     </div>
                     <div className="grid grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-6 mb-10">
                         {baseFields.map((field, idx) => (
