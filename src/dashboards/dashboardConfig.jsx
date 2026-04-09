@@ -65,7 +65,7 @@ const ManagerRejectedLeads = lazy(() => import("../dashboards/manager/pages/Mana
 
 // Admin Pages
 const AdminDashboard = lazy(() => import("../dashboards/admin/pages/AdminDashboard"));
-const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLeads"));
+// const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLeads"));
 const AdminCombinedLeads = lazy(() => import("../dashboards/admin/pages/CombinedLeads"));
 const AdminPendingRequests = lazy(() => import("../dashboards/admin/pages/PendingRequests"));
 const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersManagement"));
@@ -86,7 +86,7 @@ export const dashboardConfig = [
       { name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
 
 
-      { name: 'Managers Leads', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
+      // { name: 'Managers Leads', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
       { name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
 
       { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true },
