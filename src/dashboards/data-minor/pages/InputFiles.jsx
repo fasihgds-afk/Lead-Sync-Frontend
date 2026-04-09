@@ -23,6 +23,7 @@ const InputFiles = () => {
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
 
+
     const handleReset = () => {
         setFormData({
             firstName: "",
