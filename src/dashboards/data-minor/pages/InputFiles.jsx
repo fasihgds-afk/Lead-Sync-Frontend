@@ -275,6 +275,11 @@ const InputFiles = () => {
             return;
         }
 
+        if (formData.leadSource === 'Other' && (formData.customSourceName.toLowerCase().includes('http') || formData.customSourceName.toLowerCase().includes('www.'))) {
+            setMessage({ type: "error", text: "Custom Source Name cannot be a URL. Please provide only the name (e.g., TikTok)." });
+            return;
+        }
+
         setSubmitting(true);
         try {
             const response = await dataMinerService.submitLead(leadData);
@@ -692,10 +697,11 @@ const InputFiles = () => {
                                         }}
                                     >
                                         <option value="" className="bg-slate-900 text-white">Choose a source...</option>
-                                        <option value="Capella Portal" className="bg-slate-900 text-white">Capella Portal</option>
+                                        <option value="Capella" className="bg-slate-900 text-white">Capella</option>
+                                        <option value="Walden" className="bg-slate-900 text-white">Walden</option>
+                                        <option value="WGU" className="bg-slate-900 text-white">WGU</option>
+                                        <option value="LinkedIn" className="bg-slate-900 text-white">LinkedIn</option>
                                         <option value="Facebook" className="bg-slate-900 text-white">Facebook</option>
-                                        <option value="Instagram" className="bg-slate-900 text-white">Instagram</option>
-                                        <option value="YouTube" className="bg-slate-900 text-white">YouTube</option>
                                         <option value="Other" className="bg-slate-900 text-white">Other Source</option>
                                     </select>
                                     <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
@@ -707,7 +713,7 @@ const InputFiles = () => {
                                 </div>
                             </div>
 
-                            {formData.leadSource && (formData.leadSource === 'Facebook' || formData.leadSource === 'Instagram' || formData.leadSource === 'YouTube' || formData.leadSource === 'Capella Portal') && (
+                            {formData.leadSource && formData.leadSource !== 'Other' && (
                                 <div className="group/field space-y-2 animate-in slide-in-from-left-5 duration-500">
                                     <label className="text-[10px] font-black uppercase tracking-[0.25em] ml-1 block" style={{ color: 'var(--text-tertiary)' }}>
                                         {formData.leadSource} Profile URL
@@ -718,7 +724,7 @@ const InputFiles = () => {
                                             value={formData.sourceUrl}
                                             onChange={(e) => setFormData(prev => ({ ...prev, sourceUrl: e.target.value }))}
                                             className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5"
-                                            placeholder={`https://www.${formData.leadSource.toLowerCase()}.com/username`}
+                                            placeholder={`https://www.${formData.leadSource.toLowerCase()}${formData.leadSource === 'WGU' || formData.leadSource === 'Capella' || formData.leadSource === 'Walden' ? '.edu' : '.com'}/username`}
                                             style={{
                                                 borderColor: 'var(--border-primary)',
                                                 color: 'var(--text-primary)',
@@ -741,14 +747,19 @@ const InputFiles = () => {
                                                 type="text"
                                                 value={formData.customSourceName}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, customSourceName: e.target.value }))}
-                                                className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5"
-                                                placeholder="e.g. LinkedIn, TikTok, etc."
+                                                className={`w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5 ${(formData.customSourceName.toLowerCase().includes('http') || formData.customSourceName.toLowerCase().includes('www.')) ? 'border-rose-500/50' : 'var(--border-primary)'}`}
+                                                placeholder="e.g. TikTok, Twitter, etc."
                                                 style={{
-                                                    borderColor: 'var(--border-primary)',
+                                                    borderColor: (formData.customSourceName.toLowerCase().includes('http') || formData.customSourceName.toLowerCase().includes('www.')) ? '#f43f5e' : 'var(--border-primary)',
                                                     color: 'var(--text-primary)',
                                                     backgroundColor: 'var(--bg-primary)'
                                                 }}
                                             />
+                                            {(formData.customSourceName.toLowerCase().includes('http') || formData.customSourceName.toLowerCase().includes('www.')) && (
+                                                <div className="absolute -bottom-6 left-1 text-[10px] font-black text-rose-500 uppercase tracking-widest animate-in fade-in slide-in-from-top-1 duration-300">
+                                                    ⚠️ Don't paste links here. Only add source name.
+                                                </div>
+                                            )}
                                             <div className="absolute bottom-0 left-6 right-6 h-0.5 bg-gradient-to-r from-amber-500 to-orange-600 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
                                         </div>
                                     </div>
@@ -780,8 +791,8 @@ const InputFiles = () => {
                     <div className="pt-8 flex flex-col sm:flex-row items-center gap-6">
                         <button
                             type="submit"
-                            disabled={submitting}
-                            className={`w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#00BE9B] to-[#00a082] hover:from-[#00a688] hover:to-[#008c72] text-white font-black rounded-xl shadow-2xl shadow-[#00BE9B]/30 transition-all duration-300 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 ${submitting ? 'opacity-70 cursor-not-allowed translate-y-0' : ''}`}
+                            disabled={submitting || (formData.leadSource === 'Other' && (formData.customSourceName.toLowerCase().includes('http') || formData.customSourceName.toLowerCase().includes('www.')))}
+                            className={`w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#00BE9B] to-[#00a082] hover:from-[#00a688] hover:to-[#008c72] text-white font-black rounded-xl shadow-2xl shadow-[#00BE9B]/30 transition-all duration-300 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 ${(submitting || (formData.leadSource === 'Other' && (formData.customSourceName.toLowerCase().includes('http') || formData.customSourceName.toLowerCase().includes('www.')))) ? 'opacity-50 cursor-not-allowed translate-y-0 grayscale' : ''}`}
                         >
                             {submitting ? (
                                 <>
