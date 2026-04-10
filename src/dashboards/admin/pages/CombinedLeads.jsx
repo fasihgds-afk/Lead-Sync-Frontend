@@ -2,6 +2,132 @@ import React, { useState, useEffect } from 'react';
 import { combinedAPI } from '../../../api/combined.api';
 import SharedLoader from '../../../components/SharedLoader';
 
+const LeadDetailsView = ({ lead, formatPKT }) => {
+  const [activeTab, setActiveTab] = useState('detail'); // 'detail', 'comments', 'sources'
+
+  const tabItems = [
+    { id: 'detail', label: 'Stage Detail', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', color: 'text-blue-500', activeBg: 'bg-blue-500/10' },
+    { id: 'comments', label: 'Comments', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', color: 'text-amber-500', activeBg: 'bg-amber-500/10' },
+    { id: 'sources', label: 'Source Link', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', color: 'text-emerald-500', activeBg: 'bg-emerald-500/10' }
+  ];
+
+  return (
+    <tr className="bg-[var(--bg-tertiary)]/30 border-b border-[var(--border-primary)]/50 border-x-8 border-x-amber-500/10">
+      <td colSpan="6" className="p-0">
+        <div className="p-5 animate-fadeIn">
+          {/* Tab Navigation */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-4 p-1 bg-[var(--bg-secondary)] border border-[var(--border-primary)]/50 rounded-xl w-fit">
+            {tabItems.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const itemCount = tab.id === 'comments' ? lead.comments?.length : (lead.sources?.length || 0);
+
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${isActive
+                    ? `${tab.color} ${tab.activeBg} shadow-sm ring-1 ring-current/20`
+                    : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'}`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={tab.icon} />
+                  </svg>
+                  {tab.label}
+                  {itemCount > 0 && (
+                    <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-bold ${isActive ? 'bg-white/20' : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'}`}>
+                      {itemCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tab Content */}
+          <div className="min-h-[200px] animate-fadeIn">
+            {activeTab === 'detail' && (
+              <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3 max-w-2xl">
+                {[
+                  { label: 'Data Minor', user: lead.createdBy?.name, date: lead.createdAt, color: 'text-blue-500' },
+                  { label: 'Verifier', user: lead.lqUpdatedBy?.name, date: lead.lqUpdatedAt, color: 'text-emerald-500' },
+                  { label: 'Manager', user: lead.assignedTo?.name, date: lead.assignedAt, color: 'text-purple-500' },
+                  { label: 'Status', user: lead.status || 'UNPAID', date: lead.submittedDate ? `${lead.submittedDate} ${lead.submittedTime}` : null, color: 'text-rose-500' }
+                ].map((item, i) => (
+                  <div key={i} className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm space-y-2 relative overflow-hidden">
+                    <span className={`text-[8px] font-black uppercase tracking-widest ${item.color} opacity-80 flex items-center gap-1.5`}>
+                      <div className="w-1 h-1 rounded-full bg-current" />
+                      {item.label}
+                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[13px] font-black text-[var(--text-primary)] leading-none truncate">{item.user || 'PENDING'}</span>
+                      {item.date ? (
+                        <div className="flex flex-col gap-0.5 pt-1.5 border-t border-[var(--border-primary)]/40">
+                          <span className="text-[9px] font-bold text-[var(--text-secondary)] opacity-70">📅 {formatPKT(item.date, 'date')}</span>
+                          <span className="text-[9px] font-bold text-[var(--text-secondary)] opacity-70">🕒 {formatPKT(item.date, 'time')} <span className="text-[7px] opacity-40">PKT</span></span>
+                        </div>
+                      ) : (
+                        <span className="text-[8px] font-black text-[var(--text-tertiary)] opacity-30 uppercase tracking-widest italic">---</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'comments' && (
+              <div className="max-w-3xl space-y-3 pr-2 custom-scrollbar max-h-[400px] overflow-y-auto">
+                {lead.comments?.length > 0 ? lead.comments.map((comment, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/10 px-1.5 py-0.5 rounded-lg">{comment.createdByRole}</span>
+                      <span className="text-[10px] font-bold text-[var(--text-tertiary)] opacity-70">{formatPKT(comment.createdAt, 'full')}</span>
+                    </div>
+                    <p className="text-[12px] font-medium text-[var(--text-primary)] italic leading-tight">"{comment.text}"</p>
+                  </div>
+                )) : (
+                  <div className="py-10 text-center text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-40">No comments found</div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'sources' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {lead.sources?.length > 0 ? lead.sources.map((source, i) => {
+                  const links = source.link ? source.link.split(/\/(?=https?:\/\/)/) : [];
+                  return (
+                    <div key={i} className="p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm space-y-3">
+                      <div className="flex items-center justify-between border-b border-[var(--border-primary)]/20 pb-2">
+                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          {source.name || "Source"}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {links.map((link, j) => (
+                          <a key={j} href={link} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 p-2.5 rounded-xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-primary)]/50 hover:border-blue-500/30 transition-all group/link">
+                            <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            </div>
+                            <div className="min-w-0 pr-2 pt-0.5">
+                              <div className="text-[11px] font-bold text-[var(--text-primary)] break-all leading-tight underline decoration-blue-500/30 underline-offset-2">{link}</div>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <div className="col-span-full py-10 text-center text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-40">No sources found</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+};
+
 const CombinedLeads = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -219,8 +345,8 @@ const CombinedLeads = () => {
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-[var(--bg-tertiary)] border-b border-[var(--border-primary)]">
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Lead Intelligence</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Contact Cluster</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Name / Location</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Contact </th>
                 <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Status</th>
                 <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Active Stage</th>
                 <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Assignment</th>
@@ -276,58 +402,7 @@ const CombinedLeads = () => {
                     </td>
                   </tr>
                   {expandedRows[lead._id] && (
-                    <tr className="bg-[var(--bg-tertiary)]/20 border-b border-[var(--border-primary)]/50 border-x-8 border-x-amber-500/10">
-                      <td colSpan="6" className="p-0">
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 animate-fadeIn">
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 border-b border-[var(--border-primary)]/30 pb-2"><span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Comments</span></div>
-                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                              {lead.comments?.length > 0 ? lead.comments.map((comment, i) => (
-                                <div key={i} className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] space-y-1 hover:border-amber-500/30 transition-colors">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-tighter">{comment.createdByRole}</span>
-                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] opacity-80 tabular-nums">{formatPKT(comment.createdAt, 'full')}</span>
-                                  </div>
-                                  <p className="text-[11px] font-medium text-[var(--text-primary)] leading-relaxed italic">"{comment.text}"</p>
-                                </div>
-                              )) : <div className="text-center py-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-40">No threads found</div>}
-                            </div>
-                          </div>
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 border-b border-[var(--border-primary)]/30 pb-2"><span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Detail</span></div>
-                            <div className="grid grid-cols-2 gap-4 mt-2">
-                              {[
-                                { label: 'Data Minor', user: lead.createdBy?.name, date: lead.createdAt, color: 'text-blue-500' },
-                                { label: 'Verifier', user: lead.lqUpdatedBy?.name, date: lead.lqUpdatedAt, color: 'text-emerald-500' },
-                                { label: 'Manager', user: lead.assignedTo?.name, date: lead.assignedAt, color: 'text-purple-500' },
-                                { label: 'Status', user: lead.status || 'UNPAID', date: lead.submittedDate ? `${lead.submittedDate} ${lead.submittedTime}` : null, color: 'text-rose-500' }
-                              ].map((item, i) => (
-                                <div key={i} className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm space-y-2">
-                                  <span className={`text-[9px] font-black uppercase tracking-[0.15em] ${item.color} opacity-80`}>{item.label}</span>
-                                  <div className="flex flex-col gap-1.5">
-                                    <span className="text-sm font-black text-[var(--text-primary)] leading-tight">{item.user || 'PENDING'}</span>
-                                    {item.date ? (
-                                      <div className="flex flex-col gap-0.5">
-                                        <div className="flex items-center gap-1.5 opacity-70">
-                                          <span className="text-[10px] grayscale">📅</span>
-                                          <span className="text-[10px] font-bold text-[var(--text-secondary)]">{formatPKT(item.date, 'date')}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 opacity-70">
-                                          <span className="text-[10px] grayscale">🕒</span>
-                                          <span className="text-[10px] font-bold text-[var(--text-secondary)] tracking-tight">{formatPKT(item.date, 'time')} <span className="text-[8px] opacity-50 font-black">PKT</span></span>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <span className="text-[9px] font-black text-[var(--text-tertiary)] opacity-30 uppercase tracking-widest italic">--- PENDING ---</span>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                    <LeadDetailsView lead={lead} formatPKT={formatPKT} />
                   )}
                 </React.Fragment>
               ))}
