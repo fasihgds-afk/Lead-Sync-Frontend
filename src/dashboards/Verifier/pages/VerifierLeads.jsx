@@ -32,6 +32,26 @@ const VerifierLeads = () => {
     const [notification, setNotification] = useState(null);
     const [showConfirm, setShowConfirm] = useState(false);
     const initialLoadDone = useRef(false);
+    const [showCustomPic, setShowCustomPic] = useState(false);
+    const [isRomanticUser, setIsRomanticUser] = useState(false);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                const user = JSON.parse(storedUser);
+                const targetId = '69d40e2899bd1248d4188144';
+                if (user.id === targetId || user._id === targetId) {
+                    setIsRomanticUser(true);
+                    setShowCustomPic(true);
+                    const timer = setTimeout(() => setShowCustomPic(false), 10000);
+                    return () => clearTimeout(timer);
+                }
+            } catch (error) {
+                console.error('Failed to parse user from localStorage:', error);
+            }
+        }
+    }, []);
 
     const notify = useCallback((message, type = 'success') => {
         setNotification({ message, type });
@@ -83,7 +103,7 @@ const VerifierLeads = () => {
                 return val.includes(lowSearch);
             });
             const linkedinMatch = lead.linkedinUrl?.toLowerCase().includes(lowSearch);
-            
+
             return companyMatch || personMatch || websiteMatch || emailMatch || linkedinMatch;
         });
     }, [leads, searchTerm]);
@@ -132,19 +152,32 @@ const VerifierLeads = () => {
             ...prev,
             [leadId]: { ...(prev[leadId] ?? {}), [email]: status },
         }));
-    }, []);
+
+        // Special Romantic Trigger
+        if (isRomanticUser) {
+            setShowCustomPic(true);
+            setTimeout(() => setShowCustomPic(false), 4000);
+        }
+    }, [isRomanticUser]);
 
     const markAllActive = useCallback((leadId) => {
         const lead = leads.find((l) => l._id === leadId);
         if (!lead) return;
+        let modified = false;
         (lead.emails ?? []).forEach((e) => {
             const norm = e.normalized || e.value;
             if (!norm) return;
             if ((e.status || 'PENDING').toUpperCase() === 'PENDING') {
                 changeEmailStatus(leadId, norm, 'ACTIVE');
+                modified = true;
             }
         });
-    }, [leads, changeEmailStatus]);
+
+        if (modified && isRomanticUser) {
+            setShowCustomPic(true);
+            setTimeout(() => setShowCustomPic(false), 4000);
+        }
+    }, [leads, changeEmailStatus, isRomanticUser]);
 
     const markAllLeadsActive = useCallback(() => {
         let count = 0;
@@ -182,10 +215,15 @@ const VerifierLeads = () => {
             setLeads(nextLeads);
             setPendingChanges(nextPending);
             notify(`Marked ${count} emails as ACTIVE across ${searchTerm ? 'filtered' : 'all'} leads!`);
+
+            if (isRomanticUser) {
+                setShowCustomPic(true);
+                setTimeout(() => setShowCustomPic(false), 4000);
+            }
         } else {
             notify('No pending emails found in the current view.', 'info');
         }
-    }, [leads, filteredLeads, pendingChanges, notify, searchTerm]);
+    }, [leads, filteredLeads, pendingChanges, notify, searchTerm, isRomanticUser]);
 
     const handleDone = useCallback(async (leadId) => {
         const lead = leads.find((l) => l._id === leadId);
@@ -245,136 +283,276 @@ const VerifierLeads = () => {
     };
 
     return (
-        <div className="p-4 sm:p-6 md:p-8 space-y-6 min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-            <div className="flex flex-col items-center justify-center text-center gap-6">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tight mb-2">Verifier Leads</h1>
-                    <p className="text-sm opacity-70" style={{ color: 'var(--text-secondary)' }}>
-                        Review and verify submitted leads
-                    </p>
-                    {leads.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-3 mt-4">
-                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-black shadow-lg"
-                                style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {filteredLeads.length.toLocaleString()} Leads {searchTerm && `Found (of ${leads.length})`}
-                            </div>
+        <div className={`p-4 sm:p-6 md:p-8 space-y-6 min-h-screen transition-all duration-1000 relative ${isRomanticUser ? 'romantic-theme' : ''}`}
+            style={{
+                background: isRomanticUser
+                    ? 'linear-gradient(135deg, #ffafbd 0%, #ffc3a0 100%)' // Bright Pink-Peach Romantic Gradient
+                    : 'var(--bg-primary)',
+                color: isRomanticUser ? '#700d33' : 'var(--text-primary)'
+            }}>
+
+            {isRomanticUser && (
+                <style>{`
+                    .romantic-theme {
+                        --bg-primary: #fff0f3 !important;
+                        --bg-secondary: rgba(255, 255, 255, 0.7) !important;
+                        --bg-tertiary: rgba(255, 230, 235, 0.9) !important;
+                        --text-primary: #700d33 !important;
+                        --text-secondary: #a3004a !important;
+                        --border-primary: #ffb3c1 !important;
+                        --accent-primary: #fb6f92 !important;
+                        --accent-secondary: #ff8fab !important;
+                    }
+                    .romantic-theme input {
+                        background: white !important;
+                        color: #700d33 !important;
+                    }
+                    .romantic-theme input::placeholder {
+                        color: #ff8fab !important;
+                    }
+                    .romantic-theme button:not(.bg-gradient-to-r) {
+                        background: white !important;
+                    }
+                    .romantic-theme .group {
+                        backdrop-filter: blur(8px);
+                    }
+                    @keyframes floatUp {
+                        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+                        10% { opacity: 0.7; }
+                        90% { opacity: 0.7; }
+                        100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+                    }
+                `}</style>
+            )}
+
+            {/* Romantic Background Decoration (Persistent) */}
+            {isRomanticUser && (
+                <div className="fixed inset-0 pointer-events-none opacity-20 select-none overflow-hidden z-0">
+                    <div className="flex flex-wrap gap-24 p-20 rotate-[-12deg] w-[150%] h-[150%] -translate-x-20 -translate-y-20">
+                        {[...Array(100)].map((_, i) => (
+                            <span key={i} className="text-6xl font-black text-pink-400/30">LOVE</span>
+                        ))}
+                    </div>
+                    {/* Floating Emojis (Downwards) */}
+                    {[...Array(30)].map((_, i) => (
+                        <div key={i} className="absolute text-5xl animate-pulse" style={{
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 5}s`,
+                            opacity: 0.6
+                        }}>
+                            {['😘', '💋', '❤️', '💖', '🌹', '💕'][Math.floor(Math.random() * 6)]}
                         </div>
+                    ))}
+                    {/* Balloons & Hearts (Upwards) */}
+                    {[...Array(25)].map((_, i) => (
+                        <div key={`up-${i}`} className="absolute" style={{
+                            bottom: '-100px',
+                            left: `${Math.random() * 100}%`,
+                            fontSize: `${Math.random() * 40 + 20}px`,
+                            animation: `floatUp ${Math.random() * 6 + 6}s linear infinite`,
+                            animationDelay: `${Math.random() * 10}s`,
+                            opacity: 0.7
+                        }}>
+                            {['🎈', '💘', '💝', '🏩', '🌹'][Math.floor(Math.random() * 5)]}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {showCustomPic && isRomanticUser && (
+                <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center pointer-events-none animate-fadeIn overflow-hidden bg-pink-100/40 backdrop-blur-[6px]">
+                    {/* Falling Romantic Elements */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {[...Array(40)].map((_, i) => (
+                            <div
+                                key={i}
+                                className="absolute"
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    fontSize: `${Math.random() * 30 + 20}px`,
+                                    animation: `fallRomantic ${Math.random() * 4 + 3}s linear infinite`,
+                                    animationDelay: `${Math.random() * 5}s`,
+                                    top: '-50px'
+                                }}
+                            >
+                                {['❤️', '💋', '💖', '😘'][Math.floor(Math.random() * 4)]}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="relative z-10 flex flex-col items-center gap-10 transform translate-y-[-20px]">
+                        <div className="relative group">
+                            <img
+                                src="/black.png"
+                                alt="Romantic Moment"
+                                className="max-w-[75vw] max-h-[55vh] object-contain rounded-[60px] shadow-[0_0_120px_rgba(251,111,146,0.9)] border-[12px] border-white ring-8 ring-pink-200"
+                            />
+                            {/* Floating Kisses around image */}
+                            <div className="absolute -top-12 -left-12 text-8xl animate-bounce">💋</div>
+                            <div className="absolute -bottom-12 -right-12 text-8xl animate-bounce" style={{ animationDelay: '0.7s' }}>😘</div>
+                            <div className="absolute top-1/2 -right-16 text-7xl animate-pulse">❤️</div>
+                        </div>
+
+                        <div className="text-center space-y-2">
+                            <h1 className="text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-red-600 to-pink-500 drop-shadow-2xl animate-pulse tracking-tighter italic">
+                                MY LOVE
+                            </h1>
+                            <p className="text-4xl font-bold font-mono text-pink-600 italic animate-bounce">💋 MUAH! 💋</p>
+                        </div>
+                    </div>
+
+                    <style>{`
+                        @keyframes fallRomantic {
+                            0% { transform: translateY(-50px) rotate(0deg) scale(0.5); opacity: 1; }
+                            50% { transform: translateY(50vh) rotate(180deg) scale(1.4); }
+                            100% { transform: translateY(110vh) rotate(360deg) scale(0.8); opacity: 0; }
+                        }
+                    `}</style>
+                </div>
+            )}
+
+            {!isRomanticUser && showCustomPic && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-fadeIn pointer-events-none">
+                    <img
+                        src="/black.png"
+                        alt="Custom Content"
+                        className="max-w-[95vw] max-h-[95vh] object-contain rounded-2xl"
+                    />
+                </div>
+            )}
+
+            <div className="relative z-10 space-y-8">
+                <div className="flex flex-col items-center justify-center text-center gap-6">
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tight mb-2">Verifier Leads</h1>
+                        <p className="text-sm opacity-70" style={{ color: 'var(--text-secondary)' }}>
+                            Review and verify submitted leads
+                        </p>
+                        {leads.length > 0 && (
+                            <div className="flex flex-wrap justify-center gap-3 mt-4">
+                                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-black shadow-lg"
+                                    style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    {filteredLeads.length.toLocaleString()} Leads {searchTerm && `Found (of ${leads.length})`}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-4 p-3 rounded-2xl border shadow-md w-full max-w-5xl"
+                        style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+                        {/* Mark All Active (Global) */}
+                        <button onClick={markAllLeadsActive}
+                            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold text-xs uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                            Mark All Leads Active
+                        </button>
+
+                        <div className="w-px h-8 opacity-20" style={{ backgroundColor: 'var(--border-primary)' }} />
+
+                        <button onClick={copyAllEmails}
+                            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold text-xs uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                            Copy ({totalEmailsOnPage})
+                        </button>
+                        <div className="w-px h-8 opacity-20" style={{ backgroundColor: 'var(--border-primary)' }} />
+                        <div className="relative">
+                            <svg className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search email…"
+                                className="pl-9 pr-8 py-2.5 w-64 rounded-xl border text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-[var(--accent-primary)]/20 transition-all font-mono"
+                                style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                            />
+                            {searchTerm && (
+                                <button onClick={() => setSearchTerm('')}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-500/10 text-gray-400">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+                        <button onClick={() => fetchLeads()} disabled={loading}
+                            className="p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold hover:bg-[var(--bg-primary)] disabled:opacity-50 transition-all"
+                            style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}>
+                            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            {loading ? 'Loading…' : 'Refresh'}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                    <button onClick={() => setShowConfirm(true)} disabled={isMoving}
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-3 hover:scale-105 active:scale-95 disabled:opacity-50 transition-all border border-emerald-400/20">
+                        {isMoving
+                            ? <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        }
+                        Move Verified Leads to LQ
+                    </button>
+                </div>
+
+                <div className={`space-y-4 transition-all duration-300 ${loading ? 'opacity-40 pointer-events-none' : ''}`}>
+                    {loading && leads.length === 0 ? (
+                        <div className="p-20 flex flex-col items-center gap-4 opacity-60">
+                            <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin"
+                                style={{ borderColor: 'var(--border-primary)', borderTopColor: 'var(--accent-primary)' }} />
+                            <p style={{ color: 'var(--text-secondary)' }}>Loading leads…</p>
+                        </div>
+                    ) : leads.length === 0 ? (
+                        <div className="p-20 text-center opacity-60 flex flex-col items-center rounded-3xl border border-dashed"
+                            style={{ borderColor: 'var(--border-primary)' }}>
+                            <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            <p style={{ color: 'var(--text-secondary)' }}>
+                                {searchTerm ? `No leads match "${searchTerm}"` : 'No leads found for verification'}
+                            </p>
+                        </div>
+                    ) : (
+                        filteredLeads.map((lead, i) => (
+                            <LeadCard
+                                key={lead._id}
+                                lead={lead}
+                                index={i}
+                                globalIndex={i + 1}
+                                isExpanded={expandedIds.has(lead._id)}
+                                onToggle={toggleExpand}
+                                pendingChanges={pendingChanges}
+                                processingLeads={processingLeads}
+                                copiedEmail={copiedEmail}
+                                onCopy={handleCopy}
+                                onChangeStatus={changeEmailStatus}
+                                onMarkAllActive={markAllActive}
+                                onDone={handleDone}
+                                searchTerm={searchTerm}
+                            />
+                        ))
                     )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-4 p-3 rounded-2xl border shadow-md w-full max-w-5xl"
-                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
-                    {/* Mark All Active (Global) */}
-                    <button onClick={markAllLeadsActive}
-                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold text-xs uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                        </svg>
-                        Mark All Leads Active
-                    </button>
+                <ConfirmModal
+                    show={showConfirm}
+                    onConfirm={handleMoveToLQ}
+                    onCancel={() => setShowConfirm(false)}
+                    isMoving={isMoving}
+                />
 
-                    <div className="w-px h-8 opacity-20" style={{ backgroundColor: 'var(--border-primary)' }} />
-
-                    <button onClick={copyAllEmails}
-                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold text-xs uppercase tracking-widest shadow-lg flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                        Copy ({totalEmailsOnPage})
-                    </button>
-                    <div className="w-px h-8 opacity-20" style={{ backgroundColor: 'var(--border-primary)' }} />
-                    <div className="relative">
-                        <svg className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search email…"
-                            className="pl-9 pr-8 py-2.5 w-64 rounded-xl border text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-[var(--accent-primary)]/20 transition-all font-mono"
-                            style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
-                        />
-                        {searchTerm && (
-                            <button onClick={() => setSearchTerm('')}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-500/10 text-gray-400">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        )}
-                    </div>
-                    <button onClick={() => fetchLeads()} disabled={loading}
-                        className="p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold hover:bg-[var(--bg-primary)] disabled:opacity-50 transition-all"
-                        style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}>
-                        <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {loading ? 'Loading…' : 'Refresh'}
-                    </button>
-                </div>
+                <Toast notification={notification} onClose={() => setNotification(null)} />
             </div>
-
-            <div className="flex flex-col items-center gap-1">
-                <button onClick={() => setShowConfirm(true)} disabled={isMoving}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black text-xs uppercase tracking-widest shadow-lg flex items-center gap-3 hover:scale-105 active:scale-95 disabled:opacity-50 transition-all border border-emerald-400/20">
-                    {isMoving
-                        ? <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    }
-                    Move Verified Leads to LQ
-                </button>
-            </div>
-
-            <div className={`space-y-4 transition-all duration-300 ${loading ? 'opacity-40 pointer-events-none' : ''}`}>
-                {loading && leads.length === 0 ? (
-                    <div className="p-20 flex flex-col items-center gap-4 opacity-60">
-                        <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin"
-                            style={{ borderColor: 'var(--border-primary)', borderTopColor: 'var(--accent-primary)' }} />
-                        <p style={{ color: 'var(--text-secondary)' }}>Loading leads…</p>
-                    </div>
-                ) : leads.length === 0 ? (
-                    <div className="p-20 text-center opacity-60 flex flex-col items-center rounded-3xl border border-dashed"
-                        style={{ borderColor: 'var(--border-primary)' }}>
-                        <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                        </svg>
-                        <p style={{ color: 'var(--text-secondary)' }}>
-                            {searchTerm ? `No leads match "${searchTerm}"` : 'No leads found for verification'}
-                        </p>
-                    </div>
-                ) : (
-                    filteredLeads.map((lead, i) => (
-                        <LeadCard
-                            key={lead._id}
-                            lead={lead}
-                            index={i}
-                            globalIndex={i + 1}
-                            isExpanded={expandedIds.has(lead._id)}
-                            onToggle={toggleExpand}
-                            pendingChanges={pendingChanges}
-                            processingLeads={processingLeads}
-                            copiedEmail={copiedEmail}
-                            onCopy={handleCopy}
-                            onChangeStatus={changeEmailStatus}
-                            onMarkAllActive={markAllActive}
-                            onDone={handleDone}
-                            searchTerm={searchTerm}
-                        />
-                    ))
-                )}
-            </div>
-
-            <ConfirmModal
-                show={showConfirm}
-                onConfirm={handleMoveToLQ}
-                onCancel={() => setShowConfirm(false)}
-                isMoving={isMoving}
-            />
-
-            <Toast notification={notification} onClose={() => setNotification(null)} />
         </div>
     );
 };
