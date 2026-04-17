@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { combinedAPI } from '../../../api/combined.api';
 import SharedLoader from '../../../components/SharedLoader';
+import { toast } from 'react-hot-toast';
 
 const LeadDetailsView = ({ lead, formatPKT }) => {
   const [activeTab, setActiveTab] = useState('detail'); // 'detail', 'comments', 'sources'
@@ -128,27 +129,27 @@ const LeadDetailsView = ({ lead, formatPKT }) => {
                     if (lUrl.includes('wgu')) return { label: 'WGU', color: 'bg-emerald-500/10 text-emerald-500' };
                     if (lUrl.includes('capella')) return { label: 'Capella', color: 'bg-purple-500/10 text-purple-500' };
                     if (lUrl.includes('walden')) return { label: 'Walden', color: 'bg-cyan-500/10 text-cyan-500' };
-                    
+
                     // Auto-extract domain name for any other sources
                     try {
-                        const domain = new URL(url).hostname.replace('www.', '').split('.')[0];
-                        const label = domain.charAt(0).toUpperCase() + domain.slice(1);
-                        
-                        // Deterministic color based on label to keep it colorful but consistent
-                        const colorPalette = [
-                          'bg-indigo-500/10 text-indigo-500',
-                          'bg-rose-500/10 text-rose-500',
-                          'bg-sky-500/10 text-sky-500',
-                          'bg-pink-500/10 text-pink-500',
-                          'bg-teal-500/10 text-teal-500',
-                          'bg-violet-500/10 text-violet-500'
-                        ];
-                        const hash = label.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
-                        const color = colorPalette[Math.abs(hash) % colorPalette.length];
-                        
-                        return { label: label, color: color };
+                      const domain = new URL(url).hostname.replace('www.', '').split('.')[0];
+                      const label = domain.charAt(0).toUpperCase() + domain.slice(1);
+
+                      // Deterministic color based on label to keep it colorful but consistent
+                      const colorPalette = [
+                        'bg-indigo-500/10 text-indigo-500',
+                        'bg-rose-500/10 text-rose-500',
+                        'bg-sky-500/10 text-sky-500',
+                        'bg-pink-500/10 text-pink-500',
+                        'bg-teal-500/10 text-teal-500',
+                        'bg-violet-500/10 text-violet-500'
+                      ];
+                      const hash = label.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+                      const color = colorPalette[Math.abs(hash) % colorPalette.length];
+
+                      return { label: label, color: color };
                     } catch (e) {
-                        return { label: 'Link', color: 'bg-slate-500/10 text-slate-500' };
+                      return { label: 'Link', color: 'bg-slate-500/10 text-slate-500' };
                     }
                   };
 
@@ -306,6 +307,18 @@ const CombinedLeads = () => {
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+    toast.success(`${text} copied!`, {
+      duration: 2000,
+      style: {
+        fontSize: '11px',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        background: 'var(--bg-secondary)',
+        color: 'var(--text-primary)',
+        border: '1px solid var(--border-primary)'
+      }
+    });
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -453,7 +466,7 @@ const CombinedLeads = () => {
                           <span className="text-[10px] font-black text-[var(--text-secondary)] tabular-nums">{lead.phones?.length || 0}</span>
                         </div>
                         {(lead.emails?.length > 0 || lead.phones?.length > 0) && (
-                          <button onClick={() => openContactDetails(lead)} className="w-8 h-8 rounded-lg bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-white transition-all flex items-center justify-center shadow-sm border border-[var(--accent-primary)]/20" title="View Intelligence Profile">
+                          <button onClick={() => openContactDetails(lead)} className="w-8 h-8 rounded-lg bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] hover:!bg-[var(--accent-primary)] hover:!text-white transition-all flex items-center justify-center shadow-sm border border-[var(--accent-primary)]/20" title="View Intelligence Profile">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                           </button>
                         )}
@@ -514,53 +527,58 @@ const CombinedLeads = () => {
       {/* Contact Details Modal */}
       {selectedLead && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[24px] w-full max-w-2xl shadow-2xl overflow-hidden animate-slideUp p-0 relative">
-            <div className="p-4 flex items-center justify-between border-b border-[var(--border-primary)]/50">
-              <span className="text-[10px] font-black text-[var(--accent-primary)] uppercase tracking-[0.2em]">Contact </span>
-              <button onClick={closeContactDetails} className="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-rose-500 hover:text-white transition-all text-[var(--text-tertiary)] shadow-sm">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[24px] w-[95%] max-w-lg shadow-2xl overflow-hidden animate-slideUp p-0 relative">
+            <div className="p-2.5 flex items-center justify-between border-b border-[var(--border-primary)]/50">
+              <span className="text-[9px] font-black text-[var(--accent-primary)] uppercase tracking-[0.2em]">Contact </span>
+              <button onClick={closeContactDetails} className="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-rose-500 hover:text-white transition-all text-[var(--text-tertiary)] shadow-sm">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
-            <div className="max-h-[55vh] overflow-y-auto custom-scrollbar">
-              <div className="p-4 space-y-4">
+            <div className="max-h-[45vh] overflow-y-auto custom-scrollbar">
+              <div className="p-3 space-y-3">
                 {/* Email Intelligence */}
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2 border-b border-[var(--border-primary)]/20 pb-1.5">
                     <div className="p-1 px-1.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase">@</div>
                     <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] opacity-70">Email </span>
                   </div>
-                  <div className="grid grid-cols-1 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {selectedLead.emails?.map((email, idx) => {
                       const isSelected = selectedLead.responseSource?.emails?.some(re => re.value === email.value);
                       return (
-                        <div key={idx} className={`flex items-center justify-between p-4 rounded-2xl border transition-all relative overflow-hidden ${isSelected ? 'bg-blue-500/10 border-blue-500/50 shadow-md ring-1 ring-blue-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-blue-500/30'
+                        <div key={idx} className={`flex items-center justify-between p-2 rounded-lg border transition-all relative overflow-hidden ${isSelected ? 'bg-blue-500/10 border-blue-500/50 shadow-sm ring-1 ring-blue-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:bg-blue-500 hover:border-blue-500 hover:text-white group/email'
                           }`}>
-                          <div className="flex flex-col gap-2 flex-1 pr-4">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${email.status === 'DEAD' ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'
+                          <div className="flex flex-col gap-1 flex-1 min-w-0 pr-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`text-[6px] font-black uppercase tracking-widest px-1 py-0.5 rounded ${email.status === 'DEAD' ? 'bg-rose-500/10 text-rose-500 group-hover/email:bg-white/20 group-hover/email:text-white' : 'bg-emerald-500/10 text-emerald-500 group-hover/email:bg-white/20 group-hover/email:text-white'
                                 }`}>
                                 {email.status || 'VERIFIED'}
                               </span>
                               {isSelected && (
-                                <span className="bg-blue-600/10 text-blue-600 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-blue-600/20">
-                                  Selected Source
+                                <span className="bg-blue-600/10 text-blue-600 group-hover/email:bg-white/20 group-hover/email:text-white text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full border border-blue-600/20">
+                                  Selected
                                 </span>
                               )}
                             </div>
-                            <span className="text-sm font-black text-[var(--text-primary)] break-all leading-tight">{email.value}</span>
+                            <span 
+                              onClick={() => handleCopy(email.value, `e-${idx}`)}
+                              className="text-[11px] font-black break-all leading-tight cursor-pointer hover:text-blue-500 transition-colors"
+                            >
+                              {email.value}
+                            </span>
                           </div>
 
                           <button
                             onClick={() => handleCopy(email.value, `e-${idx}`)}
-                            className={`shrink-0 p-2 rounded-lg transition-all border ${copiedId === `e-${idx}` ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[var(--bg-secondary)] border-[var(--border-primary)]/50 text-[var(--text-tertiary)] hover:border-blue-500/50 hover:text-blue-500 shadow-sm'
+                            className={`shrink-0 p-1.5 rounded-lg transition-all border ${copiedId === `e-${idx}` ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[var(--bg-secondary)] border-[var(--border-primary)]/50 text-[var(--text-tertiary)] group-hover/email:bg-white/20 group-hover/email:text-white group-hover/email:border-white/30 shadow-sm'
                               }`}
                           >
                             {copiedId === `e-${idx}` ? (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                             ) : (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                               </svg>
                             )}
                           </button>
@@ -571,39 +589,44 @@ const CombinedLeads = () => {
                 </div>
 
                 {/* Phone Numbers */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-2 border-b border-[var(--border-primary)]/20 pb-1.5">
-                    <div className="p-1 px-1.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase">#</div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] opacity-70">Phone Numbers</span>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 border-b border-[var(--border-primary)]/20 pb-1">
+                    <div className="p-1 px-1.5 rounded bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase">#</div>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-primary)] opacity-70">Phone Numbers</span>
                   </div>
-                  <div className="grid grid-cols-1 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {selectedLead.phones?.map((phone, idx) => {
                       const isSelected = selectedLead.responseSource?.phones?.some(rp => rp.value === phone);
                       return (
-                        <div key={idx} className={`flex items-center justify-between p-4 rounded-2xl border transition-all relative overflow-hidden ${isSelected ? 'bg-emerald-500/10 border-emerald-500/50 shadow-md ring-1 ring-emerald-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:border-emerald-500/30'
+                        <div key={idx} className={`flex items-center justify-between p-2 rounded-lg border transition-all relative overflow-hidden ${isSelected ? 'bg-emerald-500/10 border-emerald-500/50 shadow-sm ring-1 ring-emerald-500/20' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] hover:bg-emerald-500 hover:border-emerald-500 hover:text-white group/phone'
                           }`}>
-                          <div className="flex flex-col gap-1.5 flex-1 pr-4">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest px-1.5 py-0.5 bg-emerald-500/10 rounded">Verified Line</span>
+                          <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-1.5">
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-[6px] font-black text-emerald-500 uppercase tracking-widest px-1 py-0.5 bg-emerald-500/10 rounded group-hover/phone:bg-white/20 group-hover/phone:text-white">Line</span>
                               {isSelected && (
-                                <span className="bg-emerald-600/10 text-emerald-600 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-emerald-600/20">
-                                  Selected Source
+                                <span className="bg-emerald-600/10 text-emerald-600 group-hover/phone:bg-white/20 group-hover/phone:text-white text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full border border-emerald-600/20">
+                                  Selected
                                 </span>
                               )}
                             </div>
-                            <span className="text-sm font-black text-[var(--text-primary)]">{phone}</span>
+                            <span 
+                              onClick={() => handleCopy(phone, `p-${idx}`)}
+                              className="text-[11px] font-black leading-tight cursor-pointer hover:text-emerald-500 transition-colors"
+                            >
+                              {phone}
+                            </span>
                           </div>
 
                           <button
                             onClick={() => handleCopy(phone, `p-${idx}`)}
-                            className={`shrink-0 p-2 rounded-lg transition-all border ${copiedId === `p-${idx}` ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[var(--bg-secondary)] border-[var(--border-primary)]/50 text-[var(--text-tertiary)] hover:border-emerald-500/50 hover:text-emerald-500 shadow-sm'
+                            className={`shrink-0 p-1.5 rounded-lg transition-all border ${copiedId === `p-${idx}` ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[var(--bg-secondary)] border-[var(--border-primary)]/50 text-[var(--text-tertiary)] group-hover/phone:bg-white/20 group-hover/phone:text-white group-hover/phone:border-white/30 shadow-sm'
                               }`}
                           >
                             {copiedId === `p-${idx}` ? (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                             ) : (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                               </svg>
                             )}
                           </button>
@@ -615,8 +638,8 @@ const CombinedLeads = () => {
               </div>
             </div>
 
-            <div className="p-4 bg-[var(--bg-tertiary)] border-t border-[var(--border-primary)]/50 flex items-center justify-end">
-              <button onClick={closeContactDetails} className="px-6 py-2 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/90 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:scale-95">Close Profile</button>
+            <div className="p-2.5 bg-[var(--bg-tertiary)] border-t border-[var(--border-primary)]/50 flex items-center justify-end">
+              <button onClick={closeContactDetails} className="px-4 py-1.5 rounded-lg bg-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/90 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:scale-95">Close</button>
             </div>
           </div>
         </div>

@@ -31,16 +31,18 @@ export default function AdminDashboard() {
         const end = new Date();
 
         switch (filter) {
+            case 'TODAY':
+                // from today to today
+                break;
+            case 'YESTERDAY':
+                start.setDate(now.getDate() - 1);
+                end.setDate(now.getDate() - 1);
+                break;
             case 'WEEK':
                 start.setDate(now.getDate() - 7);
                 break;
-            case 'MONTH':
-                start.setMonth(now.getMonth() - 1);
-                break;
-            case 'PREV_MONTH':
-                start.setMonth(now.getMonth() - 1);
+            case 'THIS_MONTH':
                 start.setDate(1);
-                end.setDate(0);
                 break;
             case 'CUSTOM':
                 return customDates;
@@ -72,69 +74,7 @@ export default function AdminDashboard() {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-    const cards = useMemo(() => {
-        if (!data) return [];
-        const { totals, conversions } = data;
-        return [
-            {
-                id: 'mining',
-                title: 'Data Mining',
-                value: totals.dmCount,
 
-                trend: conversions.dm_to_lq,
-                path: 'combined-leads',
-                icon: (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M4 7a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V7z" />
-                        <path d="M4 15a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
-                        <path d="M8 3v2M16 3v2M8 19v2M16 19v2" />
-                    </svg>
-                )
-            },
-            {
-                id: 'deals',
-                title: 'Verified Leads',
-                value: totals.verifierCount,
-
-                trend: conversions.verifier_to_lq,
-                path: 'manager-leads',
-                icon: (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                    </svg>
-                )
-            },
-            {
-                id: 'qualification',
-                title: 'LQ Leads',
-                value: totals.lqCount,
-
-                trend: conversions.lq_to_manager,
-                path: 'combined-leads',
-                icon: (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M9 12l2 2 4-4" />
-                        <circle cx="12" cy="12" r="10" />
-                    </svg>
-                )
-            },
-            {
-                id: 'qualified',
-                title: 'Qualified Leads',
-                value: totals.qualifiedCount,
-
-                trend: totals.lqCount > 0 ? ((totals.qualifiedCount / totals.lqCount) * 100).toFixed(1) : 0,
-                path: 'manager-leads',
-                icon: (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M9 12l2 2 4-4" />
-                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        <path d="M12 8v8M8 12h8" />
-                    </svg>
-                )
-            }
-        ];
-    }, [data]);
 
     if (loading && !data) return <SharedLoader />;
 
@@ -174,10 +114,11 @@ export default function AdminDashboard() {
                     <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <div className="flex items-center bg-[var(--bg-tertiary)] border border-[var(--border-primary)] p-1 rounded-xl">
                             {[
-                                { id: 'ALL', label: 'All' },
-                                { id: 'WEEK', label: '7D' },
-                                { id: 'MONTH', label: '30D' },
-                                { id: 'PREV_MONTH', label: 'Prev' },
+                                { id: 'ALL', label: 'ALL' },
+                                { id: 'TODAY', label: 'Today' },
+                                { id: 'YESTERDAY', label: 'Previous Day' },
+                                { id: 'WEEK', label: '7 Days' },
+                                { id: 'THIS_MONTH', label: 'This Month' },
                                 { id: 'CUSTOM', label: 'Custom' }
                             ].map(f => (
                                 <button
@@ -229,219 +170,182 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* KPI Cards - 2x2 Grid (Full Width) */}
-            <div className="grid grid-cols-2 gap-4 w-full">
-                {cards.map((card) => (
-                    <div
-                        key={card.id}
-                        onClick={() => card.path && navigate(card.path)}
-                        className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-3.5 hover:border-[var(--accent-primary)] transition-all cursor-pointer shadow-sm hover:shadow-md"
-                    >
-                        <div className="flex items-start justify-between mb-2">
-                            <div className="p-1.5 bg-[var(--accent-primary)]/10 rounded-lg text-[var(--accent-primary)]">
-                                {card.icon}
-                            </div>
+            <div className={`space-y-5 transition-all duration-500 ${loading ? 'blur-[3px] opacity-60 pointer-events-none' : 'blur-0 opacity-100'}`}>
+                {/* Overall Summary (Moved up and Full Width) */}
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-[var(--accent-primary)]/10 flex items-center justify-center text-[var(--accent-primary)]">
+                            <FiActivity className="w-5 h-5" />
                         </div>
-
-                        <h3 className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">{card.title}</h3>
-
-                        <div className="flex items-end justify-between gap-2">
-                            <span className="text-2xl font-black text-[var(--text-primary)] leading-none">{card.value || 0}</span>
-
-                        </div>
-
-                        {card.subtitle && (
-                            <p className="text-[10px] text-[var(--text-secondary)] opacity-50 mt-2 pt-2 border-t border-[var(--border-primary)]/10 truncate">
-                                {card.subtitle}
-                            </p>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {/* Conversion Funnel & Summary */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Conversion Funnel - Takes 2 columns */}
-                <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-1 h-4 bg-[var(--accent-primary)] rounded-full" />
-                        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Overall Performance</h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Data Mining → Verification */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <p className="text-xs text-[var(--text-secondary)]">Mining → Verification</p>
-                                <p className="text-sm font-bold text-[var(--text-primary)]">{conversions.dm_to_lq}%</p>
-                            </div>
-                            <div className="h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${conversions.dm_to_lq}%` }} />
-                            </div>
-                            <div className="flex justify-between text-[10px]">
-                                <span className="text-[var(--text-secondary)]">{totals.lqCount} converted</span>
-                                <span className="text-[var(--text-primary)] font-medium">{totals.dmCount} total</span>
-                            </div>
-                        </div>
-
-                        {/* Verification → Manager */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <p className="text-xs text-[var(--text-secondary)]">Verification → Manager</p>
-                                <p className="text-sm font-bold text-[var(--text-primary)]">{conversions.lq_to_manager}%</p>
-                            </div>
-                            <div className="h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                                <div className="h-full bg-purple-500 rounded-full" style={{ width: `${conversions.lq_to_manager}%` }} />
-                            </div>
-                            <div className="flex justify-between text-[10px]">
-                                <span className="text-[var(--text-secondary)]">{totals.managerCount} converted</span>
-                                <span className="text-[var(--text-primary)] font-medium">{totals.lqCount} total</span>
-                            </div>
-                        </div>
-
-                        {/* Manager → Paid */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <p className="text-xs text-[var(--text-secondary)]">Manager → Paid</p>
-                                <p className="text-sm font-bold text-[var(--text-primary)]">{conversions.manager_paid}%</p>
-                            </div>
-                            <div className="h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                                <div className="h-full bg-amber-500 rounded-full" style={{ width: `${conversions.manager_paid}%` }} />
-                            </div>
-                            <div className="flex justify-between text-[10px]">
-                                <span className="text-[var(--text-secondary)]">{totals.paidCount} converted</span>
-                                <span className="text-[var(--text-primary)] font-medium">{totals.managerCount} total</span>
-                            </div>
+                        <div>
+                            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Overall Summary</h3>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-5">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-[var(--accent-primary)]/10 flex items-center justify-center text-[var(--accent-primary)]">
-                                <FiActivity className="w-5 h-5" />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {[
+                        {
+                            icon: <FiFolder />,
+                            label: "Total Leads",
+                            value: safeTotals.totalLeads,
+                            bgGradient: "from-blue-500/10 to-blue-600/5",
+                            iconBg: "bg-blue-500/15",
+                            iconColor: "text-blue-500",
+                            textColor: "text-blue-600 dark:text-blue-400"
+                        },
+                        {
+                            icon: <FiEdit />,
+                            label: "Data Mining",
+                            value: safeTotals.dmCount,
+                            bgGradient: "from-indigo-500/10 to-indigo-600/5",
+                            iconBg: "bg-indigo-500/15",
+                            iconColor: "text-indigo-500",
+                            textColor: "text-indigo-600 dark:text-indigo-400"
+                        },
+                        {
+                            icon: <FiTarget />,
+                            label: "Verifier Leads",
+                            value: safeTotals.verifierCount,
+                            bgGradient: "from-emerald-500/10 to-emerald-600/5",
+                            iconBg: "bg-emerald-500/15",
+                            iconColor: "text-emerald-500",
+                            textColor: "text-emerald-600 dark:text-emerald-400"
+                        },
+                        {
+                            icon: <FiCheckCircle />,
+                            label: "LQ Leads",
+                            value: safeTotals.lqCount,
+                            bgGradient: "from-purple-500/10 to-purple-600/5",
+                            iconBg: "bg-purple-500/15",
+                            iconColor: "text-purple-500",
+                            textColor: "text-purple-600 dark:text-purple-400"
+                        },
+                        {
+                            icon: <FiUsers />,
+                            label: "Manager Leads",
+                            value: safeTotals.managerCount,
+                            bgGradient: "from-amber-500/10 to-amber-600/5",
+                            iconBg: "bg-amber-500/15",
+                            iconColor: "text-amber-500",
+                            textColor: "text-amber-600 dark:text-amber-400"
+                        },
+                        {
+                            icon: <FiAlertCircle />,
+                            label: "Unpaid Leads",
+                            value: safeTotals.unpaidCount,
+                            bgGradient: "from-rose-500/10 to-rose-600/5",
+                            iconBg: "bg-rose-500/15",
+                            iconColor: "text-rose-500",
+                            textColor: "text-rose-600 dark:text-rose-400"
+                        },
+                        {
+                            icon: <FiDollarSign />,
+                            label: "Paid Leads",
+                            value: safeTotals.paidCount,
+                            bgGradient: "from-teal-500/10 to-teal-600/5",
+                            iconBg: "bg-teal-500/15",
+                            iconColor: "text-teal-500",
+                            textColor: "text-teal-600 dark:text-teal-400"
+                        },
+                    ].map((item, idx) => (
+                        <div
+                            key={idx}
+                            className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${item.bgGradient} p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md`}
+                        >
+                            {/* Subtle background pattern */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200">
+                                <div className="absolute -top-1 -right-1 w-12 h-12 rounded-full bg-white/20 blur-xl"></div>
                             </div>
-                            <div>
-                                <h3 className="text-sm font-semibold text-[var(--text-primary)]">Overall Summary</h3>
 
+                            <div className="relative flex items-start justify-between">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center ${item.iconColor}`}>
+                                            <span className="text-base">{item.icon}</span>
+                                        </div>
+                                        <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+                                            {item.label}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className={`text-xl font-bold ${item.textColor}`}>
+                                            {item.value?.toLocaleString() || 0}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Decorative element */}
+                                <div className={`absolute bottom-2 right-2 text-2xl opacity-5 group-hover:opacity-10 transition-opacity duration-200`}>
+                                    {item.icon}
+                                </div>
+                            </div>
+
+                            {/* Progress bar (optional) */}
+                            <div className="relative mt-3 h-1 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
+                                <div
+                                    className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${item.iconColor.replace('text', 'to')} opacity-30 group-hover:opacity-50 transition-opacity duration-200`}
+                                    style={{ width: `${safeTotals.totalLeads > 0 ? (item.value / safeTotals.totalLeads) * 100 : 0}%` }}
+                                ></div>
                             </div>
                         </div>
+                    ))}
+                </div>
+            </div>
 
+            {/* Conversion Funnel */}
+            <div className="w-full bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-4 bg-[var(--accent-primary)] rounded-full" />
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">Overall Performance Breakdown</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Data Mining → Verification */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium text-[var(--text-secondary)]">Mining → Verification</p>
+                            <p className="text-base font-bold text-[var(--text-primary)]">{conversions.dm_to_lq}%</p>
+                        </div>
+                        <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${conversions.dm_to_lq}%` }} />
+                        </div>
+                        <div className="flex justify-between text-xs pt-1">
+                            <span className="text-[var(--text-secondary)]">{totals.lqCount} converted</span>
+                            <span className="text-[var(--text-primary)] font-medium">{totals.dmCount} total</span>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        {[
-                            {
-                                icon: <FiFolder />,
-                                label: "Total Leads",
-                                value: safeTotals.totalLeads,
-                                bgGradient: "from-blue-500/10 to-blue-600/5",
-                                iconBg: "bg-blue-500/15",
-                                iconColor: "text-blue-500",
-                                textColor: "text-blue-600 dark:text-blue-400"
-                            },
-                            {
-                                icon: <FiEdit />,
-                                label: "Data Mining",
-                                value: safeTotals.dmCount,
-                                bgGradient: "from-indigo-500/10 to-indigo-600/5",
-                                iconBg: "bg-indigo-500/15",
-                                iconColor: "text-indigo-500",
-                                textColor: "text-indigo-600 dark:text-indigo-400"
-                            },
-                            {
-                                icon: <FiTarget />,
-                                label: "Verifier Leads",
-                                value: safeTotals.verifierCount,
-                                bgGradient: "from-emerald-500/10 to-emerald-600/5",
-                                iconBg: "bg-emerald-500/15",
-                                iconColor: "text-emerald-500",
-                                textColor: "text-emerald-600 dark:text-emerald-400"
-                            },
-                            {
-                                icon: <FiCheckCircle />,
-                                label: "LQ Leads",
-                                value: safeTotals.lqCount,
-                                bgGradient: "from-purple-500/10 to-purple-600/5",
-                                iconBg: "bg-purple-500/15",
-                                iconColor: "text-purple-500",
-                                textColor: "text-purple-600 dark:text-purple-400"
-                            },
-                            {
-                                icon: <FiUsers />,
-                                label: "Manager Leads",
-                                value: safeTotals.managerCount,
-                                bgGradient: "from-amber-500/10 to-amber-600/5",
-                                iconBg: "bg-amber-500/15",
-                                iconColor: "text-amber-500",
-                                textColor: "text-amber-600 dark:text-amber-400"
-                            },
-
-                            {
-                                icon: <FiAlertCircle />,
-                                label: "Unpaid Leads",
-                                value: safeTotals.unpaidCount,
-                                bgGradient: "from-rose-500/10 to-rose-600/5",
-                                iconBg: "bg-rose-500/15",
-                                iconColor: "text-rose-500",
-                                textColor: "text-rose-600 dark:text-rose-400"
-                            },
-                            {
-                                icon: <FiDollarSign />,
-                                label: "Paid Leads",
-                                value: safeTotals.paidCount,
-                                bgGradient: "from-teal-500/10 to-teal-600/5",
-                                iconBg: "bg-teal-500/15",
-                                iconColor: "text-teal-500",
-                                textColor: "text-teal-600 dark:text-teal-400"
-                            },
-                        ].map((item, idx) => (
-                            <div
-                                key={idx}
-                                className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${item.bgGradient} p-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-md`}
-                            >
-                                {/* Subtle background pattern */}
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200">
-                                    <div className="absolute -top-1 -right-1 w-12 h-12 rounded-full bg-white/20 blur-xl"></div>
-                                </div>
-
-                                <div className="relative flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className={`w-7 h-7 rounded-lg ${item.iconBg} flex items-center justify-center ${item.iconColor}`}>
-                                                <span className="text-sm">{item.icon}</span>
-                                            </div>
-                                            <span className="text-[11px] font-medium text-[var(--text-secondary)] uppercase tracking-wide">
-                                                {item.label}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className={`text-xl font-bold ${item.textColor}`}>
-                                                {item.value?.toLocaleString() || 0}
-                                            </span>
-
-                                        </div>
-                                    </div>
-
-                                    {/* Decorative element */}
-                                    <div className={`absolute bottom-1 right-1 text-2xl opacity-5 group-hover:opacity-10 transition-opacity duration-200`}>
-                                        {item.icon}
-                                    </div>
-                                </div>
-
-                                {/* Progress bar (optional) */}
-                                <div className="relative mt-2 h-0.5 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
-                                    <div
-                                        className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${item.iconColor.replace('text', 'to')} opacity-30 group-hover:opacity-50 transition-opacity duration-200`}
-                                        style={{ width: `${(item.value / safeTotals.totalLeads) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
+                    {/* Verification → Manager */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium text-[var(--text-secondary)]">Verification → Manager</p>
+                            <p className="text-base font-bold text-[var(--text-primary)]">{conversions.lq_to_manager}%</p>
+                        </div>
+                        <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                            <div className="h-full bg-purple-500 rounded-full" style={{ width: `${conversions.lq_to_manager}%` }} />
+                        </div>
+                        <div className="flex justify-between text-xs pt-1">
+                            <span className="text-[var(--text-secondary)]">{totals.managerCount} converted</span>
+                            <span className="text-[var(--text-primary)] font-medium">{totals.lqCount} total</span>
+                        </div>
                     </div>
 
-
+                    {/* Manager → Paid */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                            <p className="text-sm font-medium text-[var(--text-secondary)]">Manager → Paid</p>
+                            <p className="text-base font-bold text-[var(--text-primary)]">{conversions.manager_paid}%</p>
+                        </div>
+                        <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${conversions.manager_paid}%` }} />
+                        </div>
+                        <div className="flex justify-between text-xs pt-1">
+                            <span className="text-[var(--text-secondary)]">{totals.paidCount} converted</span>
+                            <span className="text-[var(--text-primary)] font-medium">{totals.managerCount} total</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -508,6 +412,7 @@ export default function AdminDashboard() {
                     Live Data • Filter: {activeFilter}
                 </div>
                 <span>{new Date().toLocaleTimeString('en-PK')} PKT</span>
+            </div>
             </div>
         </div>
     );

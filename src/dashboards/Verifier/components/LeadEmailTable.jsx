@@ -9,14 +9,7 @@ const HighlightText = ({ text, search }) => {
     return (
         <span>
             {text.slice(0, idx)}
-            <mark style={{
-                background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-                color: '#fff',
-                borderRadius: '3px',
-                padding: '0 2px',
-                boxShadow: '0 0 6px rgba(245,158,11,0.6)',
-                fontWeight: 'inherit',
-            }}>
+            <mark className="bg-amber-500/30 text-[var(--accent-primary)] rounded px-0.5 font-bold">
                 {text.slice(idx, idx + search.length)}
             </mark>
             {text.slice(idx + search.length)}
@@ -27,9 +20,13 @@ const HighlightText = ({ text, search }) => {
 export const EmailRow = React.memo(({ email, status, hasPending, onChangeStatus, copiedEmail, onCopy, searchTerm }) => {
     const norm = email;
     const upperStatus = (status || 'PENDING').toUpperCase();
+    const isMatch = searchTerm && norm.toLowerCase().includes(searchTerm.toLowerCase());
 
     return (
-        <div className="grid grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-[var(--bg-tertiary)]/20 transition-colors">
+        <div className={`grid grid-cols-12 gap-4 px-5 py-4 items-center transition-all duration-300 relative
+            ${isMatch 
+                ? 'bg-amber-500/10 ring-1 ring-amber-500/30 z-10' 
+                : 'hover:bg-[var(--bg-tertiary)]/20'}`}>
             <div className="col-span-5 flex items-center gap-2 group/copy">
                 <span className="font-mono text-sm break-all font-medium" style={{ color: 'var(--text-primary)' }}>
                     <HighlightText text={norm} search={searchTerm} />

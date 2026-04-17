@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import SignupPage from '../auth/Signup';
 import LoginPage from '../auth/login';
@@ -71,6 +72,7 @@ function AppRoutesWithTokenManagement() {
 export default function AppRoutes() {
   return (
     <Router>
+      <Toaster />
       <AppRoutesWithTokenManagement />
     </Router>
   );
