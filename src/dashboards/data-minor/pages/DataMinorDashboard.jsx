@@ -17,9 +17,11 @@ export default function DataMinorDashboard() {
     const [customFrom, setCustomFrom] = useState('');
     const [customTo, setCustomTo] = useState('');
 
+    const [hasInitialData, setHasInitialData] = useState(false);
+
     const dailyTarget = 50;
 
-    const fetchStats = useCallback(async () => {
+    const fetchStats = useCallback(async (manualParams = null) => {
         try {
             setLoading(true);
             setError(null);
@@ -29,11 +31,16 @@ export default function DataMinorDashboard() {
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
             const todayStr = now.toISOString().split('T')[0];
 
+            // Use manual params if provided (for immediate updates like Reset), otherwise use current state
+            const activeFilter = manualParams?.dateFilter || dateFilter;
+            const activeFrom = manualParams?.from !== undefined ? manualParams.from : customFrom;
+            const activeTo = manualParams?.to !== undefined ? manualParams.to : customTo;
+
             let filterParams = {};
-            if (dateFilter === 'today') filterParams.today = 'true';
-            else if (dateFilter === 'custom') {
-                if (customFrom) filterParams.from = customFrom;
-                if (customTo) filterParams.to = customTo;
+            if (activeFilter === 'today') filterParams.today = 'true';
+            else if (activeFilter === 'custom') {
+                if (activeFrom) filterParams.from = activeFrom;
+                if (activeTo) filterParams.to = activeTo;
             }
 
             const [todayRes, monthRes, filteredRes] = await Promise.all([
@@ -47,6 +54,7 @@ export default function DataMinorDashboard() {
                 monthly: monthRes.totalCount || 0,
                 filtered: filteredRes.totalCount || 0
             });
+            setHasInitialData(true);
 
         } catch (err) {
             console.error('Production sync failed:', err);
@@ -59,10 +67,12 @@ export default function DataMinorDashboard() {
     useEffect(() => {
         const currentUser = tokenManager.getUser();
         setUser(currentUser);
+        // Initial fetch on mount only
         fetchStats();
-    }, [fetchStats]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    if (loading && stats.today === 0) return <SharedLoader />;
+    if (loading && !hasInitialData) return <SharedLoader />;
 
     const efficiency = Math.min(Math.round((stats.today / dailyTarget) * 100), 100);
 
@@ -134,8 +144,7 @@ export default function DataMinorDashboard() {
                             setDateFilter('today');
                             setCustomFrom('');
                             setCustomTo('');
-                            // Stats will update via useEffect/fetchStats dependency or manual call
-                            setTimeout(fetchStats, 0);
+                            fetchStats({ dateFilter: 'today', from: '', to: '' });
                         }}
                         className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-primary)] active:scale-95 transition-all duration-300"
                         title="Reset & Refresh"
@@ -145,48 +154,52 @@ export default function DataMinorDashboard() {
                 </div>
             </div>
 
-            {/* Stats Grid - Compact Single Row */}
-            <div className="max-w-4xl">
-                <div className="grid grid-cols-2 gap-4">
-                    <StatCard
-                        title="Today Leads"
-                        value={stats.today}
-                        subtitle={`Target: ${dailyTarget}`}
-                        color="bg-[#00BE9B]/10 text-[#00BE9B]"
-                        icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
-                    />
+            {/* Content Area - Applying blur on refresh */}
+            <div className={`space-y-8 transition-all duration-500 ${loading ? 'opacity-60 blur-[2px] pointer-events-none' : 'opacity-100 blur-0'}`}>
+                {/* Stats Grid - Compact Single Row */}
+                <div className="max-w-4xl">
+                    <div className="grid grid-cols-2 gap-4">
+                        <StatCard
+                            title="Today Leads"
+                            value={stats.today}
+                            subtitle={`Target: ${dailyTarget}`}
+                            color="bg-[#00BE9B]/10 text-[#00BE9B]"
+                            icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+                        />
 
-                    <StatCard
-                        title={dateFilter === 'today' ? "Today Focus" : dateFilter === 'custom' ? "Custom Range" : "System Total"}
-                        value={stats.filtered}
-                        subtitle={dateFilter === 'today' ? "Current Workday" : dateFilter === 'custom' ? "Selected Period" : "All-Time Output"}
-                        color="bg-[#00BE9B] text-white"
-                        icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138z" /></svg>}
-                    />
-                </div>
-            </div>
-            {/* Progress Section */}
-            <div className="p-6 rounded-3xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[var(--accent-primary)]">Productivity </h3>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="flex justify-between items-end mb-1">
-                        <p className="text-xs font-bold text-[var(--text-primary)] uppercase">Daily Target </p>
-                        <p className="text-lg font-black text-[var(--accent-primary)]">{efficiency}%</p>
+                        <StatCard
+                            title={dateFilter === 'today' ? "Today Focus" : dateFilter === 'custom' ? "Custom Range" : "System Total"}
+                            value={stats.filtered}
+                            subtitle={dateFilter === 'today' ? "Current Workday" : dateFilter === 'custom' ? "Selected Period" : "All-Time Output"}
+                            color="bg-[#00BE9B] text-white"
+                            icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138z" /></svg>}
+                        />
                     </div>
-                    <div className="h-4 w-full bg-[var(--bg-tertiary)] rounded-2xl p-1 border border-[var(--border-primary)] relative overflow-hidden">
-                        <div
-                            className={`h-full rounded-xl transition-all duration-1000 ${efficiency >= 85 ? 'bg-[#00BE9B] shadow-[0_0_15px_rgba(0,190,155,0.3)]' : 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'}`}
-                            style={{ width: `${efficiency}%` }}
-                        >
-                            <div className="w-full h-full bg-white/20 animate-pulse" />
+                </div>
+
+                {/* Progress Section */}
+                <div className="p-6 rounded-3xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-[var(--accent-primary)]">Productivity </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end mb-1">
+                            <p className="text-xs font-bold text-[var(--text-primary)] uppercase">Daily Target </p>
+                            <p className="text-lg font-black text-[var(--accent-primary)]">{efficiency}%</p>
                         </div>
-                    </div>
-                    <div className="flex justify-between text-[10px] font-black opacity-30 uppercase tracking-tighter">
-                        <span>Add Leads: {stats.today} Leads</span>
-                        <span>System Relay: {dailyTarget} Leads/Day</span>
+                        <div className="h-4 w-full bg-[var(--bg-tertiary)] rounded-2xl p-1 border border-[var(--border-primary)] relative overflow-hidden">
+                            <div
+                                className={`h-full rounded-xl transition-all duration-1000 ${efficiency >= 85 ? 'bg-[#00BE9B] shadow-[0_0_15px_rgba(0,190,155,0.3)]' : 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'}`}
+                                style={{ width: `${efficiency}%` }}
+                            >
+                                <div className="w-full h-full bg-white/20 animate-pulse" />
+                            </div>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black opacity-30 uppercase tracking-tighter">
+                            <span>Add Leads: {stats.today} Leads</span>
+                            <span>System Relay: {dailyTarget} Leads/Day</span>
+                        </div>
                     </div>
                 </div>
             </div>
