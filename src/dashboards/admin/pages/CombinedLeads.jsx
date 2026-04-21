@@ -58,31 +58,94 @@ const LeadDetailsView = ({ lead, formatPKT }) => {
           {/* Tab Content */}
           <div className="min-h-[200px] animate-fadeIn">
             {activeTab === 'detail' && (
-              <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3 max-w-2xl">
-                {[
-                  { label: 'Data Minor', user: lead.createdBy?.name, date: lead.createdAt, color: 'text-blue-500' },
-                  { label: 'Verifier', user: lead.lqUpdatedBy?.name, date: lead.lqUpdatedAt, color: 'text-emerald-500' },
-                  { label: 'Manager', user: lead.assignedTo?.name, date: lead.assignedAt, color: 'text-purple-500' },
-                  { label: 'Status', user: lead.status || 'UNPAID', date: lead.submittedDate ? `${lead.submittedDate} ${lead.submittedTime}` : null, color: 'text-rose-500' }
-                ].map((item, i) => (
-                  <div key={i} className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm space-y-2 relative overflow-hidden">
-                    <span className={`text-[8px] font-black uppercase tracking-widest ${item.color} opacity-80 flex items-center gap-1.5`}>
-                      <div className="w-1 h-1 rounded-full bg-current" />
-                      {item.label}
-                    </span>
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-[13px] font-black text-[var(--text-primary)] leading-none truncate">{item.user || 'PENDING'}</span>
-                      {item.date ? (
-                        <div className="flex flex-col gap-0.5 pt-1.5 border-t border-[var(--border-primary)]/40">
-                          <span className="text-[9px] font-bold text-[var(--text-secondary)] opacity-70">📅 {formatPKT(item.date, 'date')}</span>
-                          <span className="text-[9px] font-bold text-[var(--text-secondary)] opacity-70">🕒 {formatPKT(item.date, 'time')} <span className="text-[7px] opacity-40">PKT</span></span>
+              <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-4 gap-3">
+                {(() => {
+                  const items = [
+                    {
+                      label: '1. Data Miner Stage',
+                      user: lead.createdBy?.name || 'N/A',
+                      date: lead.createdAt,
+                      color: 'text-emerald-500',
+                      border: 'border-emerald-500/20',
+                      bg: 'bg-emerald-500/5',
+                      icon: 'M12 4v16m8-8H4'
+                    },
+                    {
+                      label: '2. Verified Stage',
+                      user: lead.verifiedCompletedAt ? 'Bulk Process' : (lead.emails?.some(e => e.verifiedAt) ? 'Active' : 'Pending'),
+                      // Prioritize verifiedAt from emails as requested by user
+                      date: lead.emails?.find(e => e.verifiedAt)?.verifiedAt || lead.verifiedCompletedAt,
+                      color: 'text-blue-500',
+                      border: 'border-blue-500/20',
+                      bg: 'bg-blue-500/5',
+                      icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+                    },
+                    {
+                      label: '3. LQ (Qualifier) Stage',
+                      user: lead.lqUpdatedBy?.name || (lead.assignedTo?.role === 'Lead Qualifiers' ? lead.assignedTo?.name : 'Pending'),
+                      date: lead.lqUpdatedAt || (lead.assignedTo?.role === 'Lead Qualifiers' ? lead.assignedAt : null),
+                      color: 'text-amber-500',
+                      border: 'border-amber-500/20',
+                      bg: 'bg-amber-500/5',
+                      icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                    },
+                    {
+                      label: '4. Manager Stage',
+                      user: (lead.stage === 'DONE' || lead.stage === 'MANAGER') ? (lead.assignedTo?.name || 'Manager') : 'Not Assigned',
+                      date: (lead.stage === 'DONE' || lead.stage === 'MANAGER') ? lead.updatedAt : null,
+                      color: 'text-rose-500',
+                      border: 'border-rose-500/20',
+                      bg: 'bg-rose-500/5',
+                      icon: 'M13 7h8l-8 8-4-4-6 6'
+                    }
+                  ];
+
+                  return items.map((item, i) => (
+                    <div key={i} className={`p-4 rounded-2xl bg-[var(--bg-secondary)] border ${item.border} ${item.bg} shadow-sm space-y-3 relative overflow-hidden transition-all hover:shadow-md`}>
+                      <div className="flex items-center justify-between border-b border-current/10 pb-2">
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${item.color} flex items-center gap-1.5`}>
+                          <div className={`w-1 h-1 rounded-full bg-current ${item.date ? 'animate-pulse' : ''}`} />
+                          {item.label}
+                        </span>
+                        <svg className={`w-3.5 h-3.5 ${item.color} opacity-40`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={item.icon} />
+                        </svg>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col">
+                          <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.1em] mb-0.5">Assigned / Done By</span>
+                          <span className={`text-[11px] font-black leading-none truncate ${item.user === 'Pending' || item.user === 'Not Assigned' ? 'text-[var(--text-tertiary)] italic opacity-50' : 'text-[var(--text-primary)]'}`}>
+                            {item.user}
+                          </span>
                         </div>
-                      ) : (
-                        <span className="text-[8px] font-black text-[var(--text-tertiary)] opacity-30 uppercase tracking-widest italic">---</span>
-                      )}
+
+                        <div className="flex flex-col pt-2 border-t border-current/5">
+                          <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.1em] mb-1">Timeline Detail</span>
+                          {item.date ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 text-[9px] font-bold text-[var(--text-secondary)]">
+                                <span className="opacity-50">📅</span>
+                                {formatPKT(item.date, 'date')}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[9px] font-bold text-[var(--text-secondary)]">
+                                <span className="opacity-50">🕒</span>
+                                {formatPKT(item.date, 'time')} <span className="text-[7px] opacity-40">PKT</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[8px] font-black text-[var(--text-tertiary)] opacity-30 uppercase tracking-widest italic">Waiting...</span>
+                              {i === 3 && lead.stage === 'LQ' && (
+                                <span className="text-[7px] font-bold text-amber-500/60 uppercase">Currently with LQ</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             )}
 
@@ -285,8 +348,8 @@ const CombinedLeads = () => {
   };
 
   const filterOptions = {
-    stages: ['DM', 'Verifier', 'LQ', 'DONE'],
-    lqStatuses: ['PENDING', 'IN_CONVERSATION', 'DEAD', 'QUALIFIED']
+    stages: ['DM', 'Verifier', 'LQ'],
+    lqStatuses: ['PENDING', 'REACHED', 'DEAD', 'QUALIFIED']
   };
 
   const openContactDetails = (lead) => setSelectedLead(lead);
@@ -358,6 +421,34 @@ const CombinedLeads = () => {
     } catch (e) {
       return dateString;
     }
+  };
+
+  const getPaginationRange = () => {
+    const { currentPage, totalPages } = pagination;
+    const delta = 1; // Number of pages to show on each side of the current page
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    for (let i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+
+    return rangeWithDots;
   };
 
   if (isInitialLoading) return <SharedLoader />;
@@ -512,12 +603,23 @@ const CombinedLeads = () => {
           <div className="flex items-center gap-2">
             <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="px-3 py-1.5 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-50 text-[10px] font-black uppercase transition-all">Previous</button>
             <div className="flex items-center gap-1">
-              {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
-                const pageNum = i + 1;
-                return (
-                  <button key={pageNum} onClick={() => handlePageChange(pageNum)} className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black transition-all ${pagination.currentPage === pageNum ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'}`}>{pageNum}</button>
-                );
-              })}
+              {getPaginationRange().map((page, i) => (
+                <React.Fragment key={i}>
+                  {page === '...' ? (
+                    <span className="w-7 h-7 flex items-center justify-center text-[10px] font-black text-[var(--text-tertiary)]">...</span>
+                  ) : (
+                    <button
+                      onClick={() => handlePageChange(page)}
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black transition-all ${pagination.currentPage === page
+                        ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  )}
+                </React.Fragment>
+              ))}
             </div>
             <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="px-3 py-1.5 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-50 text-[10px] font-black uppercase transition-all">Next</button>
           </div>
@@ -561,7 +663,7 @@ const CombinedLeads = () => {
                                 </span>
                               )}
                             </div>
-                            <span 
+                            <span
                               onClick={() => handleCopy(email.value, `e-${idx}`)}
                               className="text-[11px] font-black break-all leading-tight cursor-pointer hover:text-blue-500 transition-colors"
                             >
@@ -609,7 +711,7 @@ const CombinedLeads = () => {
                                 </span>
                               )}
                             </div>
-                            <span 
+                            <span
                               onClick={() => handleCopy(phone, `p-${idx}`)}
                               className="text-[11px] font-black leading-tight cursor-pointer hover:text-emerald-500 transition-colors"
                             >
