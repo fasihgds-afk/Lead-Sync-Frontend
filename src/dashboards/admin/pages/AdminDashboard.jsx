@@ -320,10 +320,10 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Data Mining → Verification */}
+                        {/* Data Mining → LQ */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <p className="text-sm font-medium text-[var(--text-secondary)]">Mining → Verification</p>
+                                <p className="text-sm font-medium text-[var(--text-secondary)]">Mining → LQ</p>
                                 <p className="text-base font-bold text-[var(--text-primary)]">{conversions.dm_to_lq}%</p>
                             </div>
                             <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
@@ -335,7 +335,7 @@ export default function AdminDashboard() {
                             </div>
                         </div>
 
-                        {/* Verification → Manager */}
+                        {/* LQ → Manager */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
                                 <p className="text-sm font-medium text-[var(--text-secondary)]">LQ → Manager</p>
@@ -394,7 +394,7 @@ export default function AdminDashboard() {
                             color="purple"
                             data={leaderboards.leadQualifiers}
                             valueKey="leadsUpdated"
-                            valueLabel="Qualified"
+                            valueLabel="Status Update"
                         />
                     )}
 
