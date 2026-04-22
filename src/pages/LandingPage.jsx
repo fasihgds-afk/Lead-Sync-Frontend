@@ -1,8 +1,24 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthHeader from '../components/AuthHeader';
+import tokenManager from '../utils/tokenManager';
+import { getRoleBasedRedirect } from '../utils/roleRedirect';
 
 const LandingPage = () => {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = tokenManager.getToken();
+        if (token && tokenManager.isCurrentTokenValid()) {
+            setIsLoggedIn(true);
+            setUser(tokenManager.getUser());
+        }
+    }, []);
+
+    const dashboardPath = user ? getRoleBasedRedirect(user.role || user.department) : '/login';
+
     return (
         <div className="min-h-screen font-sans selection:bg-[var(--accent-primary)]/30 selection:text-[var(--text-primary)]" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Enhanced Dynamic Background */}
@@ -60,20 +76,18 @@ const LandingPage = () => {
 
                     {/* CTA Button - Enhanced */}
                     <div className="pt-8 animate-slideUp flex gap-4" style={{ animationDelay: '0.3s' }}>
-                        <Link to="/login"
+                        <Link to={isLoggedIn ? dashboardPath : "/login"}
                             className="group relative px-10 py-4 rounded-2xl font-black text-lg text-white shadow-2xl transition-all duration-500 hover:scale-105 active:scale-95 overflow-hidden"
                             style={{
                                 background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                                 boxShadow: '0 20px 40px -15px var(--accent-primary)'
                             }}>
                             <span className="relative z-10 flex items-center gap-2">
-                                Lead Sync Login
+                                {isLoggedIn ? 'Go to Dashboard' : 'Lead Sync Login'}
                                 <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
                             </span>
                             <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-500"></span>
                         </Link>
-
-
                     </div>
 
 

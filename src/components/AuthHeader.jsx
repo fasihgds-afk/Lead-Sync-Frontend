@@ -64,32 +64,21 @@ const AuthHeader = ({ isLandingPage = false }) => {
 
                 {isLandingPage ? (
                     isLoggedIn ? (
-                        <div className="flex items-center gap-4">
-                            <div className="hidden sm:flex flex-col items-end">
-                                <span className="text-xs font-black uppercase tracking-widest text-[var(--accent-primary)]">Logged in as</span>
-                                <span className="text-sm font-bold text-[var(--text-primary)]">{user?.name || 'User'}</span>
+                        <div className="flex items-center gap-6">
+                            <div className="hidden md:flex flex-col items-end">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: 'var(--text-tertiary)' }}>Authenticated</span>
+                                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{user?.name || 'Authorized User'}</span>
                             </div>
-                            <div className="group relative">
-                                <button
-                                    onClick={handleGoToDashboard}
-                                    className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00BE9B] to-[#00a082] flex items-center justify-center text-white font-black shadow-lg shadow-[#00BE9B]/20 transition-all hover:scale-105 active:scale-95 group-hover:rotate-3"
-                                >
-                                    {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
-                                </button>
-                                {/* Tooltip/Dropdown hint */}
-                                <div className="absolute top-full right-0 mt-3 p-3 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all pointer-events-none min-w-[180px]">
-                                    <p className="text-[10px] font-black uppercase tracking-tighter text-[var(--text-tertiary)] mb-1">Current Session</p>
-                                    <p className="text-sm font-bold text-[var(--text-primary)] truncate">{user?.name}</p>
-                                    <div className="mt-3 pt-3 border-t border-[var(--border-primary)]">
-                                        <button
-                                            onClick={handleGoToDashboard}
-                                            className="w-full text-left text-xs font-bold text-[#00BE9B] hover:translate-x-1 transition-transform pointer-events-auto"
-                                        >
-                                            Enter Dashboard →
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                            <button
+                                onClick={handleGoToDashboard}
+                                className="group relative px-8 py-3 rounded-xl bg-gradient-to-r from-[#00BE9B] via-[#00d4ad] to-[#00BE9B] bg-[length:200%_auto] hover:bg-right text-white text-xs font-black uppercase tracking-[0.15em] shadow-lg shadow-[#00BE9B]/20 transition-all duration-500 hover:scale-105 active:scale-95 flex items-center gap-3 overflow-hidden"
+                            >
+                                <span className="relative z-10 flex items-center gap-2">
+                                    Dashboard
+                                    <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                                </span>
+                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out skew-x-[-20deg]"></div>
+                            </button>
                         </div>
                     ) : (
                         <div className="flex items-center gap-4">
