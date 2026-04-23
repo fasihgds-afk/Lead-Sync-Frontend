@@ -108,23 +108,17 @@ export const dashboardConfig = [
   {
     id: 'admin',
     name: 'Admin',
-    role: ['Admin', 'Super Admin'],
+    role: ['Super Admin', 'Admin'],
     basePath: '/gds/admin',
     icon: <ShieldIcon />,
     pages: [
       { name: 'Dashboard', path: '', component: AdminDashboard, icon: <DashboardIcon />, showInSidebar: true },
       { name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
-
-
-      // { name: 'Managers Leads', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
-      { name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
-
-      { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true },
-
-      { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
-
-      { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false },
+      { name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true, allowedRoles: ['Super Admin'] },
       { name: 'Performance', path: 'performance', component: AdminPerformance, icon: <AnalyticsIcon />, showInSidebar: true },
+      { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: ['Super Admin'] },
+      { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true, allowedRoles: ['Super Admin'] },
+      { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false, allowedRoles: ['Super Admin'] },
     ],
   },
   {

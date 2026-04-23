@@ -231,7 +231,8 @@ export default function PendingRequests() {
                               'Lead Qualifiers': 'LQ',
                               'Verifier': 'VER',
                               'Manager': 'MGR',
-                              'Admin': 'ADM'
+                              'Admin': 'ADM',
+                              'Super Admin': 'SA'
                             }[req.department] || req.department.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase()
                           ) : 'N/A'}
                         </span>
@@ -266,6 +267,7 @@ export default function PendingRequests() {
                           <option className="bg-[var(--bg-secondary)]" value="Verifier">Verifier</option>
                           <option className="bg-[var(--bg-secondary)]" value="Manager">Manager</option>
                           <option className="bg-[var(--bg-secondary)]" value="Admin">Admin</option>
+                          <option className="bg-[var(--bg-secondary)]" value="Super Admin">Super Admin</option>
                         </select>
                       </div>
                     </td>

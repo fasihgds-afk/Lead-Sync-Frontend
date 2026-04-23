@@ -72,9 +72,13 @@ const LeadDetailsView = ({ lead, formatPKT }) => {
                     },
                     {
                       label: '2. Verified Stage',
-                      user: lead.verifiedCompletedAt ? 'Bulk Process' : (lead.emails?.some(e => e.verifiedAt) ? 'Active' : 'Pending'),
+                      user: lead.verifiedCompletedAt 
+                        ? 'Bulk Process' 
+                        : (lead.emails?.some(e => e.verifiedAt) || (!lead.emails?.length && lead.phones?.length > 0 && ['Verifier', 'LQ', 'MANAGER', 'DONE'].includes(lead.stage))) 
+                          ? 'Active' 
+                          : 'Pending',
                       // Prioritize verifiedAt from emails as requested by user
-                      date: lead.emails?.find(e => e.verifiedAt)?.verifiedAt || lead.verifiedCompletedAt,
+                      date: lead.emails?.find(e => e.verifiedAt)?.verifiedAt || lead.verifiedCompletedAt || ((!lead.emails?.length && lead.phones?.length > 0 && ['Verifier', 'LQ', 'MANAGER', 'DONE'].includes(lead.stage)) ? lead.updatedAt : null),
                       color: 'text-blue-500',
                       border: 'border-blue-500/20',
                       bg: 'bg-blue-500/5',
@@ -477,17 +481,16 @@ const CombinedLeads = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)]/40 rounded-full px-3 py-1 gap-3">
-              <button onClick={() => fetchCombinedLeads()} className="w-7 h-7 flex items-center justify-center bg-[var(--bg-secondary)] rounded-full border border-[var(--border-primary)] hover:bg-[var(--accent-success)] hover:text-white transition-all shadow-sm">
-                <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-              <div className="flex flex-col leading-none">
-                <div className="flex items-center gap-1.5"><div className="w-1 h-1 rounded-full bg-[var(--accent-success)] animate-pulse" /><span className="text-[7px] font-black uppercase tracking-widest text-[var(--text-tertiary)]"></span></div>
-                <span className="text-[9px] font-black text-[var(--text-primary)] mt-0.5">Refresh</span>
-              </div>
-            </div>
+            <button
+              onClick={() => fetchCombinedLeads()}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl text-xs font-bold hover:bg-[var(--accent-success)] hover:text-white transition-all shadow-sm disabled:opacity-50"
+            >
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <select value={filters.stage} onChange={(e) => setFilters(prev => ({ ...prev, stage: e.target.value }))} className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 uppercase tracking-widest cursor-pointer transition-all">

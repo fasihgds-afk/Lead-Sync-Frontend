@@ -155,7 +155,11 @@ export default function DynamicSidebar({ isOpen, isCollapsed, onClose, onToggle,
               {/* Current Dashboard Pages */}
               {currentDashboard.pages.filter(page => {
                 if (page.showInSidebar === false) return false;
-                if (page.allowedRoles && (!userRole || !page.allowedRoles.includes(userRole))) return false;
+                if (page.allowedRoles) {
+                  const normalizedUserRole = userRole?.toLowerCase();
+                  const normalizedAllowedRoles = page.allowedRoles.map(r => r.toLowerCase());
+                  if (!normalizedUserRole || !normalizedAllowedRoles.includes(normalizedUserRole)) return false;
+                }
                 return true;
               }).map((page) => {
                 const pagePath = `${currentDashboard.basePath}${page.path ? '/' + page.path : ''}`;

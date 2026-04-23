@@ -32,9 +32,11 @@ export default function DynamicRoutes() {
                         key={page.path || 'index'}
                         path={page.path || ''}
                         element={
-                          <Suspense fallback={<PageLoader />}>
-                            <PageComponent />
-                          </Suspense>
+                          <ProtectedRoute allowedRoles={page.allowedRoles}>
+                            <Suspense fallback={<PageLoader />}>
+                              <PageComponent />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
                     );

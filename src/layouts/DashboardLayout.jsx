@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { toast } from 'react-hot-toast';
 
 import DynamicSidebar from '../components/DynamicSidebar';
 import TokenStatus from '../components/TokenStatus';
@@ -15,6 +16,7 @@ export default function DashboardLayout() {
   /* Global Theme Management */
   const { theme, toggleTheme } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Find current dashboard & page
   const currentDashboard = dashboardConfig.find(db =>
@@ -90,6 +92,24 @@ export default function DashboardLayout() {
     window.location.href = '/login';
   };
 
+  const handleCopyEmail = () => {
+    if (user?.email) {
+      navigator.clipboard.writeText(user.email);
+      toast.success('Email copied!', {
+        duration: 2000,
+        style: {
+          fontSize: '11px',
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          background: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border-primary)'
+        }
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-[var(--bg-primary)] transition-colors duration-300">
       <TokenStatus />
@@ -133,10 +153,17 @@ export default function DashboardLayout() {
                 <div className="h-10 w-px bg-[var(--border-primary)] hidden md:block mr-2" />
               )}
               {currentDashboard && (
-                <div className="flex flex-col">
-
-                  <div className="text-xs sm:text-[15px] font-black text-[var(--text-primary)] uppercase tracking-[-0.02em] leading-none">
-                    {getDashboardTitleFromPath(location.pathname, user?.role || user?.department)}
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] shadow-inner">
+                    <div className="w-2.5 h-2.5 rounded-[3px] bg-[var(--accent-primary)] shadow-[0_0_8px_var(--accent-primary)] animate-pulse opacity-80" />
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <div className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-1">
+                      Current Role
+                    </div>
+                    <div className="text-xs sm:text-sm font-black text-[var(--text-primary)] uppercase tracking-widest leading-none">
+                      {getDashboardTitleFromPath(location.pathname, user?.role || user?.department)}
+                    </div>
                   </div>
                 </div>
               )}
@@ -182,23 +209,20 @@ export default function DashboardLayout() {
                 </div>
               </div>
 
-              <div className="relative group/user cursor-pointer">
+              <div className="relative group/user cursor-pointer" onClick={() => setShowProfileModal(true)}>
                 <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-[#00BE9B]/10 transition-all group-hover/user:scale-105 group-hover/user:rotate-2 border-2 border-[var(--border-primary)] ring-4 ring-transparent group-hover/user:ring-[#00BE9B]/5"
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-[#00BE9B]/10 transition-all group-hover/user:scale-105 group-hover/user:rotate-2 border-2 border-[var(--border-primary)] ring-4 ring-transparent group-hover/user:ring-[#00BE9B]/5 overflow-hidden"
                   style={{
-                    background: 'linear-gradient(135deg, #00BE9B, #00a082)',
+                    background: user?.profileImage ? 'transparent' : 'linear-gradient(135deg, #00BE9B, #00a082)',
                   }}
                 >
-                  {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                  {user?.profileImage ? (
+                    <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name?.split(' ').map(n => n[0]).join('') || 'U'
+                  )}
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-[var(--bg-secondary)] rounded-full shadow-lg" />
-
-                {/* Profile Tooltip on Hover */}
-                <div className="absolute top-[calc(100%+15px)] right-0 w-48 p-4 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl opacity-0 translate-y-2 group-hover/user:opacity-100 group-hover/user:translate-y-0 transition-all pointer-events-none z-[100]">
-                  <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1.5">User Info</p>
-                  <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">{user?.name}</p>
-                  <p className="text-[9px] font-medium text-[var(--text-tertiary)] mt-1 truncate">{user?.email}</p>
-                </div>
               </div>
 
               {/* Logout Button */}
@@ -219,6 +243,52 @@ export default function DashboardLayout() {
             </div>
           </div>
         </header>
+
+        {/* User Profile Modal */}
+        {showProfileModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn" onClick={() => setShowProfileModal(false)}>
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-3xl w-full max-w-xs shadow-xl overflow-hidden animate-slideUp p-6 text-center relative" onClick={e => e.stopPropagation()}>
+
+              {/* Close Icon */}
+              <button onClick={() => setShowProfileModal(false)} className="absolute top-4 right-4 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="w-20 h-20 mx-auto mb-4 rounded-[1rem] overflow-hidden border-2 border-[var(--border-primary)] flex items-center justify-center font-black text-2xl" style={{ background: user?.profileImage ? 'transparent' : 'linear-gradient(135deg, #00BE9B, #00a082)', color: 'white' }}>
+                {user?.profileImage ? (
+                  <img src={user.profileImage} alt={user?.name} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.split(' ').map(n => n[0]).join('') || 'U'
+                )}
+              </div>
+
+              <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">{user?.name}</h3>
+              <p 
+                onClick={handleCopyEmail}
+                className="text-xs font-medium text-[var(--text-tertiary)] mb-5 cursor-pointer hover:text-[var(--text-primary)] transition-colors flex items-center justify-center gap-1.5 group"
+                title="Click to copy email"
+              >
+                {user?.email}
+                <svg className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </p>
+
+              <div className="space-y-3 mb-6 text-left bg-[var(--bg-tertiary)] p-3.5 rounded-2xl border border-[var(--border-primary)] shadow-inner">
+                <div className="flex justify-between items-center border-b border-[var(--border-primary)] pb-2.5">
+                  <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Role</span>
+                  <span className="text-[13px] font-semibold text-[#00BE9B] bg-[#00BE9B]/10 px-2.5 py-0.5 rounded-md">{user?.role}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Gender</span>
+                  <span className="text-[13px] font-medium text-[var(--text-primary)] capitalize">{user?.sex || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Logout Confirmation Modal */}
         {showLogoutConfirm && (
