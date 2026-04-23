@@ -60,7 +60,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
 
     setLoading(false);
-  }, [allowedRoles]);
+  }, [JSON.stringify(allowedRoles), navigate]);
 
   // Show loading while checking authentication
   if (loading) {

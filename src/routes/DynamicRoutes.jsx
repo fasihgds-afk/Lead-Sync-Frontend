@@ -27,16 +27,24 @@ export default function DynamicRoutes() {
                 <Routes>
                   {dashboard.pages.map((page) => {
                     const PageComponent = page.component;
+                    const hasPageLevelProtection = page.allowedRoles && page.allowedRoles.length > 0;
+
                     return (
                       <Route
                         key={page.path || 'index'}
                         path={page.path || ''}
                         element={
-                          <ProtectedRoute allowedRoles={page.allowedRoles}>
+                          hasPageLevelProtection ? (
+                            <ProtectedRoute allowedRoles={page.allowedRoles}>
+                              <Suspense fallback={<PageLoader />}>
+                                <PageComponent />
+                              </Suspense>
+                            </ProtectedRoute>
+                          ) : (
                             <Suspense fallback={<PageLoader />}>
                               <PageComponent />
                             </Suspense>
-                          </ProtectedRoute>
+                          )
                         }
                       />
                     );
