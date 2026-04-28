@@ -7,10 +7,18 @@ const LeadDetailsView = ({ lead, formatPKT }) => {
   const [activeTab, setActiveTab] = useState('detail'); // 'detail', 'comments', 'sources'
 
   const tabItems = [
-    { id: 'detail', label: 'Stage Detail', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', color: 'text-blue-500', activeBg: 'bg-blue-500/10' },
-    { id: 'comments', label: 'Comments', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', color: 'text-amber-500', activeBg: 'bg-amber-500/10' },
-    { id: 'sources', label: 'Source Link', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', color: 'text-emerald-500', activeBg: 'bg-emerald-500/10' }
+    { id: 'detail', label: 'Stage Detail', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', color: 'text-blue-500', activeBg: 'bg-blue-500/10' }
   ];
+
+  if (lead.comments && lead.comments.length > 0) {
+    tabItems.push({ id: 'comments', label: 'Comments', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', color: 'text-amber-500', activeBg: 'bg-amber-500/10' });
+  }
+
+  tabItems.push({ id: 'sources', label: 'Source Link', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', color: 'text-emerald-500', activeBg: 'bg-emerald-500/10' });
+
+  if (lead.assignedTo?.role === 'Manager') {
+    tabItems.push({ id: 'payment', label: 'Payment Details', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-purple-500', activeBg: 'bg-purple-500/10' });
+  }
 
   return (
     <tr className="bg-[var(--bg-tertiary)]/30 border-b border-[var(--border-primary)]/50 border-x-8 border-x-amber-500/10">
@@ -31,6 +39,8 @@ const LeadDetailsView = ({ lead, formatPKT }) => {
                   const nameIsLink = (curr.name || "").trim().startsWith('http');
                   return acc + links.length + (nameIsLink ? 1 : 0);
                 }, 0);
+              } else if (tab.id === 'payment') {
+                itemCount = lead.upsales?.length || 0;
               }
 
               return (
@@ -252,6 +262,37 @@ const LeadDetailsView = ({ lead, formatPKT }) => {
                   );
                 }) : (
                   <div className="col-span-full py-10 text-center text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-40">No sources found</div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'payment' && (
+              <div className="max-w-3xl space-y-4 pr-2 custom-scrollbar max-h-[400px] overflow-y-auto">
+                <div className="flex items-center gap-3 mb-2 p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm">
+                    <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${lead.status === 'PAID' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30'}`}>
+                        {lead.status === 'PAID' ? 'PAID' : 'UNPAID'}
+                    </span>
+                    {lead.status === 'PAID' && lead.upsales && (
+                        <span className="text-[12px] font-bold text-[var(--text-secondary)] ml-auto">Total Amount: <span className="text-emerald-500">${lead.upsales.reduce((sum, item) => sum + (item.amount || 0), 0).toFixed(2)}</span></span>
+                    )}
+                </div>
+
+                {lead.status === 'PAID' ? (
+                  lead.upsales?.length > 0 ? lead.upsales.map((upsell, i) => (
+                    <div key={i} className="p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] shadow-sm">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[12px] font-black text-emerald-500 tracking-tight">${upsell.amount}</span>
+                        <span className="text-[10px] font-bold text-[var(--text-tertiary)] opacity-70">
+                            {formatPKT(upsell.addedAt || upsell.createdAt, 'full')}
+                        </span>
+                      </div>
+                      <p className="text-[12px] font-medium text-[var(--text-primary)] italic leading-tight">"{upsell.comment || 'No comment'}"</p>
+                    </div>
+                  )) : (
+                    <div className="py-10 text-center text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-40">Paid, but no payment details recorded.</div>
+                  )
+                ) : (
+                  <div className="py-10 text-center text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-40">Lead is currently Unpaid</div>
                 )}
               </div>
             )}
@@ -579,6 +620,7 @@ const CombinedLeads = () => {
                       <div className="flex flex-col gap-1">
                         {lead.createdBy && <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-500" /><span className="text-[8px] font-bold text-[var(--text-secondary)]">{lead.createdBy.name} (DM)</span></div>}
                         {lead.lqUpdatedBy && <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /><span className="text-[8px] font-bold text-[var(--text-secondary)]">{lead.lqUpdatedBy.name} (LQ)</span></div>}
+                        {lead.assignedTo && lead.assignedTo.role === 'Manager' && <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-rose-500" /><span className="text-[8px] font-bold text-[var(--text-secondary)]">{lead.assignedTo.name} (Manager)</span></div>}
                       </div>
                     </td>
                     <td className="px-4 py-2 align-middle">
