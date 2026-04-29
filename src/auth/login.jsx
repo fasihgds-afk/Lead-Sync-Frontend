@@ -19,7 +19,7 @@ export default function LoginPage() {
         tokenManager.clearAuthData();
 
         // Stop token monitoring on login page
-        tokenManager.stopExpiryMonitoring();
+        tokenManager.clearTimers();
 
         const handleTokenExpired = (event) => {
             setError(event.detail?.message || 'Session expired. Please login again.');
@@ -44,13 +44,11 @@ export default function LoginPage() {
         setError(null);
         setLoading(true);
 
-        console.log("Login clicked");
-        console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
 
         try {
             const response = await authAPI.login(formData);
 
-            console.log("Login API success:", response);
+
 
             const { token, user, expiresIn } = response;
 

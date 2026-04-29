@@ -9,14 +9,19 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
     const [filtersApplied, setFiltersApplied] = useState({});
     const [refreshing, setRefreshing] = useState(false);
 
-    // Use refs to prevent redundant/parallel overlapping fetches
-    const isFetchingLeads = useRef(false);
+    // Use refs to abort previous in-flight requests
+    const abortControllerRef = useRef(null);
 
     const fetchLeads = useCallback(async (force = false) => {
-        if (isFetchingLeads.current && !force) return;
+        // Abort any ongoing request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        // Create a new AbortController for this request
+        abortControllerRef.current = new AbortController();
 
         try {
-            isFetchingLeads.current = true;
             if (force) {
                 setRefreshing(true);
             } else {
@@ -26,7 +31,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
             const skip = (currentPage - 1) * itemsPerPage;
             console.log('Fetching leads with filters:', { filters, currentPage, itemsPerPage, skip });
 
-            const response = await lqAPI.getMyLeads(itemsPerPage, skip, filters);
+            const response = await lqAPI.getMyLeads(itemsPerPage, skip, filters, abortControllerRef.current.signal);
             console.log('API response:', response);
 
             if (response.success) {
@@ -40,12 +45,15 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
                 setTotal(0);
             }
         } catch (err) {
+            if (err.name === 'CanceledError' || err.name === 'AbortError') {
+                console.log('Fetch leads request was cancelled');
+                return; // Silently exit without updating state or stopping loading
+            }
             console.error("Fetch leads error:", err);
             setLeadsError("Network error while fetching leads");
             setLeads([]);
             setTotal(0);
         } finally {
-            isFetchingLeads.current = false;
             setLoading(false);
             setRefreshing(false);
         }

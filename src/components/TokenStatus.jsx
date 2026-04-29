@@ -34,7 +34,7 @@ export default function TokenStatus() {
   useEffect(() => {
     if (isPublicRoute()) return;
 
-    tokenManager.initializeMonitoring();
+    tokenManager.initialize();
     updateStatus();
 
     const onExpired = () => {

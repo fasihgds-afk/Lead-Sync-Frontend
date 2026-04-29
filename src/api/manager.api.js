@@ -19,7 +19,6 @@ export const managerAPI = {
             params,
             headers: { Authorization: `Bearer ${token}` }
         });
-        console.log(response.data);
         return response.data;
     },
 
@@ -63,10 +62,10 @@ export const managerAPI = {
     getStats: async (params = {}) => {
         const token = tokenManager.getToken();
         const user = tokenManager.getUser();
-        
+
         // Backend route is /api/manager/leads/stats/:managerId
         const managerId = params.managerId || user?.id || user?._id;
-        
+
         if (!managerId) {
             console.error("No managerId found for stats request");
             throw new Error("Manager ID is required");

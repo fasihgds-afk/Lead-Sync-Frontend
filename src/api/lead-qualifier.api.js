@@ -3,19 +3,17 @@ import tokenManager from '../utils/tokenManager';
 
 export const lqAPI = {
     // Get leads assigned to the current Lead Qualifier with filters
-    getMyLeads: async (limit = 20, skip = 0, filters = {}) => {
+    getMyLeads: async (limit = 20, skip = 0, filters = {}, signal = null) => {
         const token = tokenManager.getToken();
         const params = { limit, skip, ...filters };
 
-        console.log('Making API call with params:', params);
-
         const response = await axiosInstance.get('/api/lq/leads', {
             params,
+            signal,
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
-        console.log('Raw API response:', response.data);
         return response.data;
     },
 

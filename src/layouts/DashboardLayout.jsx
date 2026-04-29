@@ -84,7 +84,7 @@ export default function DashboardLayout() {
       return;
     }
 
-    tokenManager.initializeMonitoring();
+    tokenManager.initialize();
   }, [navigate]);
 
   const confirmLogout = () => {

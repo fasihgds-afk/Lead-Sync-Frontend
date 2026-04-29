@@ -31,7 +31,7 @@ function AppRoutesWithTokenManagement() {
     };
  
     if (isPublicRoute) {
-      tokenManager.stopExpiryMonitoring();
+      tokenManager.clearTimers();
       return;
     }
  
@@ -47,7 +47,7 @@ function AppRoutesWithTokenManagement() {
     };
  
     window.addEventListener('tokenExpired', handleTokenExpired);
-    tokenManager.startExpiryMonitoring();
+    tokenManager.scheduleTimers();
  
     return () => {
       window.removeEventListener('tokenExpired', handleTokenExpired);
