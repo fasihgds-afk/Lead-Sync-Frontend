@@ -176,6 +176,12 @@ export default function LeadQualifierLeads() {
         callback();
     };
 
+    const handlePageChange = (newPage) => {
+        if (newPage === currentPage) return;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setCurrentPage(newPage);
+    };
+
     // Sync selected lead with fresh data from leads array
     const activeLead = useMemo(() => {
         if (!selectedLead) return null;
@@ -339,7 +345,12 @@ export default function LeadQualifierLeads() {
 
             {/* Table Section */}
             <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] shadow-xl overflow-hidden relative animate-slideUp">
-                <div className="overflow-x-auto">
+                {loading && (
+                    <div className="absolute inset-x-0 top-0 h-1 bg-blue-500/30 overflow-hidden z-[50]">
+                        <div className="w-1/2 h-full bg-blue-500 animate-[shimmer_1.5s_infinite]" style={{ background: 'linear-gradient(90deg, transparent, #3b82f6, transparent)' }}></div>
+                    </div>
+                )}
+                <div className={`overflow-x-auto transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                     <table className="w-full text-left border-collapse min-w-[700px] lg:min-w-[900px]">
                         <thead>
                             <tr className="bg-[var(--bg-tertiary)] border-b border-[var(--border-primary)]">
@@ -385,7 +396,7 @@ export default function LeadQualifierLeads() {
 
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
                             className="p-2 md:p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
                         >
@@ -396,7 +407,7 @@ export default function LeadQualifierLeads() {
                             {[...Array(totalPages)].map((_, i) => (
                                 <button
                                     key={i}
-                                    onClick={() => setCurrentPage(i + 1)}
+                                    onClick={() => handlePageChange(i + 1)}
                                     className={`w-8 h-8 md:w-9 md:h-9 rounded-xl text-[9px] md:text-[10px] font-black transition-all ${currentPage === i + 1 ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20' : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'}`}
                                 >
                                     {i + 1}
@@ -405,7 +416,7 @@ export default function LeadQualifierLeads() {
                         </div>
 
                         <button
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                             disabled={currentPage === totalPages || totalPages === 0}
                             className="p-2 md:p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
                         >
@@ -510,6 +521,7 @@ export default function LeadQualifierLeads() {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+                @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
                 `
             }} />
         </div>
