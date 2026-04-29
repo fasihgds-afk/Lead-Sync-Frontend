@@ -13,7 +13,7 @@ import AssignManagerModal from '../components/AssignManagerModal';
 export default function LeadQualifierLeads() {
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
+    const itemsPerPage = 50;
 
     // Filter states
     const {
