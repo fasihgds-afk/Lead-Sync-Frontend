@@ -146,7 +146,19 @@ export default function AssignManagerModal({
                                                     : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]/40'
                                                     }`}
                                             >
-                                                <span className="text-xs font-bold truncate max-w-[200px]">{em.value}</span>
+                                                <div className="flex flex-col items-start overflow-hidden pr-2 text-left">
+                                                    <span className="text-xs font-bold truncate max-w-[180px]">{em.value}</span>
+                                                    {em.status && (
+                                                        <span className={`text-[6px] font-black px-1 py-0.5 rounded uppercase tracking-tighter border mt-0.5 ${
+                                                            em.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                                                            em.status === 'BOUNCED' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 
+                                                            em.status === 'DEAD' ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' :
+                                                            'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                        }`}>
+                                                            {em.status}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <div className={`w-4 h-4 flex-shrink-0 rounded-md flex items-center justify-center border-2 transition-all ${selectedEmails.includes(em.normalized)
                                                     ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]'
                                                     : 'border-[var(--border-primary)]'

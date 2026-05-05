@@ -60,11 +60,26 @@ const ContactDetailsModal = memo(({
                         <div className="grid grid-cols-2 gap-1.5">
                             {selectedLead.emails?.map((email, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)]/50 group/item hover:border-blue-500/30 transition-all">
-                                    <div className="flex items-center gap-2 overflow-hidden">
-                                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${email.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' : 'bg-amber-400'}`} />
+                                    <div className="flex items-center gap-2 overflow-hidden flex-1">
+                                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                            email.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' : 
+                                            email.status === 'BOUNCED' ? 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.5)]' : 
+                                            email.status === 'DEAD' ? 'bg-slate-500 shadow-[0_0_6px_rgba(100,116,139,0.5)]' :
+                                            'bg-amber-400'
+                                        }`} />
                                         <span className="text-[11px] font-bold text-[var(--text-primary)] truncate">{email.value}</span>
+                                        {email.status && (
+                                            <span className={`flex-shrink-0 text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter border ${
+                                                email.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                                                email.status === 'BOUNCED' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 
+                                                email.status === 'DEAD' ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' :
+                                                'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                            }`}>
+                                                {email.status}
+                                            </span>
+                                        )}
                                     </div>
-                                    <button onClick={() => onCopy(email.value, `email-${idx}`)} className="p-1 rounded hover:bg-blue-500/10 text-[var(--text-tertiary)] hover:text-blue-500 transition-all">
+                                    <button onClick={() => onCopy(email.value, `email-${idx}`)} className="p-1 rounded hover:bg-blue-500/10 text-[var(--text-tertiary)] hover:text-blue-500 transition-all flex-shrink-0">
                                         {copiedId === `email-${idx}` ? <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>}
                                     </button>
                                 </div>
