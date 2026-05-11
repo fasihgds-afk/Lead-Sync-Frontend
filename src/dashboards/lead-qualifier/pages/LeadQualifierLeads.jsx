@@ -69,23 +69,23 @@ export default function LeadQualifierLeads() {
     };
 
     const handleCopyAllEmails = () => {
-        const allEmails = filteredLeads.flatMap(lead =>
-            lead.emails?.map(e => e.value) || []
+        const activeEmails = filteredLeads.flatMap(lead =>
+            lead.emails?.filter(e => e.status === 'ACTIVE').map(e => e.value) || []
         ).filter(Boolean);
 
-        if (allEmails.length > 0) {
-            navigator.clipboard.writeText(allEmails.join('\n'));
+        if (activeEmails.length > 0) {
+            navigator.clipboard.writeText(activeEmails.join('\n'));
             window.showCustomNotification({
                 type: 'success',
-                title: 'Emails Copied',
-                message: `Successfully copied ${allEmails.length} emails from the active page.`,
+                title: 'Active Emails Copied',
+                message: `Successfully copied ${activeEmails.length} ACTIVE emails from the active page.`,
                 duration: 3000
             });
         } else {
             window.showCustomNotification({
                 type: 'warning',
-                title: 'No Emails',
-                message: 'No emails found on the current page to copy.',
+                title: 'No Active Emails',
+                message: 'No ACTIVE emails found on the current page to copy.',
                 duration: 3000
             });
         }
@@ -281,13 +281,13 @@ export default function LeadQualifierLeads() {
                                     type="button"
                                     onClick={handleCopyAllEmails}
                                     className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:!text-white hover:border-[var(--accent-primary)]"
-                                    title="Copy all emails on this page"
+                                    title="Copy all ACTIVE emails on this page"
                                 >
                                     <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
                                     <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
-                                        Copy All Emails
+                                        Copy Active Emails
                                     </span>
                                 </button>
 
