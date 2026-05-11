@@ -1,23 +1,23 @@
 import React from 'react';
 
-const LeadIdentity = ({ lead, size = 'md', className = '' }) => {
+const LeadIdentity = ({ lead, index, size = 'md', className = '' }) => {
     if (!lead) return null;
 
     const sizes = {
         sm: {
-            avatar: 'w-8 h-8 text-sm rounded-lg',
+            avatar: 'w-8 h-8 text-xs rounded-lg',
             name: 'text-xs',
             location: 'text-[8px]',
             gap: 'gap-3'
         },
         md: {
-            avatar: 'w-10 h-10 rounded-2xl text-lg',
+            avatar: 'w-10 h-10 rounded-2xl text-base',
             name: 'text-sm',
             location: 'text-[9px]',
             gap: 'gap-4'
         },
         lg: {
-            avatar: 'h-12 w-12 rounded-xl text-xl',
+            avatar: 'h-12 w-12 rounded-xl text-lg',
             name: 'text-lg',
             location: 'text-[9px]',
             gap: 'gap-4'
@@ -29,7 +29,7 @@ const LeadIdentity = ({ lead, size = 'md', className = '' }) => {
     return (
         <div className={`flex items-center ${s.gap} ${className}`}>
             <div className={`${s.avatar} bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-primary)]/60 flex items-center justify-center font-black text-white shadow-lg shadow-[var(--accent-primary)]/20 transition-transform group-hover:scale-105`}>
-                {lead.name?.[0]?.toUpperCase() || '?'}
+                {index || lead.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="space-y-1">
                 <div className={`${s.name} text-[var(--text-white)] text-[var(--text-primary)] leading-none tracking-tight`}>

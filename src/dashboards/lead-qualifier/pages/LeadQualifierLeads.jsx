@@ -91,11 +91,15 @@ export default function LeadQualifierLeads() {
         }
     };
 
-    const handleCopyAllNumbers = () => {
-        const allNumbers = filteredLeads.flatMap(lead =>
-            lead.phones?.map(p => typeof p === 'object' ? (p.value || p.number) : p) || []
-        ).filter(Boolean);
-
+    const handleCopyPrimaryNumbers = () => {
+        const allNumbers = filteredLeads
+            .map(lead => {
+                const firstPhone = lead.phones?.[0];
+                return typeof firstPhone === 'object'
+                    ? (firstPhone?.value || firstPhone?.number)
+                    : firstPhone;
+            })
+            .filter(Boolean);
         if (allNumbers.length > 0) {
             navigator.clipboard.writeText(allNumbers.join('\n'));
             window.showCustomNotification({
@@ -113,7 +117,32 @@ export default function LeadQualifierLeads() {
             });
         }
     };
+    const handleCopySecondaryNumbers = () => {
+        const allNumbers = filteredLeads
+            .flatMap(lead =>
+                lead.phones?.slice(1).map(p =>
+                    typeof p === 'object' ? (p.value || p.number) : p
+                ) || []
+            )
+            .filter(Boolean);
 
+        if (allNumbers.length > 0) {
+            navigator.clipboard.writeText(allNumbers.join('\n'));
+            window.showCustomNotification({
+                type: 'success',
+                title: 'Numbers Copied',
+                message: `Successfully copied ${allNumbers.length} secondary phone numbers.`,
+                duration: 3000
+            });
+        } else {
+            window.showCustomNotification({
+                type: 'warning',
+                title: 'No Numbers',
+                message: 'No secondary phone numbers found.',
+                duration: 3000
+            });
+        }
+    };
     const handleOpenBulkMark = () => {
         // filter out leads that are strictly PENDING. Adjust the condition if status text differs.
         const pendingIds = filteredLeads.filter(l => l.lqStatus === "PENDING").map(l => l._id);
@@ -241,88 +270,101 @@ export default function LeadQualifierLeads() {
             <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-4 md:p-6 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-primary)] opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-                <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 xl:gap-6 relative z-10">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full xl:w-auto">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 w-full lg:w-auto">
                         <div className="flex items-center gap-4">
-                            <div className="p-2.5 bg-[var(--accent-primary)]/10 rounded-2xl text-[var(--accent-primary)] shadow-inner">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2" />
-                                </svg>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div>
-                                    <h1 className="text-xl md:text-2xl font-black text-[var(--text-primary)] tracking-tight">All Leads</h1>
+                            <div className="flex items-center justify-center w-12 h-12 bg-[var(--accent-primary)]/10 rounded-2xl text-[var(--accent-primary)] shadow-inner border border-[var(--accent-primary)]/20">
+                                <div className="flex flex-col items-center justify-center">
+                                    <span className="text-[10px] font-black leading-none uppercase mb-0.5 opacity-60 tracking-tighter">AL</span>
+                                    <span className="text-base font-black leading-none">{total || 0}</span>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        console.log('Leads refresh button clicked');
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        refreshLeads();
-                                    }}
-                                    disabled={refreshing}
-                                    className={`flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 ${refreshing
-                                        ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] opacity-75 cursor-not-allowed'
-                                        : 'bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
-                                        }`}
-                                    title={refreshing ? "Refreshing..." : "Refresh leads"}
-                                >
-                                    <svg className={`w-5 h-5 transition-colors pointer-events-none ${refreshing ? 'animate-spin text-white' : 'text-[var(--accent-primary)] group-hover:text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                    <span className={`text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none ${refreshing ? 'text-white' : 'text-[var(--accent-primary)] group-hover:text-white'
-                                        }`}>
-                                        {refreshing ? 'Refreshing...' : 'Refresh'}
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={handleCopyAllEmails}
-                                    className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:!text-white hover:border-[var(--accent-primary)]"
-                                    title="Copy all ACTIVE emails on this page"
-                                >
-                                    <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                    <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
-                                        Copy Active Emails
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={handleCopyAllNumbers}
-                                    className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:!text-white hover:border-[var(--accent-primary)]"
-                                    title="Copy all phone numbers on this page"
-                                >
-                                    <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
-                                    <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
-                                        Copy All Numbers
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={handleOpenBulkMark}
-                                    className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-orange-500 hover:bg-orange-500 hover:!text-white hover:border-orange-500"
-                                    title="Mark all pending leads on this page as REACHED"
-                                >
-                                    <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
-                                        Mark All REACHED
-                                    </span>
-                                </button>
                             </div>
+                            <h1 className="text-xl md:text-2xl font-black text-[var(--text-primary)] tracking-tight whitespace-nowrap">All Leads</h1>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    console.log('Leads refresh button clicked');
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    refreshLeads();
+                                }}
+                                disabled={refreshing}
+                                className={`flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 ${refreshing
+                                    ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] opacity-75 cursor-not-allowed'
+                                    : 'bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
+                                    }`}
+                                title={refreshing ? "Refreshing..." : "Refresh leads"}
+                            >
+                                <svg className={`w-5 h-5 transition-colors pointer-events-none ${refreshing ? 'animate-spin text-white' : 'text-[var(--accent-primary)] group-hover:text-white'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                <span className={`text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none ${refreshing ? 'text-white' : 'text-[var(--accent-primary)] group-hover:text-white'
+                                    }`}>
+                                    {refreshing ? 'Refreshing...' : 'Refresh'}
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleCopyAllEmails}
+                                className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:!text-white hover:border-[var(--accent-primary)]"
+                                title="Copy all ACTIVE emails on this page"
+                            >
+                                <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
+                                    Copy Active Emails
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleCopyPrimaryNumbers}
+                                className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:!text-white hover:border-[var(--accent-primary)]"
+                                title="Copy all phone numbers on this page"
+                            >
+                                <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
+                                    Copy Primary
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCopySecondaryNumbers}
+                                className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:!text-white hover:border-[var(--accent-primary)]"
+                                title="Copy all phone numbers on this page"
+                            >
+                                <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
+                                    Copy Secondary
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleOpenBulkMark}
+                                className="flex items-center gap-2 px-3 py-2.5 border rounded-xl transition-all shadow-sm group cursor-pointer relative z-10 bg-[var(--bg-tertiary)]/40 border-[var(--border-primary)] text-orange-500 hover:bg-orange-500 hover:!text-white hover:border-orange-500"
+                                title="Mark all pending leads on this page as REACHED"
+                            >
+                                <svg className="w-5 h-5 transition-colors pointer-events-none group-hover:!text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="text-[10px] font-black uppercase tracking-wider transition-all pointer-events-none select-none group-hover:!text-white">
+                                    Mark All REACHED
+                                </span>
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <LeadFilters
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
@@ -362,10 +404,11 @@ export default function LeadQualifierLeads() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-primary)]/30">
-                            {filteredLeads.map((lead) => (
+                            {filteredLeads.map((lead, index) => (
                                 <LeadTableRow
                                     key={lead._id}
                                     lead={lead}
+                                    index={(currentPage - 1) * itemsPerPage + index + 1}
                                     onViewInfo={(l) => { setSelectedLead(l); setIsContactModalOpen(true); }}
                                     handleUpdateStatus={updateLeadStatus}
                                     onOpenComments={(l) => { setSelectedLead(l); setIsTimelineModalOpen(true); }}
@@ -475,7 +518,7 @@ export default function LeadQualifierLeads() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M9 16h.01m12-4a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        
+
                         <h3 className="text-xl font-black text-[var(--text-primary)] text-center mb-2 tracking-tight">
                             Confirm Bulk Update
                         </h3>

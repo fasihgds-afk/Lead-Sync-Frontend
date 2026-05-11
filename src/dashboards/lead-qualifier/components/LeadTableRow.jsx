@@ -4,6 +4,7 @@ import { getStatusStyle, getStatusLabel } from '../utils/statusStyles';
 
 const LeadTableRow = memo(({
     lead,
+    index,
     onViewInfo,
     handleUpdateStatus,
     onOpenComments,
@@ -14,7 +15,7 @@ const LeadTableRow = memo(({
     return (
         <tr className="hover:bg-[var(--bg-tertiary)]/30 transition-colors group cursor-default">
             <td className="px-4 md:px-6 py-3 md:py-4">
-                <LeadIdentity lead={lead} size="md" />
+                <LeadIdentity lead={lead} index={index} size="md" />
             </td>
             <td className="px-4 md:px-6 py-3 md:py-4">
                 <div className="flex flex-wrap items-center gap-2">
