@@ -309,6 +309,7 @@ const CombinedLeads = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [isSearchMode, setIsSearchMode] = useState(false);
   const [filters, setFilters] = useState({
     stage: '',
     lqStatus: ''
@@ -330,15 +331,7 @@ const CombinedLeads = () => {
     }));
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      if (searchTerm) {
-        setPagination(prev => ({ ...prev, currentPage: 1 }));
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  // No debounce — search only fires on Enter or button click
 
   useEffect(() => {
     fetchCombinedLeads();
@@ -348,7 +341,29 @@ const CombinedLeads = () => {
     try {
       setLoading(true);
       const skip = (pagination.currentPage - 1) * pagination.itemsPerPage;
-      const filterParams = { ...filters, search: debouncedSearchTerm };
+
+      // Search mode — use the dedicated search endpoint
+      if (isSearchMode && debouncedSearchTerm.trim().length >= 2) {
+        const response = await combinedAPI.searchLeads(
+          debouncedSearchTerm.trim(),
+          pagination.itemsPerPage,
+          skip
+        );
+        if (response.success) {
+          setLeads(response.leads || []);
+          const total = response.metadata?.total_records || 0;
+          const totalPages = Math.ceil(total / pagination.itemsPerPage);
+          setPagination(prev => ({
+            ...prev,
+            totalPages: totalPages || 1,
+            totalLeads: total
+          }));
+        }
+        return;
+      }
+
+      // Normal mode — existing filter-based fetch
+      const filterParams = { ...filters };
       Object.keys(filterParams).forEach(key => {
         if (filterParams[key] === '' || filterParams[key] === null) {
           delete filterParams[key];
@@ -380,6 +395,15 @@ const CombinedLeads = () => {
       }
     } catch (error) {
       console.error("Failed to fetch leads:", error);
+      toast.error('Failed to fetch leads. Please try again.', {
+        style: {
+          fontSize: '11px',
+          fontWeight: 'bold',
+          background: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border-primary)'
+        }
+      });
     } finally {
       setLoading(false);
       setIsInitialLoading(false);
@@ -395,6 +419,21 @@ const CombinedLeads = () => {
   const filterOptions = {
     stages: ['DM', 'Verifier', 'LQ'],
     lqStatuses: ['PENDING', 'REACHED', 'DEAD', 'QUALIFIED']
+  };
+
+  const triggerSearch = () => {
+    const q = searchTerm.trim();
+    if (q.length < 2) return;
+    setDebouncedSearchTerm(q);
+    setIsSearchMode(true);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
+    setIsSearchMode(false);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
   };
 
   const openContactDetails = (lead) => setSelectedLead(lead);
@@ -503,46 +542,109 @@ const CombinedLeads = () => {
       {/* Header Stats Card */}
       <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-6 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
-        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 relative z-10">
-          <div className="flex flex-wrap items-center gap-8">
-            <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-[var(--accent-success)]/10 rounded-2xl text-[var(--accent-success)] shadow-inner">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+        <div className="flex flex-col gap-5 relative z-10">
+          {/* Top row: title, count, refresh, filters */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+            <div className="flex flex-wrap items-center gap-8">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-[var(--accent-success)]/10 rounded-2xl text-[var(--accent-success)] shadow-inner">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)] uppercase">All <span className="text-[var(--accent-success)]">Leads</span></h1>
               </div>
-              <h1 className="text-2xl font-black tracking-tight text-[var(--text-primary)] uppercase">All <span className="text-[var(--accent-success)]">Leads</span></h1>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="flex flex-col">
-                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] opacity-60">Total Leads</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-[var(--text-primary)] tabular-nums">{pagination.totalLeads}</span>
-                  <span className="text-[9px] font-bold text-[var(--accent-success)]/60 uppercase">Leads</span>
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] opacity-60">
+                    {isSearchMode ? 'Search Results' : 'Total Leads'}
+                  </span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-black text-[var(--text-primary)] tabular-nums">{pagination.totalLeads}</span>
+                    <span className="text-[9px] font-bold text-[var(--accent-success)]/60 uppercase">Leads</span>
+                  </div>
                 </div>
               </div>
+              {!isSearchMode && (
+                <button
+                  onClick={() => fetchCombinedLeads()}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl text-xs font-bold hover:bg-[var(--accent-success)] hover:text-white transition-all shadow-sm disabled:opacity-50"
+                >
+                  <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {loading ? 'Refreshing...' : 'Refresh'}
+                </button>
+              )}
             </div>
-            <button
-              onClick={() => fetchCombinedLeads()}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl text-xs font-bold hover:bg-[var(--accent-success)] hover:text-white transition-all shadow-sm disabled:opacity-50"
-            >
-              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {loading ? 'Refreshing...' : 'Refresh'}
-            </button>
+            {/* Stage / LQ filters — hidden while searching */}
+            {!isSearchMode && (
+              <div className="flex flex-wrap items-center gap-4">
+                <select value={filters.stage} onChange={(e) => setFilters(prev => ({ ...prev, stage: e.target.value }))} className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 uppercase tracking-widest cursor-pointer transition-all">
+                  <option value="">ALL STAGES</option>
+                  {filterOptions.stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+                </select>
+                {(!filters.stage || filters.stage === 'LQ') && (
+                  <select value={filters.lqStatus} onChange={(e) => setFilters(prev => ({ ...prev, lqStatus: e.target.value }))} className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 uppercase tracking-widest cursor-pointer transition-all">
+                    <option value="">LQ STATUS</option>
+                    {filterOptions.lqStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <select value={filters.stage} onChange={(e) => setFilters(prev => ({ ...prev, stage: e.target.value }))} className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 uppercase tracking-widest cursor-pointer transition-all">
-              <option value="">ALL STAGES</option>
-              {filterOptions.stages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
-            </select>
-            {(!filters.stage || filters.stage === 'LQ') && (
-              <select value={filters.lqStatus} onChange={(e) => setFilters(prev => ({ ...prev, lqStatus: e.target.value }))} className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-2 text-xs font-black text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 uppercase tracking-widest cursor-pointer transition-all">
-                <option value="">LQ STATUS</option>
-                {filterOptions.lqStatuses.map(status => <option key={status} value={status}>{status}</option>)}
-              </select>
+
+          {/* Search bar */}
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-3 flex-1 max-w-xl px-4 py-2.5 rounded-2xl border transition-all duration-200 ${isSearchMode ? 'bg-[var(--bg-tertiary)] border-[var(--accent-primary)]/50 ring-2 ring-[var(--accent-primary)]/10' : 'bg-[var(--bg-tertiary)] border-[var(--border-primary)] focus-within:border-[var(--accent-primary)]/50 focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/10'}`}>
+              <svg className={`w-4 h-4 shrink-0 transition-colors ${isSearchMode ? 'text-[var(--accent-primary)]' : 'text-[var(--text-tertiary)]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchTerm(val);
+                  if (val === '') {
+                    setDebouncedSearchTerm('');
+                    setIsSearchMode(false);
+                    setPagination(prev => ({ ...prev, currentPage: 1 }));
+                  }
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && triggerSearch()}
+                placeholder="Search by name, email, phone or location..."
+                className="flex-1 bg-transparent outline-none text-[12px] font-bold text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:font-normal"
+              />
+              {loading && isSearchMode && (
+                <svg className="w-4 h-4 shrink-0 text-[var(--accent-primary)] animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              )}
+            </div>
+            {/* Search button */}
+            <button
+              onClick={triggerSearch}
+              disabled={searchTerm.trim().length < 2 || loading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[var(--accent-primary)] text-white text-[11px] font-black uppercase tracking-widest transition-all shadow-sm disabled:opacity-40 hover:opacity-90 active:scale-95"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Search
+            </button>
+            {/* Reset button — only visible when search is active or input has text */}
+            {(isSearchMode || searchTerm) && (
+              <button
+                onClick={clearSearch}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-[11px] font-black uppercase tracking-widest transition-all hover:bg-rose-500 hover:text-white active:scale-95"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset
+              </button>
             )}
           </div>
         </div>
@@ -641,7 +743,9 @@ const CombinedLeads = () => {
           </table>
         </div>
 
-        {leads.length === 0 && <div className="text-center py-12 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">No Intelligence Threads Found</div>}
+        {leads.length === 0 && <div className="text-center py-12 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">
+          {isSearchMode ? `No results found for "${debouncedSearchTerm}"` : 'No Intelligence Threads Found'}
+        </div>}
 
         <div className="px-6 py-4 border-t border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30 flex items-center justify-between">
           <div className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Showing <span className="text-[var(--text-primary)]">{leads.length}</span> of <span className="text-[var(--text-primary)]">{pagination.totalLeads}</span></div>

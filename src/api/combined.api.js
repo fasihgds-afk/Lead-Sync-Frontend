@@ -15,5 +15,13 @@ export const combinedAPI = {
       params: { limit, skip, stage: role, ...filters }
     });
     return response.data;
+  },
+
+  // Search leads by name, email, phone, or location
+  searchLeads: async (q, limit = 20, skip = 0) => {
+    const response = await axiosInstance.get('/api/leads/search', {
+      params: { q, limit, skip }
+    });
+    return response.data;
   }
 };
