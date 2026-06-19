@@ -83,7 +83,7 @@ export const getUserRole = () => {
   return user ? (user.role || user.department || null) : null;
 };
 
-// 🔹 Role check (safe)
+// Role check (safe)
 export const hasRequiredRole = (userRole, requiredRoles) => {
   if (!requiredRoles?.length) return true;
 
@@ -92,4 +92,13 @@ export const hasRequiredRole = (userRole, requiredRoles) => {
   return requiredRoles
     .map(r => resolveRole(r))
     .includes(role);
+};
+
+// Public routes (Single Source of Truth)
+const PUBLIC_ROUTES = new Set(['/', '/login', '/signup', '/forgot-password']);
+
+export const isPublicRoute = (pathname) => {
+  const path = pathname || window.location.pathname;
+  const normalizedPath = path.toLowerCase().replace(/\/$/, '') || '/';
+  return PUBLIC_ROUTES.has(normalizedPath) || normalizedPath.startsWith('/reset-password');
 };

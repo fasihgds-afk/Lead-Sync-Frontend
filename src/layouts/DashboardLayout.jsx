@@ -83,8 +83,6 @@ export default function DashboardLayout() {
       window.location.href = '/login';
       return;
     }
-
-    tokenManager.initialize();
   }, [navigate]);
 
   const confirmLogout = () => {

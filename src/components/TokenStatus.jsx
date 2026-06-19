@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import tokenManager from '../utils/tokenManager';
-
-const PUBLIC_ROUTES = new Set(['/', '/login', '/signup']);
-const LOGIN_PATH = '/login';
-
-const isPublicRoute = () => PUBLIC_ROUTES.has(window.location.pathname);
-const redirectToLogin = () => {
-  if (!isPublicRoute()) window.location.replace(LOGIN_PATH);
-};
+import { isPublicRoute } from '../utils/roleRedirect';
 
 export default function TokenStatus() {
+  const location = useLocation();
   const [status, setStatus] = useState(null);
   const [warning, setWarning] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -17,7 +12,7 @@ export default function TokenStatus() {
   const clearAuth = () => tokenManager.clearAuthData();
 
   const updateStatus = useCallback(() => {
-    if (isPublicRoute()) return;
+    if (isPublicRoute(location.pathname)) return;
 
     const nextStatus = tokenManager.getTokenStatus();
     setStatus(nextStatus);
@@ -32,9 +27,8 @@ export default function TokenStatus() {
   }, []);
 
   useEffect(() => {
-    if (isPublicRoute()) return;
+    if (isPublicRoute(location.pathname)) return;
 
-    tokenManager.initialize();
     updateStatus();
 
     const onExpired = () => {
@@ -64,7 +58,7 @@ export default function TokenStatus() {
     };
   }, [updateStatus]);
 
-  if (isPublicRoute() || !status) return null;
+  if (isPublicRoute(location.pathname) || !status) return null;
 
   if (warning || status.expired) {
     return (

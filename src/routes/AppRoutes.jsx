@@ -9,17 +9,11 @@ import LandingPage from '../pages/LandingPage';
 import DynamicRoutes from './DynamicRoutes';
 import TokenStatus from '../components/TokenStatus';
 import tokenManager from '../utils/tokenManager';
+import { isPublicRoute } from '../utils/roleRedirect';
 
 function AppRoutesWithTokenManagement() {
   const location = useLocation();
-  const normalizedPath = location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-  const isPublicRoute =
-    normalizedPath === '/' ||
-    normalizedPath === '/login' ||
-    normalizedPath === '/signup' ||
-    normalizedPath === '/forgot-password' ||
-    normalizedPath.startsWith('/reset-password');
- 
+  const isPublicRoutePath = isPublicRoute(location.pathname);
   const navigate = useNavigate();
  
   // Token validation & expiry handling (protected routes only)
@@ -30,7 +24,7 @@ function AppRoutesWithTokenManagement() {
       navigate('/', { replace: true });
     };
  
-    if (isPublicRoute) {
+    if (isPublicRoutePath) {
       tokenManager.clearTimers();
       return;
     }
@@ -52,7 +46,7 @@ function AppRoutesWithTokenManagement() {
     return () => {
       window.removeEventListener('tokenExpired', handleTokenExpired);
     };
-  }, [location.pathname, isPublicRoute, navigate]);
+  }, [location.pathname, isPublicRoutePath, navigate]);
  
   return (
     <>

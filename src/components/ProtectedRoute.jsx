@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import tokenManager from '../utils/tokenManager';
 import SharedLoader from './SharedLoader';
+import { getRoleBasedRedirect, hasRequiredRole } from '../utils/roleRedirect';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -21,36 +22,23 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       }
 
       const userData = tokenManager.getUser();
+      const userRole = userData.role || userData.department;
 
-      // Role Authorization Check
-      if (allowedRoles.length > 0) {
-        const userRole = userData.role || userData.department;
-        const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
-        const normalizedUserRole = userRole?.toLowerCase();
+      // Role Authorization Check using centralized utility
+      if (allowedRoles.length > 0 && !hasRequiredRole(userRole, allowedRoles)) {
+        console.log('Unauthorized access attempt:', { userRole, allowedRoles });
 
-        if (!normalizedUserRole || !normalizedAllowedRoles.includes(normalizedUserRole)) {
-          console.log('Unauthorized access attempt:', { userRole, allowedRoles });
-
-          // Redirect to their own dashboard based on their actual role
-          let path = '/';
-          if (normalizedUserRole === 'admin' || normalizedUserRole === 'super admin') {
-            path = '/gds/admin';
-          } else if (normalizedUserRole === 'manager') {
-            path = '/gds/manager';
-          } else if (normalizedUserRole === 'data minors') {
-            path = '/gds/data-minor';
-          } else if (normalizedUserRole === 'lead qualifiers') {
-            path = '/gds/lead-qualifier';
-          } else if (normalizedUserRole === 'verifier') {
-            path = '/gds/verifier';
-          } else {
-            console.log('No matching role found, clearing auth and redirecting to home');
-            tokenManager.clearAuthData();
-          }
-
-          navigate(path, { replace: true });
-          return;
+        // Redirect to their own dashboard using centralized utility
+        const redirectPath = getRoleBasedRedirect(userRole);
+        
+        if (redirectPath === '/unauthorized') {
+          console.log('No matching role found, clearing auth and redirecting to home');
+          tokenManager.clearAuthData();
+          navigate('/', { replace: true });
+        } else {
+          navigate(redirectPath, { replace: true });
         }
+        return;
       }
 
       setIsAuthenticated(true);
@@ -60,7 +48,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
 
     setLoading(false);
-  }, [JSON.stringify(allowedRoles), navigate]);
+  }, [allowedRoles, navigate]);
 
   // Show loading while checking authentication
   if (loading) {
