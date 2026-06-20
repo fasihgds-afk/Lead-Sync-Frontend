@@ -2,71 +2,400 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Under Maintenance – Lead Sync</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Maintenance | Lead Sync</title>
+    <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #090d16;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-glow: rgba(16, 185, 129, 0.15);
+            --accent-border: rgba(16, 185, 129, 0.25);
+            --emerald-500: #10b981;
+            --teal-400: #2dd4bf;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: #f1f5f9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      text-align: center;
-      padding: 20px;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .container {
-      max-width: 480px;
-    }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
 
-    .icon {
-      font-size: 64px;
-      margin-bottom: 24px;
-    }
+        /* Ambient background glow effects */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(45, 212, 191, 0.05) 50%, transparent 100%);
+            top: -10%;
+            left: -10%;
+            filter: blur(80px);
+            z-index: 1;
+            animation: pulse-slow 12s infinite alternate ease-in-out;
+        }
 
-    h1 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: #f8fafc;
-    }
+        .ambient-glow-2 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(16, 185, 129, 0.03) 50%, transparent 100%);
+            bottom: -10%;
+            right: -10%;
+            filter: blur(80px);
+            z-index: 1;
+            animation: pulse-slow 15s infinite alternate-reverse ease-in-out;
+        }
 
-    p {
-      font-size: 16px;
-      color: #94a3b8;
-      line-height: 1.6;
-    }
+        /* Subtle grid pattern overlay */
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center;
+            z-index: 2;
+            mask-image: radial-gradient(circle, black 40%, transparent 85%);
+            -webkit-mask-image: radial-gradient(circle, black 40%, transparent 85%);
+        }
 
-    .badge {
-      display: inline-block;
-      margin-top: 28px;
-      padding: 8px 20px;
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 999px;
-      font-size: 14px;
-      color: #64748b;
-    }
-  </style>
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 520px;
+            text-align: center;
+            padding: 40px 32px;
+            border-radius: 24px;
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow:
+                0 4px 30px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Animated Header Icon */
+        .icon-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-glow {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--emerald-500), var(--teal-400));
+            opacity: 0.25;
+            filter: blur(8px);
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+
+        .icon-wrapper {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1.5px solid var(--accent-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(16, 185, 129, 0.1);
+        }
+
+        .gear-svg {
+            width: 32px;
+            height: 32px;
+            color: var(--emerald-500);
+            animation: spin 8s infinite linear;
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 40%, #a7f3d0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+            font-weight: 400;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 99px;
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            font-size: 12px;
+            font-weight: 600;
+            color: #34d399;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--emerald-500);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--emerald-500);
+            animation: blink 1.5s infinite ease-in-out;
+        }
+
+        /* Detail Cards (Grid) */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .detail-item {
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .detail-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+
+        .detail-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--emerald-500);
+            flex-shrink: 0;
+        }
+
+        .detail-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .detail-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 1px;
+        }
+
+        /* Footer info */
+        .footer-note {
+            margin-top: 24px;
+            font-size: 11px;
+            color: #475569;
+            letter-spacing: 0.2px;
+        }
+
+        /* Keyframes Animations */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.35;
+                transform: scale(1.08);
+            }
+        }
+
+        @keyframes pulse-slow {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+
+            100% {
+                transform: scale(1.1) translate(30px, 20px);
+                filter: blur(90px);
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 20px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="icon">🔧</div>
-    <h1>We'll be back shortly</h1>
-    <p>Lead Sync is currently undergoing scheduled maintenance. We apologize for the inconvenience and appreciate your
-      patience.</p>
-    <div class="badge">Estimated downtime: ~2 hour</div>
-  </div>
+    <!-- Background glows -->
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="container">
+        <!-- Status Indicator Badge -->
+        <div class="status-badge">
+            <span class="status-dot"></span>
+            Scheduled System Upgrade
+        </div>
+
+        <!-- Animated Gear Icon -->
+        <div class="icon-container">
+            <div class="icon-glow"></div>
+            <div class="icon-wrapper">
+                <svg class="gear-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <h1>We'll be back shortly</h1>
+        <p>Lead Sync is currently undergoing essential scheduled maintenance to optimize system speed and database
+            connectivity. We'll be back online in a few minutes.</p>
+
+        <!-- Information Cards Grid -->
+        <div class="details-grid">
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+
+                <div class="detail-content">
+                    <span class="detail-label">Estimated Downtime</span>
+                    <span class="detail-value">Live on Monday</span>
+                </div>
+
+            </div>
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                        </path>
+                    </svg>
+                </div>
+                <div class="detail-content">
+                    <span class="detail-label">Database Integrity</span>
+                    <span class="detail-value">Fully secured and untouched</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            &copy; 2026 Lead Sync. All rights reserved.
+        </div>
+    </div>
 </body>
 
 </html>
