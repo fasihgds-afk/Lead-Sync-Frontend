@@ -1,77 +1,46 @@
 import axiosInstance from './axiosInstance';
-import tokenManager from '../utils/tokenManager';
 
 export const dataMinorAPI = {
     // Get stats for the logged-in Data Minor
     getMyStats: async (params = {}) => {
-        const token = tokenManager.getToken();
-        const response = await axiosInstance.get('/api/dm/stats', {
-            params,
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-        });
+        const response = await axiosInstance.get('/api/dm/stats', { params });
         return response.data;
     },
 
     // Check for duplicate leads in real-time
     checkDuplicates: async ({ email, phone }) => {
-        const token = tokenManager.getToken();
         const response = await axiosInstance.get('/api/dm/duplicates/check', {
-            params: { email, phone },
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            params: { email, phone }
         });
         return response.data;
     },
 
     // Submit a new lead
     submitLead: async (leadData) => {
-        const token = tokenManager.getToken();
-        const response = await axiosInstance.post('/api/dm/leads', leadData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await axiosInstance.post('/api/dm/leads', leadData);
         return response.data;
     },
 
     // Verifier Endpoints
     getVerifierLeads: async (limit = 20, skip = 0) => {
-        const token = tokenManager.getToken();
-
         const response = await axiosInstance.get('/api/verifier/leads', {
-            params: { limit, skip },
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            params: { limit, skip }
         });
+        return response.data;
+    },
 
+    getVerifierLeadsCount: async () => {
+        const response = await axiosInstance.get('/api/verifier/leads/verifier-count');
         return response.data;
     },
 
     updateLeadAllEmails: async (leadId, emails) => {
-        const token = tokenManager.getToken();
-        const response = await axiosInstance.post(`/api/verifier/leads/${leadId}/update-emails`, { emails }, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await axiosInstance.post(`/api/verifier/leads/${leadId}/update-emails`, { emails });
         return response.data;
     },
 
-
-
-
-
-    moveVerifierLeadsToLQ: async () => {
-        const token = tokenManager.getToken();
-        const response = await axiosInstance.post('/api/verifier/leads/move-all-to-lq', {}, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+    moveVerifierLeadsToLQ: async (moveCount) => {
+        const response = await axiosInstance.post('/api/verifier/leads/move-all-to-lq', { moveCount });
         return response.data;
     },
 };

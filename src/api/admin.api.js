@@ -1,5 +1,4 @@
 import axiosInstance from './axiosInstance';
-import tokenManager from '../utils/tokenManager';
 
 export const adminAPI = {
   // Get overview stats
@@ -14,12 +13,7 @@ export const adminAPI = {
 
   // Get all pending requests
   getPendingRequests: async () => {
-    const token = tokenManager.getToken();
-    const response = await axiosInstance.get('/api/superadmin/requests/pending', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axiosInstance.get('/api/superadmin/requests/pending');
     return response.data;
   },
 
