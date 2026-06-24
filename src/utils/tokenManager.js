@@ -1,62 +1,81 @@
+const TOKEN_KEY = 'token';
+const USER_KEY = 'user';
+const WARNING_THRESHOLD = 5 * 60 * 1000;
+const JWT_PART_COUNT = 3;
+
+function getStorage() {
+  try {
+    const test = '__tm_probe__';
+    sessionStorage.setItem(test, '1');
+    sessionStorage.removeItem(test);
+    return sessionStorage;
+  } catch {
+    return {
+      _store: {},
+      getItem(k) { return Object.prototype.hasOwnProperty.call(this._store, k) ? this._store[k] : null; },
+      setItem(k, v) { this._store[k] = String(v); },
+      removeItem(k) { delete this._store[k]; },
+    };
+  }
+}
+
+const storage = getStorage();
+
+function parseJWTPayload(token) {
+  if (typeof token !== 'string') return null;
+
+  const parts = token.split('.');
+  if (parts.length !== JWT_PART_COUNT) return null;
+
+  try {
+    const base64 = parts[1]
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(parts[1].length / 4) * 4, '=');
+
+    const json = decodeURIComponent(
+      Array.from(atob(base64), c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+    );
+
+    const payload = JSON.parse(json);
+
+    if (typeof payload !== 'object' || payload === null) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 class TokenManager {
   constructor() {
-    this.TOKEN_KEY = 'token';
-    this.USER_KEY = 'user';
-
-    this.WARNING_THRESHOLD = 5 * 60 * 1000; // 5 minutes
-
     this._cachedToken = null;
     this._cachedPayload = null;
-
-    this.expiryTimeout = null;
-    this.warningTimeout = null;
-
-    this.warned = false;
-  }
-
-  // ================================
-  // 🔹 TOKEN PARSING (CACHED)
-  // ================================
-  parseToken(token) {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-
-      return JSON.parse(jsonPayload);
-    } catch (error) {
-      console.error('Invalid token:', error);
-      return null;
-    }
+    this._expiryTimeout = null;
+    this._warningTimeout = null;
+    this._warned = false;
+    this._initialized = false;
   }
 
   getPayload(token) {
-    if (this._cachedToken === token) return this._cachedPayload;
-
-    const payload = this.parseToken(token);
+    if (token === this._cachedToken) return this._cachedPayload;
+    const payload = parseJWTPayload(token);
     this._cachedToken = token;
     this._cachedPayload = payload;
-
     return payload;
   }
 
-  // ================================
-  // 🔹 TOKEN INFO
-  // ================================
   getTokenExpiry(token) {
     const payload = this.getPayload(token);
-    return payload?.exp ? payload.exp * 1000 : null;
+    const exp = payload?.exp;
+    if (typeof exp !== 'number' || !isFinite(exp) || exp <= 0) return null;
+    return exp * 1000;
   }
 
   getTokenRemainingTime(token) {
     const expiry = this.getTokenExpiry(token);
-    return expiry ? Math.max(0, expiry - Date.now()) : 0;
+    if (expiry === null) return 0;
+    return Math.max(0, expiry - Date.now());
   }
 
   isTokenExpired(token) {
@@ -64,36 +83,29 @@ class TokenManager {
   }
 
   isTokenExpiringSoon(token) {
-    return this.getTokenRemainingTime(token) <= this.WARNING_THRESHOLD;
+    const remaining = this.getTokenRemainingTime(token);
+    return remaining > 0 && remaining <= WARNING_THRESHOLD;
   }
 
-  // ================================
-  // 🔹 STORAGE (Use sessionStorage if possible)
-  // ================================
   saveAuthData(token, user) {
-    if (token) {
-      sessionStorage.setItem(this.TOKEN_KEY, token);
-    }
-
-    if (user) {
-      sessionStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    }
-
-    this.scheduleTimers();
+    if (token) storage.setItem(TOKEN_KEY, token);
+    if (user && typeof user === 'object') storage.setItem(USER_KEY, JSON.stringify(user));
+    this._scheduleTimers();
   }
 
   getToken() {
-    return sessionStorage.getItem(this.TOKEN_KEY);
+    return storage.getItem(TOKEN_KEY);
   }
 
   getUser() {
-    const storedUser = sessionStorage.getItem(this.USER_KEY);
+    const raw = storage.getItem(USER_KEY);
 
-    if (storedUser) {
+    if (raw) {
       try {
-        return JSON.parse(storedUser);
-      } catch (e) {
-        console.error('User parse error:', e);
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === 'object' && parsed !== null) return parsed;
+      } catch {
+        storage.removeItem(USER_KEY);
       }
     }
 
@@ -101,35 +113,31 @@ class TokenManager {
     if (!token) return null;
 
     const payload = this.getPayload(token);
+    if (!payload) return null;
 
-    return payload
-      ? {
-        id: payload.id || payload.userId,
-        name: payload.name,
-        email: payload.email,
-        role: payload.role?.toLowerCase().trim(),
-        department: payload.department
-      }
-      : null;
+    return {
+      id: payload.id ?? payload.userId ?? null,
+      name: payload.name ?? null,
+      email: payload.email ?? null,
+      role: typeof payload.role === 'string' ? payload.role.toLowerCase().trim() : null,
+      department: payload.department ?? null,
+    };
   }
 
   isCurrentTokenValid() {
     const token = this.getToken();
-    return !!token && !this.isTokenExpired(token);
+    return Boolean(token) && !this.isTokenExpired(token);
   }
 
   clearAuthData() {
-    sessionStorage.removeItem(this.TOKEN_KEY);
-    sessionStorage.removeItem(this.USER_KEY);
-
-    this.clearTimers();
+    this._clearTimers();
+    storage.removeItem(TOKEN_KEY);
+    storage.removeItem(USER_KEY);
+    this._initialized = false;
   }
 
-  // ================================
-  // 🔹 TIMER-BASED EXPIRY (NO INTERVAL)
-  // ================================
-  scheduleTimers() {
-    this.clearTimers();
+  _scheduleTimers() {
+    this._clearTimers();
 
     const token = this.getToken();
     if (!token) return;
@@ -137,75 +145,57 @@ class TokenManager {
     const remaining = this.getTokenRemainingTime(token);
 
     if (remaining <= 0) {
-      this.handleTokenExpired();
+      setTimeout(() => this._handleTokenExpired(), 0);
       return;
     }
 
-    // Expiry timer
-    this.expiryTimeout = setTimeout(() => {
-      this.handleTokenExpired();
-    }, remaining);
+    this._expiryTimeout = setTimeout(() => this._handleTokenExpired(), remaining);
 
-    // Warning timer
-    if (remaining > this.WARNING_THRESHOLD) {
-      this.warningTimeout = setTimeout(() => {
-        this.handleTokenExpiringSoon();
-      }, remaining - this.WARNING_THRESHOLD);
+    if (remaining > WARNING_THRESHOLD) {
+      this._warningTimeout = setTimeout(() => this._handleTokenExpiringSoon(), remaining - WARNING_THRESHOLD);
     }
   }
 
-  clearTimers() {
-    if (this.expiryTimeout) clearTimeout(this.expiryTimeout);
-    if (this.warningTimeout) clearTimeout(this.warningTimeout);
-
-    this.expiryTimeout = null;
-    this.warningTimeout = null;
-    this.warned = false;
+  _clearTimers() {
+    if (this._expiryTimeout !== null) clearTimeout(this._expiryTimeout);
+    if (this._warningTimeout !== null) clearTimeout(this._warningTimeout);
+    this._expiryTimeout = null;
+    this._warningTimeout = null;
+    this._warned = false;
   }
 
-  // ================================
-  // 🔹 EVENTS
-  // ================================
-  handleTokenExpired() {
+  _handleTokenExpired() {
     this.clearAuthData();
-
-    window.dispatchEvent(
-      new CustomEvent('tokenExpired', {
-        detail: { message: 'Session expired. Please login again.' }
-      })
-    );
+    this._dispatch('tokenExpired', { message: 'Session expired. Please log in again.' });
   }
 
-  handleTokenExpiringSoon() {
-    if (this.warned) return;
-    this.warned = true;
+  _handleTokenExpiringSoon() {
+    if (this._warned) return;
+    this._warned = true;
 
     const token = this.getToken();
-    const remainingTime = this.getTokenRemainingTime(token);
+    if (!token) return;
 
-    window.dispatchEvent(
-      new CustomEvent('tokenExpiringSoon', {
-        detail: {
-          remainingTime,
-          formattedTime: this.formatRemainingTime(remainingTime)
-        }
-      })
-    );
+    const remainingTime = this.getTokenRemainingTime(token);
+    this._dispatch('tokenExpiringSoon', { remainingTime, formattedTime: this.formatRemainingTime(remainingTime) });
   }
 
-  // ================================
-  // 🔹 UTIL
-  // ================================
+  _dispatch(name, detail) {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+
   formatRemainingTime(ms) {
-    if (ms <= 0) return 'Expired';
+    if (!isFinite(ms) || ms <= 0) return 'Expired';
 
-    const minutes = Math.floor(ms / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
+    const totalSeconds = Math.floor(ms / 1000);
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const totalHours = Math.floor(totalSeconds / 3600);
+    const totalDays = Math.floor(totalSeconds / 86400);
 
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''}`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    if (totalDays > 0) return `${totalDays} day${totalDays > 1 ? 's' : ''}`;
+    if (totalHours > 0) return `${totalHours} hour${totalHours > 1 ? 's' : ''}`;
+    if (totalMinutes > 0) return `${totalMinutes} minute${totalMinutes > 1 ? 's' : ''}`;
 
     return 'Less than 1 minute';
   }
@@ -213,24 +203,32 @@ class TokenManager {
   getTokenStatus() {
     const token = this.getToken();
 
-    if (!token) {
-      return { valid: false, expired: true, message: 'No token' };
-    }
+    if (!token) return { valid: false, expired: true, message: 'No token found.' };
 
     const remaining = this.getTokenRemainingTime(token);
 
     return {
       valid: remaining > 0,
       expired: remaining <= 0,
-      expiringSoon: remaining <= this.WARNING_THRESHOLD,
+      expiringSoon: remaining > 0 && remaining <= WARNING_THRESHOLD,
       remainingTime: remaining,
-      formattedTime: this.formatRemainingTime(remaining)
+      formattedTime: this.formatRemainingTime(remaining),
     };
   }
 
+  scheduleTimers() {
+    this._scheduleTimers();
+  }
+
+  clearTimers() {
+    this._clearTimers();
+  }
+
   initialize() {
+    if (this._initialized) return;
     if (this.getToken()) {
-      this.scheduleTimers();
+      this._scheduleTimers();
+      this._initialized = true;
     }
   }
 }
