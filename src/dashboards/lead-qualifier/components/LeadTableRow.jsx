@@ -64,21 +64,32 @@ const LeadTableRow = memo(({
                 </div>
             </td>
             <td className="px-4 md:px-6 py-3 md:py-4">
-                <div className="relative w-24 md:w-28 group/status">
-                    <select
-                        value={lead.lqStatus || 'PENDING'}
-                        onChange={(e) => handleUpdateStatus(lead._id, e.target.value)}
-                        className={`w-full appearance-none px-2 md:px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] border outline-none cursor-pointer transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-sm ${getStatusStyle(lead.lqStatus)}`}
-                    >
-                        <option value="PENDING" className="bg-[#121212] text-slate-400">● PENDING</option>
-                        <option value="REACHED" className="bg-[#121212] text-blue-400">● REACHED</option>
-                        <option value="QUALIFIED" className="bg-[#121212] text-emerald-400">● QUALIFIED</option>
-                        <option value="DEAD" className="bg-[#121212] text-rose-400">● DEAD</option>
-                    </select>
-                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-40 group-hover/status:opacity-100 transition-opacity">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                {lead.stage === 'MANAGER' ? (
+                    <div className="flex flex-col gap-1">
+                        <span className={`inline-flex px-2 md:px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] border ${getStatusStyle(lead.lqStatus)}`}>
+                            {lead.lqStatus || 'QUALIFIED'}
+                        </span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-amber-500/80 px-1">
+                            ↑ Submitted
+                        </span>
                     </div>
-                </div>
+                ) : (
+                    <div className="relative w-24 md:w-28 group/status">
+                        <select
+                            value={lead.lqStatus || 'PENDING'}
+                            onChange={(e) => handleUpdateStatus(lead._id, e.target.value)}
+                            className={`w-full appearance-none px-2 md:px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] border outline-none cursor-pointer transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-sm ${getStatusStyle(lead.lqStatus)}`}
+                        >
+                            <option value="PENDING" className="bg-[#121212] text-slate-400">● PENDING</option>
+                            <option value="REACHED" className="bg-[#121212] text-blue-400">● REACHED</option>
+                            <option value="QUALIFIED" className="bg-[#121212] text-emerald-400">● QUALIFIED</option>
+                            <option value="DEAD" className="bg-[#121212] text-rose-400">● DEAD</option>
+                        </select>
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-40 group-hover/status:opacity-100 transition-opacity">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
+                )}
             </td>
             <td className="px-4 md:px-6 py-3 md:py-4">
                 <div className="space-y-1">
@@ -103,7 +114,7 @@ const LeadTableRow = memo(({
                         <span className="hidden sm:inline">Notes</span> {lead.comments?.length > 0 && `(${lead.comments.length})`}
                     </button>
 
-                    {lead.lqStatus === 'QUALIFIED' && (
+                    {lead.lqStatus === 'QUALIFIED' && lead.stage !== 'MANAGER' && (
                         <button
                             onClick={() => {
                                 if ((lead.comments?.length || 0) === 0) {
@@ -117,23 +128,45 @@ const LeadTableRow = memo(({
                                         });
                                     } else {
                                         // Fallback to a more subtle notification
-                                        const notification = document.createElement('div');
-                                        notification.className = 'fixed top-4 right-4 z-50 p-4 bg-rose-500 border border-rose-600 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full';
-                                        notification.innerHTML = `
-                                            <div class="flex items-start gap-3">
-                                                <div class="flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M9 16h.01"></path>
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <h4 class="text-sm font-medium text-rose-800">Note Required</h4>
-                                                    <p class="text-sm text-rose-600 mt-1">Please add at least 1 note before assigning this lead to a manager.</p>
-                                                </div>
-                                                <button onclick="this.parentElement.remove()" class="ml-4 text-sm text-rose-600 hover:text-rose-800 font-medium">✕</button>
-                                            </div>
-                                        `;
-                                        document.body.appendChild(notification);
+                                         const notification = document.createElement('div');
+                                         notification.className = 'fixed top-4 right-4 z-50 p-4 bg-rose-500 border border-rose-600 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full';
+                                         
+                                         const container = document.createElement('div');
+                                         container.className = 'flex items-start gap-3';
+
+                                         const iconContainer = document.createElement('div');
+                                         iconContainer.className = 'flex-shrink-0';
+                                         iconContainer.innerHTML = `
+                                             <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M9 16h.01"></path>
+                                             </svg>
+                                         `;
+
+                                         const textContainer = document.createElement('div');
+                                         const h4 = document.createElement('h4');
+                                         h4.className = 'text-sm font-medium text-rose-800';
+                                         h4.textContent = 'Note Required';
+
+                                         const p = document.createElement('p');
+                                         p.className = 'text-sm text-rose-600 mt-1';
+                                         p.textContent = 'Please add at least 1 note before assigning this lead to a manager.';
+
+                                         textContainer.appendChild(h4);
+                                         textContainer.appendChild(p);
+
+                                         const closeButton = document.createElement('button');
+                                         closeButton.className = 'ml-4 text-sm text-rose-600 hover:text-rose-800 font-medium';
+                                         closeButton.textContent = '✕';
+                                         closeButton.onclick = () => {
+                                             notification.remove();
+                                         };
+
+                                         container.appendChild(iconContainer);
+                                         container.appendChild(textContainer);
+                                         container.appendChild(closeButton);
+                                         notification.appendChild(container);
+
+                                         document.body.appendChild(notification);
 
                                         // Auto-remove after 5 seconds
                                         setTimeout(() => {
