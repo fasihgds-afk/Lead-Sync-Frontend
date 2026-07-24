@@ -1,9 +1,17 @@
 import axios from 'axios';
 import tokenManager from '../utils/tokenManager';
 
-const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ?? 'https://leadsyncflow-3.onrender.com'
-).replace(/\/$/, "");
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!rawBaseUrl) {
+  throw new Error(
+    '[axiosInstance] VITE_API_BASE_URL is not defined. ' +
+    'Set it in your .env file (e.g. VITE_API_BASE_URL=http://localhost:5000). ' +
+    'Never use a production URL as a fallback.'
+  );
+}
+
+const API_BASE_URL = rawBaseUrl.replace(/\/$/, '');
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,

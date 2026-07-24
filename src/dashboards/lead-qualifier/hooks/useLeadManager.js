@@ -62,6 +62,11 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
     // Initial load and when filters/page changes
     useEffect(() => {
         fetchLeads();
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
     }, [fetchLeads]);
 
     const updateLeadStatus = async (leadId, newStatus) => {

@@ -22,6 +22,7 @@ export default function AdminDashboard() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
     const [activeFilter, setActiveFilter] = useState('ALL');
     const [customDates, setCustomDates] = useState({ from: '', to: '' });
 
@@ -71,6 +72,7 @@ export default function AdminDashboard() {
     const fetchDashboardData = useCallback(async (filterOverride, datesOverride) => {
         try {
             setLoading(true);
+            setError(null);
 
             // Use provided filter/dates OR the current state
             const targetFilter = filterOverride || activeFilter;
@@ -86,9 +88,12 @@ export default function AdminDashboard() {
             const res = await adminAPI.getOverview(params);
             if (res.success) {
                 setData(res);
+            } else {
+                setError(res.message || 'Failed to load dashboard data');
             }
-        } catch (error) {
-            console.error('Dashboard Load Error:', error);
+        } catch (err) {
+            console.error('Dashboard Load Error:', err);
+            setError(err.response?.data?.message || err.message || 'An error occurred while fetching dashboard data.');
         } finally {
             setLoading(false);
         }
@@ -100,6 +105,29 @@ export default function AdminDashboard() {
     }, []);
 
     if (loading && !data) return <SharedLoader />;
+
+    if (error) {
+        return (
+            <div className="p-4 md:p-6 space-y-5 max-w-[1200px] mx-auto min-h-[60vh] flex items-center justify-center">
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 shadow-lg max-w-md w-full text-center space-y-4">
+                    <div className="mx-auto w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
+                        <FiAlertCircle className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">Dashboard Load Error</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">{error}</p>
+                    <button
+                        onClick={() => fetchDashboardData(activeFilter, customDates)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/90 text-white rounded-xl text-xs font-bold transition-all shadow-sm animate-fadeIn"
+                    >
+                        <FiRefreshCw className="w-4 h-4" />
+                        Retry Loading
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!data) return null;
 
     const { totals, conversions, leaderboards } = data;
 

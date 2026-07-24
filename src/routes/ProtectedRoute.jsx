@@ -11,7 +11,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const { status, userRole, isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
-    // Stable key derived from VALUES, not the array reference.
     const rolesKey = useMemo(
         () => [...allowedRoles].map((r) => String(r).toLowerCase().trim()).sort().join('|'),
         [allowedRoles]
@@ -20,8 +19,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const hasRoleRestriction = allowedRoles.length > 0;
     const isAuthorized = !hasRoleRestriction || hasRequiredRole(userRole, allowedRoles);
 
-    // Avoid firing the same redirect twice (e.g. StrictMode double-invoke, or
-    // parent + child ProtectedRoute mounting in the same tick).
     const hasRedirected = useRef(false);
 
     useEffect(() => {
@@ -35,7 +32,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
             return;
         }
 
-        // status === 'authenticated' from here on
         if (!isAuthorized) {
             if (hasRedirected.current) return;
             hasRedirected.current = true;
@@ -49,16 +45,12 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
                 navigate(redirectPath, { replace: true });
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status, isAuthorized, rolesKey, navigate]);
 
-    // Still resolving global auth state -> one shared loader, no flicker.
     if (status === 'checking') {
         return <SharedLoader />;
     }
 
-    // Not authenticated or not authorized -> render nothing; effect above is
-    // already navigating away. Returning null avoids a content flash.
     if (!isAuthenticated || !isAuthorized) {
         return null;
     }

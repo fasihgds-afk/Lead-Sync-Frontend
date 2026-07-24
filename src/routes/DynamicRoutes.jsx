@@ -4,6 +4,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { dashboardConfig } from '../dashboards/dashboardConfig';
 import SharedLoader from '../components/SharedLoader';
 import ProtectedRoute from './ProtectedRoute';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh] w-full">
@@ -40,17 +41,19 @@ export default function DynamicRoutes() {
                         key={page.path || 'index'}
                         path={page.path || ''}
                         element={
-                          hasPageLevelProtection ? (
-                            <ProtectedRoute allowedRoles={page.allowedRoles}>
+                          <ErrorBoundary>
+                            {hasPageLevelProtection ? (
+                              <ProtectedRoute allowedRoles={page.allowedRoles}>
+                                <Suspense fallback={<PageLoader />}>
+                                  <PageComponent />
+                                </Suspense>
+                              </ProtectedRoute>
+                            ) : (
                               <Suspense fallback={<PageLoader />}>
                                 <PageComponent />
                               </Suspense>
-                            </ProtectedRoute>
-                          ) : (
-                            <Suspense fallback={<PageLoader />}>
-                              <PageComponent />
-                            </Suspense>
-                          )
+                            )}
+                          </ErrorBoundary>
                         }
                       />
                     );

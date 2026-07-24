@@ -1,5 +1,6 @@
 const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
+const EXPIRY_KEY = 'token_expiry';
 const WARNING_THRESHOLD = 5 * 60 * 1000;
 const JWT_PART_COUNT = 3;
 
@@ -68,8 +69,19 @@ class TokenManager {
   getTokenExpiry(token) {
     const payload = this.getPayload(token);
     const exp = payload?.exp;
-    if (typeof exp !== 'number' || !isFinite(exp) || exp <= 0) return null;
-    return exp * 1000;
+    if (typeof exp === 'number' && isFinite(exp) && exp > 0) {
+      return exp * 1000;
+    }
+
+    const storedExpiry = storage.getItem(EXPIRY_KEY);
+    if (storedExpiry) {
+      const parsed = parseInt(storedExpiry, 10);
+      if (!isNaN(parsed) && isFinite(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+
+    return null;
   }
 
   getTokenRemainingTime(token) {
@@ -87,9 +99,32 @@ class TokenManager {
     return remaining > 0 && remaining <= WARNING_THRESHOLD;
   }
 
-  saveAuthData(token, user) {
+  saveAuthData(token, user, expiresIn) {
     if (token) storage.setItem(TOKEN_KEY, token);
     if (user && typeof user === 'object') storage.setItem(USER_KEY, JSON.stringify(user));
+    
+    if (expiresIn) {
+      let expiryTime = null;
+      if (typeof expiresIn === 'number') {
+        expiryTime = Date.now() + expiresIn * 1000;
+      } else if (typeof expiresIn === 'string') {
+        const parsed = parseInt(expiresIn, 10);
+        if (!isNaN(parsed)) {
+          expiryTime = Date.now() + parsed * 1000;
+        } else {
+          const dateParsed = Date.parse(expiresIn);
+          if (!isNaN(dateParsed)) {
+            expiryTime = dateParsed;
+          }
+        }
+      }
+      if (expiryTime) {
+        storage.setItem(EXPIRY_KEY, String(expiryTime));
+      }
+    } else {
+      storage.removeItem(EXPIRY_KEY);
+    }
+    
     this._scheduleTimers();
   }
 
@@ -133,6 +168,7 @@ class TokenManager {
     this._clearTimers();
     storage.removeItem(TOKEN_KEY);
     storage.removeItem(USER_KEY);
+    storage.removeItem(EXPIRY_KEY);
     this._initialized = false;
   }
 

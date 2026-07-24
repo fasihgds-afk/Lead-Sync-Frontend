@@ -225,20 +225,43 @@ export default function LeadQualifierLeads() {
             const notification = document.createElement('div');
             notification.className = `fixed top-24 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 ${type === 'warning' ? 'bg-rose-500 border border-rose-600' : type === 'success' ? 'bg-[var(--accent-primary)] border border-[var(--accent-primary)]' : 'bg-blue-500 border border-blue-600'} text-white`;
             notification.style.transform = 'translateX(100%)';
-            notification.innerHTML = `
-                <div class="flex items-start gap-3">
-                    <div class="flex-shrink-0">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M9 16h.01"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-medium text-white">${title}</h4>
-                        <p class="text-sm text-white/90 mt-1">${message}</p>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-sm text-white/80 hover:text-white">✕</button>
-                </div>
+
+            const container = document.createElement('div');
+            container.className = 'flex items-start gap-3';
+
+            const iconContainer = document.createElement('div');
+            iconContainer.className = 'flex-shrink-0';
+            iconContainer.innerHTML = `
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M9 16h.01"></path>
+                </svg>
             `;
+
+            const textContainer = document.createElement('div');
+            
+            const h4 = document.createElement('h4');
+            h4.className = 'text-sm font-medium text-white';
+            h4.textContent = title;
+
+            const p = document.createElement('p');
+            p.className = 'text-sm text-white/90 mt-1';
+            p.textContent = message;
+
+            textContainer.appendChild(h4);
+            textContainer.appendChild(p);
+
+            const closeButton = document.createElement('button');
+            closeButton.className = 'ml-4 text-sm text-white/80 hover:text-white';
+            closeButton.textContent = '✕';
+            closeButton.onclick = () => {
+                notification.remove();
+            };
+
+            container.appendChild(iconContainer);
+            container.appendChild(textContainer);
+            container.appendChild(closeButton);
+            notification.appendChild(container);
+
             document.body.appendChild(notification);
 
             // Animate in
@@ -432,38 +455,70 @@ export default function LeadQualifierLeads() {
                 )}
 
                 {/* Pagination */}
-                <div className="px-4 md:px-6 py-3 md:py-4 bg-[var(--bg-tertiary)]/20 border-t border-[var(--border-primary)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="px-4 md:px-6 py-3 md:py-4 bg-[var(--bg-tertiary)]/20 border-t border-[var(--border-primary)] flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-[9px] md:text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">
                         Displaying <span className="text-[var(--text-primary)]">{filteredLeads.length}</span> of <span className="text-[var(--text-primary)]">{total}</span> Records
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 ml-auto">
+                        {/* Prev */}
                         <button
                             onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
-                            className="p-2 md:p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
+                            className="flex items-center gap-1 px-3 py-2 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all text-[9px] font-black uppercase tracking-wider"
                         >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                            Prev
                         </button>
 
+                        {/* Page numbers */}
                         <div className="flex items-center gap-1">
-                            {[...Array(totalPages)].map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => handlePageChange(i + 1)}
-                                    className={`w-8 h-8 md:w-9 md:h-9 rounded-xl text-[9px] md:text-[10px] font-black transition-all ${currentPage === i + 1 ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20' : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'}`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
+                            {(() => {
+                                const pages = [];
+                                const delta = 2;
+                                const left = currentPage - delta;
+                                const right = currentPage + delta;
+                                let last = 0;
+
+                                for (let i = 1; i <= totalPages; i++) {
+                                    if (i === 1 || i === totalPages || (i >= left && i <= right)) {
+                                        if (last && i - last > 1) {
+                                            pages.push('...' + i);
+                                        }
+                                        pages.push(i);
+                                        last = i;
+                                    }
+                                }
+
+                                return pages.map((page) => {
+                                    if (typeof page === 'string') {
+                                        return (
+                                            <span key={page} className="w-8 h-8 flex items-center justify-center text-[10px] font-black text-[var(--text-tertiary)] select-none">
+                                                …
+                                            </span>
+                                        );
+                                    }
+                                    return (
+                                        <button
+                                            key={page}
+                                            onClick={() => handlePageChange(page)}
+                                            className={`w-8 h-8 md:w-9 md:h-9 rounded-xl text-[9px] md:text-[10px] font-black transition-all ${currentPage === page ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20' : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'}`}
+                                        >
+                                            {page}
+                                        </button>
+                                    );
+                                });
+                            })()}
                         </div>
 
+                        {/* Next */}
                         <button
                             onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                             disabled={currentPage === totalPages || totalPages === 0}
-                            className="p-2 md:p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
+                            className="flex items-center gap-1 px-3 py-2 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all text-[9px] font-black uppercase tracking-wider"
                         >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                            Next
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                         </button>
                     </div>
                 </div>
