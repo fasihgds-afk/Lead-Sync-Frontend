@@ -70,7 +70,7 @@ export default function ManagerDashboard() {
             subValue: "Selected Period Earnings",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             colorClass: "bg-emerald-500/10 text-emerald-500",
-            onClick: () => navigate('/gds/manager/analytics')
+            onClick: () => navigate('/gds/manager/history')
         },
         {
             title: "UNPAID LEADS",
@@ -86,7 +86,7 @@ export default function ManagerDashboard() {
             subValue: "Awaiting Admin",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             colorClass: "bg-blue-500/10 text-blue-500",
-            onClick: () => navigate('/gds/manager/history')
+            onClick: () => navigate('/gds/manager/rejected-leads')
         },
         {
             title: "APPROVED REJECTIONS",
@@ -94,7 +94,7 @@ export default function ManagerDashboard() {
             subValue: "Final Rejected",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             colorClass: "bg-rose-500/10 text-rose-500",
-            onClick: () => navigate('/gds/manager/rejected')
+            onClick: () => navigate('/gds/manager/rejected-leads')
         }
     ];
 
