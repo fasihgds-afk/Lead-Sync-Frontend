@@ -22,6 +22,32 @@ function getStorage() {
 
 const storage = getStorage();
 
+function parseExpiresInToSeconds(expiresIn) {
+  if (typeof expiresIn === 'number' && isFinite(expiresIn) && expiresIn > 0) {
+    return expiresIn;
+  }
+  if (typeof expiresIn !== 'string') return null;
+
+  const str = expiresIn.trim().toLowerCase();
+  if (!str) return null;
+
+  if (/^\d+$/.test(str)) {
+    return parseInt(str, 10);
+  }
+
+  const match = str.match(/^(\d+)\s*([a-z]+)$/);
+  if (match) {
+    const val = parseInt(match[1], 10);
+    const unit = match[2];
+    if (unit === 'h' || unit === 'hrs' || unit === 'hour' || unit === 'hours') return val * 3600;
+    if (unit === 'm' || unit === 'min' || unit === 'mins' || unit === 'minute' || unit === 'minutes') return val * 60;
+    if (unit === 'd' || unit === 'day' || unit === 'days') return val * 86400;
+    if (unit === 's' || unit === 'sec' || unit === 'secs' || unit === 'second' || unit === 'seconds') return val;
+  }
+
+  return null;
+}
+
 function parseJWTPayload(token) {
   if (typeof token !== 'string') return null;
 
@@ -34,9 +60,14 @@ function parseJWTPayload(token) {
       .replace(/_/g, '/')
       .padEnd(Math.ceil(parts[1].length / 4) * 4, '=');
 
-    const json = decodeURIComponent(
-      Array.from(atob(base64), c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
-    );
+    let json;
+    try {
+      json = decodeURIComponent(
+        Array.from(atob(base64), c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+      );
+    } catch {
+      json = atob(base64);
+    }
 
     const payload = JSON.parse(json);
 
@@ -104,20 +135,18 @@ class TokenManager {
     if (user && typeof user === 'object') storage.setItem(USER_KEY, JSON.stringify(user));
     
     if (expiresIn) {
+      const seconds = parseExpiresInToSeconds(expiresIn);
       let expiryTime = null;
-      if (typeof expiresIn === 'number') {
-        expiryTime = Date.now() + expiresIn * 1000;
+
+      if (seconds !== null && seconds > 0) {
+        expiryTime = Date.now() + seconds * 1000;
       } else if (typeof expiresIn === 'string') {
-        const parsed = parseInt(expiresIn, 10);
-        if (!isNaN(parsed)) {
-          expiryTime = Date.now() + parsed * 1000;
-        } else {
-          const dateParsed = Date.parse(expiresIn);
-          if (!isNaN(dateParsed)) {
-            expiryTime = dateParsed;
-          }
+        const dateParsed = Date.parse(expiresIn);
+        if (!isNaN(dateParsed) && isFinite(dateParsed) && dateParsed > Date.now()) {
+          expiryTime = dateParsed;
         }
       }
+
       if (expiryTime) {
         storage.setItem(EXPIRY_KEY, String(expiryTime));
       }
