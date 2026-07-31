@@ -45,6 +45,15 @@ export const lqAPI = {
             params: filters
         });
         return response.data;
+    },
+
+    // Search current Lead Qualifier's accessible leads
+    searchMyLeads: async (query, limit = 20, skip = 0, signal = null) => {
+        const response = await axiosInstance.get('/api/lq/leads/search', {
+            params: { q: query, limit, skip },
+            signal
+        });
+        return response.data;
     }
 };
 

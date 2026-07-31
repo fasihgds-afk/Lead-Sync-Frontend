@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { lqAPI } from '../../../api/lead-qualifier.api';
 
-export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20) => {
+export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20, searchTerm = '') => {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [leadsError, setLeadsError] = useState(null);
@@ -29,9 +29,17 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
             }
 
             const skip = (currentPage - 1) * itemsPerPage;
-            console.log('Fetching leads with filters:', { filters, currentPage, itemsPerPage, skip });
+            const query = (searchTerm || '').trim();
 
-            const response = await lqAPI.getMyLeads(itemsPerPage, skip, filters, abortControllerRef.current.signal);
+            let response;
+            if (query.length >= 2) {
+                console.log('Searching LQ leads via API:', { query, currentPage, itemsPerPage, skip });
+                response = await lqAPI.searchMyLeads(query, itemsPerPage, skip, abortControllerRef.current.signal);
+            } else {
+                console.log('Fetching LQ leads with filters:', { filters, currentPage, itemsPerPage, skip });
+                response = await lqAPI.getMyLeads(itemsPerPage, skip, filters, abortControllerRef.current.signal);
+            }
+
             console.log('API response:', response);
 
             if (response.success) {
@@ -57,7 +65,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20)
             setLoading(false);
             setRefreshing(false);
         }
-    }, [filters, currentPage, itemsPerPage]);
+    }, [filters, currentPage, itemsPerPage, searchTerm]);
 
     // Initial load and when filters/page changes
     useEffect(() => {

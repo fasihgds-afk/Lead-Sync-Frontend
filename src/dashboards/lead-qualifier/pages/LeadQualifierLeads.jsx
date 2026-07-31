@@ -34,7 +34,7 @@ export default function LeadQualifierLeads() {
         apiFilters
     } = useLeadFilters();
 
-    // Lead management with filters and pagination
+    // Lead management with filters, pagination and searchMyLeads API integration
     const {
         leads,
         loading,
@@ -47,7 +47,7 @@ export default function LeadQualifierLeads() {
         addLeadComment,
         assignLeadManager,
         refreshLeads
-    } = useLeadManager(apiFilters, currentPage, itemsPerPage);
+    } = useLeadManager(apiFilters, currentPage, itemsPerPage, searchTerm);
 
     // Modal states
     const [selectedLead, setSelectedLead] = useState(null);
@@ -182,13 +182,16 @@ export default function LeadQualifierLeads() {
         }
     };
 
-    // Client-side search filtering (respecting API order)
+    // Server-side search results from searchMyLeads API (with client fallback for 1-char search)
     const filteredLeads = useMemo(() => {
         if (!searchTerm) return leads;
+        // Server-side search handles queries with 2+ characters
+        if (searchTerm.trim().length >= 2) return leads;
 
         const searchLower = searchTerm.toLowerCase();
         return leads.filter(lead => {
             const matchesSearch = (lead.name || '').toLowerCase().includes(searchLower) ||
+                (lead.location || '').toLowerCase().includes(searchLower) ||
                 (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchLower))) ||
                 (lead.phones?.some(p => {
                     const phoneVal = typeof p === 'object' ? (p.value || p.number || '') : (p || '');
