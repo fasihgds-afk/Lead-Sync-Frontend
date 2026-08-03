@@ -15,6 +15,12 @@ export default function LeadQualifierLeads() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 50;
 
+    // Reset to page 1 whenever search term changes
+    const handleSearchTermChange = (value) => {
+        setCurrentPage(1);
+        setSearchTerm(value);
+    };
+
     // Filter states
     const {
         searchTerm,
@@ -182,25 +188,8 @@ export default function LeadQualifierLeads() {
         }
     };
 
-    // Server-side search results from searchMyLeads API (with client fallback for 1-char search)
-    const filteredLeads = useMemo(() => {
-        if (!searchTerm) return leads;
-        // Server-side search handles queries with 2+ characters
-        if (searchTerm.trim().length >= 2) return leads;
-
-        const searchLower = searchTerm.toLowerCase();
-        return leads.filter(lead => {
-            const matchesSearch = (lead.name || '').toLowerCase().includes(searchLower) ||
-                (lead.location || '').toLowerCase().includes(searchLower) ||
-                (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchLower))) ||
-                (lead.phones?.some(p => {
-                    const phoneVal = typeof p === 'object' ? (p.value || p.number || '') : (p || '');
-                    return phoneVal.toString().toLowerCase().includes(searchLower);
-                }));
-
-            return matchesSearch;
-        });
-    }, [leads, searchTerm]);
+    // All filtering/searching is handled server-side via the API
+    const filteredLeads = leads;
 
     // Reset to page 1 when filters change
     const handleFilterChange = (callback) => {
@@ -312,7 +301,6 @@ export default function LeadQualifierLeads() {
                             <button
                                 type="button"
                                 onClick={(e) => {
-                                    console.log('Leads refresh button clicked');
                                     e.preventDefault();
                                     e.stopPropagation();
                                     refreshLeads();
@@ -393,7 +381,7 @@ export default function LeadQualifierLeads() {
                     <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                         <LeadFilters
                             searchTerm={searchTerm}
-                            setSearchTerm={setSearchTerm}
+                            setSearchTerm={handleSearchTermChange}
                             dateFilter={dateFilter}
                             setDateFilter={(value) => handleFilterChange(() => setDateFilter(value))}
                             activeTab={activeTab}

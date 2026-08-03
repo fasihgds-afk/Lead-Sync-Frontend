@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { lqAPI } from '../../../api/lead-qualifier.api';
 
 const isProd = import.meta.env.PROD;
-const log = (...args) => { if (!isProd) console.log(...args); };
-const logError = (...args) => { if (!isProd) console.error(...args); };
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20, searchTerm = '') => {
     const [leads, setLeads] = useState([]);
@@ -15,6 +15,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
 
     // Use refs to abort previous in-flight requests
     const abortControllerRef = useRef(null);
+    const debounceTimerRef = useRef(null);
 
     const fetchLeads = useCallback(async (force = false) => {
         // Abort any ongoing request
@@ -36,15 +37,11 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
             const query = (searchTerm || '').trim();
 
             let response;
-            if (query.length >= 2) {
-                log('Searching LQ leads via API:', { query, currentPage, itemsPerPage, skip });
+            if (query.length > 0) {
                 response = await lqAPI.searchMyLeads(query, itemsPerPage, skip, abortControllerRef.current.signal);
             } else {
-                log('Fetching LQ leads with filters:', { filters, currentPage, itemsPerPage, skip });
                 response = await lqAPI.getMyLeads(itemsPerPage, skip, filters, abortControllerRef.current.signal);
             }
-
-            log('API response:', response);
 
             if (response.success) {
                 setLeads(response.leads || []);
@@ -71,10 +68,27 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
         }
     }, [filters, currentPage, itemsPerPage, searchTerm]);
 
-    // Initial load and when filters/page changes
+    // Initial load and when filters/page/searchTerm changes — debounce only for search queries
     useEffect(() => {
-        fetchLeads();
+        const query = (searchTerm || '').trim();
+
+        // Clear any pending debounce timer
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        if (query.length > 0) {
+            // Debounce search API calls so we don't fire on every keystroke
+            debounceTimerRef.current = setTimeout(() => {
+                fetchLeads();
+            }, SEARCH_DEBOUNCE_MS);
+        } else {
+            // No search term — fetch normally with filters
+            fetchLeads();
+        }
+
         return () => {
+            clearTimeout(debounceTimerRef.current);
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
             }
