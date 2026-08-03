@@ -21,7 +21,7 @@ const AuthHeader = ({ isLandingPage = false }) => {
             setIsLoggedIn(false);
             setUser(null);
         }
-    }, [location.pathname]); // Update on navigation
+    }, [location.pathname]);
 
     const handleGoToDashboard = () => {
         if (user) {
@@ -31,23 +31,31 @@ const AuthHeader = ({ isLandingPage = false }) => {
     };
 
     return (
-        <header className="fixed top-0 w-full z-50 py-4 px-12 flex items-center justify-between transition-all duration-300 backdrop-blur-md border-b"
+        <header className="fixed top-0 w-full z-50 py-4 px-6 flex items-center justify-between transition-all duration-300 backdrop-blur-md border-b"
             style={{
-                borderColor: 'var(--border-primary)',
-                backgroundColor: theme === 'dark' ? 'rgba(27, 60, 83, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                borderColor: 'rgba(12, 172, 120, 0.15)',
+                backgroundColor: 'rgba(15, 42, 63, 0.85)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
                 height: '70px'
             }}>
-            <Link to="/" className="flex items-center gap-4 group pl-4 relative h-full">
-                <div className="absolute top-1/2 left-8 -translate-y-1/2 w-20 transition-transform group-hover:scale-105">
+
+            {/* Subtle background gradient for depth */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+                background: 'linear-gradient(180deg, rgba(12, 172, 120, 0.03) 0%, transparent 100%)'
+            }}></div>
+
+            <Link to="/" className="flex items-center gap-2 group relative z-10">
+                <div className="w-20 transition-transform group-hover:scale-105">
                     <Logo className="h-full w-full" />
                 </div>
             </Link>
 
-            <div className="flex items-center gap-6 pr-8"> {/* Increased pr-4 to pr-8 */}
-                {/* Theme Toggle */}
+            <div className="flex items-center gap-6 pr-8 relative z-10">
+                {/* Theme Toggle - Updated with green accent */}
                 <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)]/50 transition-colors"
+                    className="p-2 rounded-lg hover:bg-[#0cac78]/10 transition-colors"
                     style={{ color: 'var(--text-primary)' }}
                     title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                 >
@@ -66,12 +74,16 @@ const AuthHeader = ({ isLandingPage = false }) => {
                     isLoggedIn ? (
                         <div className="flex items-center gap-6">
                             <div className="hidden md:flex flex-col items-end">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: 'var(--text-tertiary)' }}>Authenticated</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Authenticated</span>
                                 <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{user?.name || 'Authorized User'}</span>
                             </div>
                             <button
                                 onClick={handleGoToDashboard}
-                                className="group relative px-8 py-3 rounded-xl bg-gradient-to-r from-[#00BE9B] via-[#00d4ad] to-[#00BE9B] bg-[length:200%_auto] hover:bg-right text-white text-xs font-black uppercase tracking-[0.15em] shadow-lg shadow-[#00BE9B]/20 transition-all duration-500 hover:scale-105 active:scale-95 flex items-center gap-3 overflow-hidden"
+                                className="group relative px-8 py-3 rounded-xl text-white text-xs font-black uppercase tracking-[0.15em] shadow-lg transition-all duration-500 hover:scale-105 active:scale-95 flex items-center gap-3 overflow-hidden"
+                                style={{
+                                    background: 'linear-gradient(135deg, #0cac78, #0a8f64)',
+                                    boxShadow: '0 15px 30px -10px rgba(12, 172, 120, 0.3)'
+                                }}
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     Dashboard
@@ -82,14 +94,44 @@ const AuthHeader = ({ isLandingPage = false }) => {
                         </div>
                     ) : (
                         <div className="flex items-center gap-4">
-                            <Link to="/login" className="px-5 py-2.5 text-sm font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[#00BE9B] transition-colors">Sign In</Link>
-                            <Link to="/signup" className="px-8 py-3 rounded-2xl bg-gradient-to-r from-[#00BE9B] to-[#00a082] text-white text-sm font-black uppercase tracking-widest shadow-xl shadow-[#00BE9B]/20 hover:scale-105 active:scale-95 transition-all">
+                            <Link to="/login"
+                                className="px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-colors"
+                                style={{
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#0cac78'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}
+                            >
+                                Sign In
+                            </Link>
+                            <Link to="/signup"
+                                className="px-8 py-3 rounded-2xl text-white text-sm font-black uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95"
+                                style={{
+                                    background: 'linear-gradient(135deg, #0cac78, #0a8f64)',
+                                    boxShadow: '0 15px 30px -10px rgba(12, 172, 120, 0.3)'
+                                }}
+                            >
                                 Sign Up
                             </Link>
                         </div>
                     )
                 ) : (
-                    <Link to="/" className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-sm font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--accent-primary)] hover:text-white hover:border-transparent transition-all group/back">
+                    <Link to="/"
+                        className="flex items-center gap-3 px-5 py-2.5 rounded-2xl border text-sm font-black uppercase tracking-widest transition-all group/back"
+                        style={{
+                            borderColor: 'rgba(12, 172, 120, 0.2)',
+                            backgroundColor: 'rgba(12, 172, 120, 0.05)',
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(12, 172, 120, 0.15)';
+                            e.currentTarget.style.borderColor = '#0cac78';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(12, 172, 120, 0.05)';
+                            e.currentTarget.style.borderColor = 'rgba(12, 172, 120, 0.2)';
+                        }}
+                    >
                         <svg className="w-5 h-5 transition-transform group-hover/back:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
@@ -97,6 +139,12 @@ const AuthHeader = ({ isLandingPage = false }) => {
                     </Link>
                 )}
             </div>
+
+            {/* Status indicator dot */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{
+                background: 'linear-gradient(90deg, transparent, #0cac78, transparent)',
+                opacity: 0.3
+            }}></div>
         </header>
     );
 };

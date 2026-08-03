@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../../../api/admin.api';
 import SharedLoader from '../../../components/SharedLoader';
+import { SYSTEM_ROLES, getDepartmentAbbrev } from '../../../utils/roleRedirect';
 import {
   FiUserCheck,
   FiShield,
@@ -225,16 +226,7 @@ export default function PendingRequests() {
                           className="px-2.5 py-1 rounded-lg bg-black/5 border border-black/10 text-[10px] font-bold text-emerald-500 uppercase tracking-wider"
                           title={req.department || ''}
                         >
-                          {req.department ? (
-                            {
-                              'Data Minors': 'DM',
-                              'Lead Qualifiers': 'LQ',
-                              'Verifier': 'VER',
-                              'Manager': 'MGR',
-                              'Admin': 'ADM',
-                              'Super Admin': 'SA'
-                            }[req.department] || req.department.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase()
-                          ) : 'N/A'}
+                          {getDepartmentAbbrev(req.department)}
                         </span>
                       </div>
                     </td>
@@ -262,12 +254,9 @@ export default function PendingRequests() {
                           className="w-40 bg-[var(--bg-secondary)] border border-gray-500/30 rounded-xl px-3 py-2 text-[11px] font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer"
                         >
                           <option className="bg-[var(--bg-secondary)]" value="" disabled>Select Role</option>
-                          <option className="bg-[var(--bg-secondary)]" value="Data Minors">Data Minors</option>
-                          <option className="bg-[var(--bg-secondary)]" value="Lead Qualifiers">Lead Qualifiers</option>
-                          <option className="bg-[var(--bg-secondary)]" value="Verifier">Verifier</option>
-                          <option className="bg-[var(--bg-secondary)]" value="Manager">Manager</option>
-                          <option className="bg-[var(--bg-secondary)]" value="Admin">Admin</option>
-                          <option className="bg-[var(--bg-secondary)]" value="Super Admin">Super Admin</option>
+                          {SYSTEM_ROLES.map((role) => (
+                            <option key={role} className="bg-[var(--bg-secondary)]" value={role}>{role}</option>
+                          ))}
                         </select>
                       </div>
                     </td>

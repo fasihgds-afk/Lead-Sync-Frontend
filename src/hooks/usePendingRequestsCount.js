@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../api/admin.api';
+import { ROLES } from '../utils/roleRedirect';
 
 export function usePendingRequestsCount(userRole) {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only fetch for Super Admin roles
-    if (userRole !== 'Super Admin' && userRole !== 'Admin') {
+    // Only fetch for Super Admin / Admin roles
+    if (userRole !== ROLES.SUPER_ADMIN && userRole !== ROLES.ADMIN) {
       setLoading(false);
       return;
     }
+
 
     const fetchCount = async () => {
       try {

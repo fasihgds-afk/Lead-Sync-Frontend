@@ -1,3 +1,60 @@
+// ✅ Single Source of Truth for Departments & Roles
+//
+// ALL role strings in the app should be imported from here.
+// Change a name in ROLES once → it propagates everywhere automatically.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROLES — canonical string values used across dashboardConfig, hooks, etc.
+// ─────────────────────────────────────────────────────────────────────────────
+export const ROLES = {
+  SUPER_ADMIN:    'Super Admin',
+  ADMIN:          'Admin',
+  DATA_MINORS:    'Data Minors',
+  LEAD_QUALIFIERS:'Lead Qualifiers',
+  VERIFIER:       'Verifier',
+  MANAGER:        'Manager',
+  WRITERS:        'Writers',
+  WRITING:        'Writing',   // alias backend sends sometimes
+  WRITER:         'Writer',    // alias backend sends sometimes
+};
+
+// Departments available for User Signup
+export const SIGNUP_DEPARTMENTS = [
+  'RND',
+  'Quality Assurance',
+  'Sales',
+  ROLES.LEAD_QUALIFIERS,
+  ROLES.WRITING,
+];
+
+// System Roles available for Admin Assignment
+export const SYSTEM_ROLES = [
+  ROLES.DATA_MINORS,
+  ROLES.LEAD_QUALIFIERS,
+  ROLES.VERIFIER,
+  ROLES.MANAGER,
+  ROLES.WRITERS,
+  ROLES.ADMIN,
+  ROLES.SUPER_ADMIN,
+];
+
+// Department Badge Acronyms
+export const DEPARTMENT_ABBREVIATIONS = {
+  [ROLES.DATA_MINORS]:     'DM',
+  [ROLES.LEAD_QUALIFIERS]: 'LQ',
+  [ROLES.VERIFIER]:        'VER',
+  [ROLES.MANAGER]:         'MGR',
+  [ROLES.WRITING]:         'WRT',
+  [ROLES.WRITERS]:         'WRT',
+  [ROLES.ADMIN]:           'ADM',
+  [ROLES.SUPER_ADMIN]:     'SA',
+};
+
+export const getDepartmentAbbrev = (dept) => {
+  if (!dept) return 'N/A';
+  return DEPARTMENT_ABBREVIATIONS[dept] || dept.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
+};
+
 // ✅ Normalize role helper
 const normalizeRole = (role) =>
   role?.toLowerCase().trim();
@@ -28,6 +85,10 @@ const ROLE_CONFIG = {
     redirect: '/gds/manager',
     display: 'Manager',
   },
+  writer: {
+    redirect: '/gds/writer',
+    display: 'Writer',
+  },
 };
 
 // ✅ Role aliases (handles messy backend data)
@@ -36,6 +97,8 @@ const ROLE_ALIASES = {
   'team lead( lead qualifiers,)': 'lead qualifier',
   'data minors': 'data minor',
   'team lead (data minors )': 'data minor',
+  'writers': 'writer',
+  'writing': 'writer',
 };
 
 // ✅ Resolve final role
