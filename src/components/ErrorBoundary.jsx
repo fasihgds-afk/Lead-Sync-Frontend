@@ -1,6 +1,9 @@
 import React from 'react';
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 
+const isProd = import.meta.env.PROD;
+const logError = (...args) => { if (!isProd) console.error(...args); };
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -12,7 +15,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    logError("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   handleReset = () => {

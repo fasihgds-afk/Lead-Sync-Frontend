@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { superAdminAPI } from '../../../api/super-admin';
 import SharedLoader from '../../../components/SharedLoader';
 
+const isProd = import.meta.env.PROD;
+const logError = (...args) => { if (!isProd) console.error(...args); };
+
 export default function SuperAdminPortal() {
     const [activeTab, setActiveTab] = useState('assignment');
     const [loading, setLoading] = useState(false);
@@ -73,7 +76,7 @@ export default function SuperAdminPortal() {
             setDataLoaded(prev => ({ ...prev, assignment: true }));
         } catch (err) {
             setError('Failed to load assignment data');
-            console.error(err);
+            logError(err);
         } finally {
             setLoading(false);
         }
@@ -91,7 +94,7 @@ export default function SuperAdminPortal() {
             setDataLoaded(prev => ({ ...prev, hierarchy: true }));
         } catch (err) {
             setError('Failed to load hierarchy data');
-            console.error(err);
+            logError(err);
         } finally {
             setLoading(false);
         }

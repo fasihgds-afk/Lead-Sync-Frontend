@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { managerAPI } from '../api/manager.api';
 
+const isProd = import.meta.env.PROD;
+const logError = (...args) => { if (!isProd) console.error(...args); };
+
 export function useLeadCounts(userRole) {
     const [counts, setCounts] = useState({ newLeads: 0 });
 
@@ -15,7 +18,7 @@ export function useLeadCounts(userRole) {
                     setCounts({ newLeads: pendingCount });
                 }
             } catch (err) {
-                console.error("Failed to fetch lead counts", err);
+                logError("Failed to fetch lead counts", err);
             }
         };
 

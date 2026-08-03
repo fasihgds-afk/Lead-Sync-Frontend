@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { adminAPI } from '../api/admin.api';
 import { ROLES } from '../utils/roleRedirect';
 
+const isProd = import.meta.env.PROD;
+const logError = (...args) => { if (!isProd) console.error(...args); };
+
 export function usePendingRequestsCount(userRole) {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -19,7 +22,7 @@ export function usePendingRequestsCount(userRole) {
         const data = await adminAPI.getPendingRequests();
         setCount(data.requests?.length || 0);
       } catch (error) {
-        console.error('Error fetching pending requests count:', error);
+        logError('Error fetching pending requests count:', error);
         setCount(0);
       } finally {
         setLoading(false);

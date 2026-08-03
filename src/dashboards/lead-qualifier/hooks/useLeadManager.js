@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { lqAPI } from '../../../api/lead-qualifier.api';
 
+const isProd = import.meta.env.PROD;
+const log = (...args) => { if (!isProd) console.log(...args); };
+const logError = (...args) => { if (!isProd) console.error(...args); };
+
 export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20, searchTerm = '') => {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -33,14 +37,14 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
 
             let response;
             if (query.length >= 2) {
-                console.log('Searching LQ leads via API:', { query, currentPage, itemsPerPage, skip });
+                log('Searching LQ leads via API:', { query, currentPage, itemsPerPage, skip });
                 response = await lqAPI.searchMyLeads(query, itemsPerPage, skip, abortControllerRef.current.signal);
             } else {
-                console.log('Fetching LQ leads with filters:', { filters, currentPage, itemsPerPage, skip });
+                log('Fetching LQ leads with filters:', { filters, currentPage, itemsPerPage, skip });
                 response = await lqAPI.getMyLeads(itemsPerPage, skip, filters, abortControllerRef.current.signal);
             }
 
-            console.log('API response:', response);
+            log('API response:', response);
 
             if (response.success) {
                 setLeads(response.leads || []);
@@ -54,10 +58,10 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
             }
         } catch (err) {
             if (err.name === 'CanceledError' || err.name === 'AbortError') {
-                console.log('Fetch leads request was cancelled');
+                log('Fetch leads request was cancelled');
                 return; // Silently exit without updating state or stopping loading
             }
-            console.error("Fetch leads error:", err);
+            logError("Fetch leads error:", err);
             setLeadsError("Network error while fetching leads");
             setLeads([]);
             setTotal(0);
@@ -86,7 +90,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
                 return true;
             }
         } catch (err) {
-            console.error("Update status error:", err);
+            logError("Update status error:", err);
             return false;
         }
         return false;
@@ -102,7 +106,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
                 return true;
             }
         } catch (err) {
-            console.error("Update bulk status error:", err);
+            logError("Update bulk status error:", err);
             return false;
         }
         return false;
@@ -126,7 +130,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
                 return true;
             }
         } catch (err) {
-            console.error("Add comment error:", err);
+            logError("Add comment error:", err);
             return false;
         }
         return false;
@@ -142,7 +146,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
             }
             return { success: false, message: response.message || "Transfer failed" };
         } catch (err) {
-            console.error("Submit to manager error:", err);
+            logError("Submit to manager error:", err);
             return { 
                 success: false, 
                 message: err.response?.data?.message || err.message || "Failed to submit to manager" 
@@ -151,7 +155,7 @@ export const useLeadManager = (filters = {}, currentPage = 1, itemsPerPage = 20,
     };
 
     const refreshLeads = useCallback(() => {
-        console.log('Refresh leads called');
+        log('Refresh leads called');
         fetchLeads(true);
     }, [fetchLeads]);
 

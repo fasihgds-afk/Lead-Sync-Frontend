@@ -1,6 +1,9 @@
 import axiosInstance from './axiosInstance';
 import tokenManager from '../utils/tokenManager';
 
+const isProd = import.meta.env.PROD;
+const logError = (...args) => { if (!isProd) console.error(...args); };
+
 export const managerAPI = {
     // Get leads assigned to the current Manager
     getMyLeads: async (params = {}) => {
@@ -46,7 +49,7 @@ export const managerAPI = {
         const managerId = params.managerId || user?.id || user?._id;
 
         if (!managerId) {
-            console.error("No managerId found for stats request");
+            logError("No managerId found for stats request");
             throw new Error("Manager ID is required");
         }
 

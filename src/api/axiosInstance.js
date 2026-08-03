@@ -1,6 +1,9 @@
 import axios from 'axios';
 import tokenManager from '../utils/tokenManager';
 
+const isProd = import.meta.env.PROD;
+const logError = (...args) => { if (!isProd) console.error(...args); };
+
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 if (!rawBaseUrl) {
@@ -36,7 +39,7 @@ axiosInstance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.error("Error in request interceptor:", error);
+      logError("Error in request interceptor:", error);
     }
     return config;
   },
