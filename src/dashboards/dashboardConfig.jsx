@@ -88,10 +88,6 @@ const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersM
 const AdminRejectedLeads = lazy(() => import("../dashboards/admin/pages/rejectedleads"));
 const AdminPerformance = lazy(() => import("../dashboards/admin/pages/PerformanceDetails"));
 const SuperAdminPortal = lazy(() => import("../dashboards/admin/pages/SuperAdminPortal"));
-const AdminAddData = lazy(() => import("../dashboards/admin/pages/AddData"));
-const AdminLeadAssignment = lazy(() => import("../dashboards/admin/pages/LeadAssignment"));
-const AdminPaidLeads = lazy(() => import("../dashboards/admin/pages/PaidLeads"));
-const AdminPendingLeads = lazy(() => import("../dashboards/admin/pages/PendingLeads"));
 
 // =====================================================================
 // Centralized Configuration
@@ -110,17 +106,13 @@ export const dashboardConfig = [
     basePath: '/gds/admin',
     icon: <ShieldIcon />,
     pages: [
-      { id: 'admin-dashboard',       name: 'Dashboard',        path: '',                 component: AdminDashboard,       icon: <DashboardIcon />,  showInSidebar: true },
-      { id: 'admin-add-data',        name: 'Add Data',         path: 'add-data',         component: AdminAddData,         icon: <PlusIcon />,       showInSidebar: true },
-      { id: 'admin-lead-assignment', name: 'Lead Assignment',  path: 'lead-assignment',  component: AdminLeadAssignment,  icon: <UserCheckIcon />,  showInSidebar: true },
-      { id: 'admin-paid-leads',      name: 'Paid Leads',       path: 'paid-leads',       component: AdminPaidLeads,       icon: <DollarIcon />,     showInSidebar: true },
-      { id: 'admin-pending-leads',   name: 'Pending Leads',    path: 'pending-leads',    component: AdminPendingLeads,    icon: <ClockIcon />,      showInSidebar: true },
-      { id: 'admin-combined-leads',  name: 'Combined Leads',   path: 'combined-leads',   component: AdminCombinedLeads,   icon: <CombinedIcon />,   showInSidebar: true },
-      { id: 'admin-rejected-leads',  name: 'Rejected Leads',   path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />,   showInSidebar: true },
-      { id: 'admin-performance',     name: 'Performance',      path: 'performance',      component: AdminPerformance,     icon: <AnalyticsIcon />,  showInSidebar: true },
-      { id: 'admin-lq-assign',       name: 'LQ Assign',        path: 'super-admin',      component: SuperAdminPortal,     icon: <SettingsIcon />,   showInSidebar: true,  allowedRoles: [ROLES.SUPER_ADMIN] },
-      { id: 'admin-pending-requests',name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />,      showInSidebar: true,  allowedRoles: [ROLES.SUPER_ADMIN] },
-      { id: 'admin-users-management',name: 'Users Management', path: 'users',            component: AdminUsersManagement, icon: <UsersIcon />,      showInSidebar: false, allowedRoles: [ROLES.SUPER_ADMIN] },
+      { id: 'admin-dashboard', name: 'Dashboard', path: '', component: AdminDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { id: 'admin-combined-leads', name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
+      { id: 'admin-rejected-leads', name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
+      { id: 'admin-performance', name: 'Performance', path: 'performance', component: AdminPerformance, icon: <AnalyticsIcon />, showInSidebar: true },
+      { id: 'admin-lq-assign', name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
+      { id: 'admin-pending-requests', name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
+      { id: 'admin-users-management', name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false, allowedRoles: [ROLES.SUPER_ADMIN] },
     ],
   },
   {
@@ -130,8 +122,8 @@ export const dashboardConfig = [
     basePath: '/gds/lead-qualifier',
     icon: <SearchIcon />,
     pages: [
-      { id: 'lq-dashboard',  name: 'Dashboard', path: '',          component: LeadQualifierDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { id: 'lq-all-leads',  name: 'All Leads', path: 'all-leads', component: LeadQualifierLeads,     icon: <CombinedIcon />,  showInSidebar: true },
+      { id: 'lq-dashboard', name: 'Dashboard', path: '', component: LeadQualifierDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { id: 'lq-all-leads', name: 'All Leads', path: 'all-leads', component: LeadQualifierLeads, icon: <CombinedIcon />, showInSidebar: true },
     ],
   },
   {
@@ -141,8 +133,8 @@ export const dashboardConfig = [
     basePath: '/gds/data-minor',
     icon: <DatabaseIcon />,
     pages: [
-      { id: 'dm-dashboard', name: 'Dashboard', path: '',          component: DataMinorDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { id: 'dm-lead-form', name: 'Lead Form', path: 'lead-form', component: InputFiles,         icon: <FilesIcon />,     showInSidebar: true },
+      { id: 'dm-dashboard', name: 'Dashboard', path: '', component: DataMinorDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { id: 'dm-lead-form', name: 'Lead Form', path: 'lead-form', component: InputFiles, icon: <FilesIcon />, showInSidebar: true },
     ],
   },
   {
@@ -163,10 +155,10 @@ export const dashboardConfig = [
     basePath: '/gds/manager',
     icon: <BriefcaseIcon />,
     pages: [
-      { id: 'manager-dashboard',      name: 'Dashboard',     path: '',              component: ManagerDashboard,      icon: <DashboardIcon />, showInSidebar: true },
-      { id: 'manager-new-leads',      name: 'New Leads',     path: 'new-leads',     component: ManagerNewLeads,       icon: <LeadsIcon />,     showInSidebar: true },
-      { id: 'manager-history',        name: 'History',       path: 'history',       component: ManagerHistory,        icon: <FilesIcon />,     showInSidebar: true },
-      { id: 'manager-rejected-leads', name: 'Rejected Leads',path: 'rejected-leads',component: ManagerRejectedLeads,  icon: <RejectedIcon />,  showInSidebar: true },
+      { id: 'manager-dashboard', name: 'Dashboard', path: '', component: ManagerDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { id: 'manager-new-leads', name: 'New Leads', path: 'new-leads', component: ManagerNewLeads, icon: <LeadsIcon />, showInSidebar: true },
+      { id: 'manager-history', name: 'History', path: 'history', component: ManagerHistory, icon: <FilesIcon />, showInSidebar: true },
+      { id: 'manager-rejected-leads', name: 'Rejected Leads', path: 'rejected-leads', component: ManagerRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
     ],
   },
   {
