@@ -3,8 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthHeader from '../components/AuthHeader';
 import tokenManager from '../utils/tokenManager';
 import { getRoleBasedRedirect } from '../utils/roleRedirect';
+import { useTheme } from '../context/ThemeContext';
 
 const LandingPage = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
@@ -20,8 +23,8 @@ const LandingPage = () => {
     const dashboardPath = user ? getRoleBasedRedirect(user.role || user.department) : '/login';
 
     return (
-        <div className="min-h-screen font-sans selection:bg-[#0cac78]/30 selection:text-white"
-            style={{ backgroundColor: '#0f2a3f', color: '#ffffff' }}>
+        <div className="min-h-screen font-sans transition-colors duration-300 selection:bg-[#0cac78]/30 selection:text-white"
+            style={{ backgroundColor: isDark ? '#0f2a3f' : '#f8fafc', color: isDark ? '#ffffff' : '#0f172a' }}>
 
             {/* Dynamic Background - Using your color scheme */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -49,7 +52,7 @@ const LandingPage = () => {
                         <span className="inline-flex items-center gap-2 px-4 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] rounded-full border backdrop-blur-sm"
                             style={{
                                 borderColor: 'rgba(12, 172, 120, 0.3)',
-                                backgroundColor: 'rgba(12, 172, 120, 0.12)',
+                                backgroundColor: isDark ? 'rgba(12, 172, 120, 0.12)' : 'rgba(12, 172, 120, 0.15)',
                                 color: '#0cac78'
                             }}>
                             <span className="w-1.5 h-1.5 rounded-full bg-[#0cac78] animate-pulse"></span>
@@ -60,7 +63,7 @@ const LandingPage = () => {
                     {/* Main Heading - Clean & Professional */}
                     <div className="space-y-3 animate-slideUp">
                         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[0.95]">
-                            <span className="inline-block text-white">
+                            <span className={`inline-block ${isDark ? 'text-white' : 'text-slate-900'}`}>
                                 Lead Sync
                             </span>
                             <br />
@@ -72,12 +75,12 @@ const LandingPage = () => {
                     </div>
 
                     {/* Description - Clean Glass Effect with good contrast */}
-                    <p className="text-base sm:text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed animate-fadeIn px-4 sm:px-6 py-4 sm:py-5 rounded-2xl"
+                    <p className="text-base sm:text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed animate-fadeIn px-4 sm:px-6 py-4 sm:py-5 rounded-2xl shadow-sm transition-colors duration-300"
                         style={{
                             animationDelay: '0.2s',
-                            color: 'rgba(255, 255, 255, 0.85)',
-                            border: '1px solid rgba(12, 172, 120, 0.15)',
-                            backgroundColor: 'rgba(15, 42, 63, 0.6)',
+                            color: isDark ? 'rgba(255, 255, 255, 0.85)' : 'rgba(30, 41, 59, 0.9)',
+                            border: isDark ? '1px solid rgba(12, 172, 120, 0.15)' : '1px solid rgba(12, 172, 120, 0.25)',
+                            backgroundColor: isDark ? 'rgba(15, 42, 63, 0.6)' : 'rgba(255, 255, 255, 0.85)',
                             backdropFilter: 'blur(12px)',
                             WebkitBackdropFilter: 'blur(12px)'
                         }}>
@@ -104,8 +107,8 @@ const LandingPage = () => {
                     <div className="pt-12 sm:pt-16 animate-fadeIn w-full" style={{ animationDelay: '0.4s' }}>
                         <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
                             <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-[#0cac78]"></div>
-                            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-60"
-                                style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em]"
+                                style={{ color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(30, 41, 59, 0.6)' }}>
                                 Global Digital Solutions
                             </p>
                             <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-[#0cac78]"></div>
@@ -114,13 +117,13 @@ const LandingPage = () => {
                         <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                             {['DATA MINING', 'QUALIFIER', 'VERIFIER', 'MANAGER'].map((role) => (
                                 <div key={role}
-                                    className="group relative px-4 sm:px-6 py-2 sm:py-3 text-[10px] sm:text-xs font-bold tracking-widest rounded-xl transition-all duration-300 hover:-translate-y-1 cursor-default"
+                                    className="group relative px-4 sm:px-6 py-2 sm:py-3 text-[10px] sm:text-xs font-bold tracking-widest rounded-xl transition-all duration-300 hover:-translate-y-1 cursor-default shadow-sm"
                                     style={{
-                                        border: '1px solid rgba(12, 172, 120, 0.2)',
-                                        backgroundColor: 'rgba(15, 42, 63, 0.7)',
+                                        border: isDark ? '1px solid rgba(12, 172, 120, 0.2)' : '1px solid rgba(12, 172, 120, 0.3)',
+                                        backgroundColor: isDark ? 'rgba(15, 42, 63, 0.7)' : 'rgba(255, 255, 255, 0.9)',
                                         backdropFilter: 'blur(8px)',
                                         WebkitBackdropFilter: 'blur(8px)',
-                                        color: 'rgba(255, 255, 255, 0.9)'
+                                        color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)'
                                     }}>
                                     {role}
                                     <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -136,8 +139,8 @@ const LandingPage = () => {
                     <div className="pt-16 sm:pt-20 md:pt-24 animate-fadeIn w-full" style={{ animationDelay: '0.6s' }}>
                         <div className="flex flex-col items-center mb-8 sm:mb-10 md:mb-12">
                             <div className="h-px w-16 sm:w-20 md:w-24 bg-gradient-to-r from-transparent via-[#0cac78] to-transparent mb-4 sm:mb-6" />
-                            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.25em] sm:tracking-[0.3em] md:tracking-[0.4em] opacity-50 text-center flex items-center gap-2"
-                                style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.25em] sm:tracking-[0.3em] md:tracking-[0.4em] text-center flex items-center gap-2"
+                                style={{ color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(30, 41, 59, 0.6)' }}>
                                 <span className="text-[#0cac78]">✦</span> Production Environment <span className="text-[#0cac78]">✦</span>
                             </p>
                         </div>
@@ -154,10 +157,10 @@ const LandingPage = () => {
                                     href={brand.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group relative flex flex-col items-center p-4 sm:p-5 md:p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden"
+                                    className="group relative flex flex-col items-center p-4 sm:p-5 md:p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden shadow-sm"
                                     style={{
-                                        backgroundColor: 'rgba(15, 42, 63, 0.5)',
-                                        borderColor: 'rgba(12, 172, 120, 0.15)',
+                                        backgroundColor: isDark ? 'rgba(15, 42, 63, 0.5)' : 'rgba(255, 255, 255, 0.85)',
+                                        borderColor: isDark ? 'rgba(12, 172, 120, 0.15)' : 'rgba(12, 172, 120, 0.25)',
                                         backdropFilter: 'blur(8px)',
                                         WebkitBackdropFilter: 'blur(8px)'
                                     }}
@@ -180,11 +183,11 @@ const LandingPage = () => {
 
                                     {/* Brand Info - Clean & Readable */}
                                     <h3 className="text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-wider mb-1 transition-colors duration-300 text-center w-full"
-                                        style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                                        style={{ color: isDark ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.95)' }}>
                                         {brand.name}
                                     </h3>
-                                    <p className="text-[7px] sm:text-[8px] md:text-[9px] font-medium opacity-60 uppercase tracking-wider text-center w-full"
-                                        style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                    <p className="text-[7px] sm:text-[8px] md:text-[9px] font-medium uppercase tracking-wider text-center w-full"
+                                        style={{ color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(51, 65, 85, 0.7)' }}>
                                         {brand.desc}
                                     </p>
 
@@ -195,7 +198,7 @@ const LandingPage = () => {
                                     {/* Exterior Arrow */}
                                     <div className="absolute top-2 sm:top-3 right-2 sm:right-3 opacity-0 group-hover:opacity-60 transition-all duration-300 transform translate-x-1 group-hover:translate-x-0">
                                         <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#0cac78' }}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l7-7m7-7H3" />
                                         </svg>
                                     </div>
                                 </a>
@@ -203,8 +206,8 @@ const LandingPage = () => {
                         </div>
 
                         {/* Footer Note */}
-                        <p className="text-[7px] sm:text-[8px] font-medium uppercase tracking-[0.2em] opacity-40 text-center mt-6 sm:mt-8"
-                            style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                        <p className="text-[7px] sm:text-[8px] font-medium uppercase tracking-[0.2em] text-center mt-6 sm:mt-8"
+                            style={{ color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(30, 41, 59, 0.5)' }}>
                             ⚡ active production brands
                         </p>
                     </div>

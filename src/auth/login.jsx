@@ -4,8 +4,11 @@ import { authAPI } from "../api/auth.api";
 import { getRoleBasedRedirect } from "../utils/roleRedirect";
 import tokenManager from "../utils/tokenManager";
 import AuthHeader from "../components/AuthHeader";
+import { useTheme } from "../context/ThemeContext";
 
 export default function LoginPage() {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({ email: "", password: "" });
@@ -66,28 +69,32 @@ export default function LoginPage() {
             navigate(redirectPath, { replace: true });
 
         } catch (err) {
-            console.error("Login API Error:", err);
+            let message = "An error occurred during login. Please try again.";
 
-            let message =
-                err?.response?.data?.message ||
-                err?.response?.data?.error ||
-                err?.message ||
-                "Login failed";
+            if (err.response) {
+                const data = err.response.data;
 
-            if (err.code === "ECONNABORTED") {
-                message = "Server took too long to respond";
+                if (data && typeof data === 'object') {
+                    message = data.error || data.message || data.msg || message;
+                } else if (typeof data === 'string' && data.trim()) {
+                    message = data;
+                }
+            } else if (err.request) {
+                message = "Unable to connect to the server. Please check your internet connection or try again later.";
+            } else if (err.message) {
+                message = err.message;
             }
 
             setError(message);
         } finally {
             setLoading(false);
         }
-    }, [formData, navigate]);
+    }, [formData, loading, navigate]);
 
     return (
-        <div className="min-h-screen flex flex-col pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+        <div className="min-h-screen flex flex-col pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300"
             style={{
-                backgroundColor: '#0f2a3f',
+                backgroundColor: isDark ? '#0f2a3f' : '#f8fafc',
             }}>
 
             {/* Dynamic Background - Matching Home Page */}
@@ -109,12 +116,12 @@ export default function LoginPage() {
 
             <div className="w-full max-w-lg mx-auto px-4 sm:px-0 relative z-10">
                 {/* Login Card */}
-                <div className="rounded-2xl shadow-2xl overflow-hidden animate-fadeIn"
+                <div className="rounded-2xl shadow-2xl overflow-hidden animate-fadeIn transition-colors duration-300"
                     style={{
-                        backgroundColor: 'rgba(15, 42, 63, 0.85)',
+                        backgroundColor: isDark ? 'rgba(15, 42, 63, 0.85)' : 'rgba(255, 255, 255, 0.9)',
                         backdropFilter: 'blur(12px)',
                         WebkitBackdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(12, 172, 120, 0.15)'
+                        border: isDark ? '1px solid rgba(12, 172, 120, 0.15)' : '1px solid rgba(12, 172, 120, 0.25)'
                     }}>
 
                     <div className="flex flex-col lg:flex-row">
@@ -182,10 +189,10 @@ export default function LoginPage() {
                         <div className="flex-1 p-8 lg:p-10">
                             {/* Header */}
                             <div className="text-center mb-10">
-                                <h2 className="text-3xl font-black mb-2 uppercase tracking-tight text-white">
+                                <h2 className={`text-3xl font-black mb-2 uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                                     Welcome Back
                                 </h2>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(30, 41, 59, 0.6)' }}>
                                     Sign in to access your dashboard
                                 </p>
                             </div>
@@ -207,11 +214,11 @@ export default function LoginPage() {
                             <form className="space-y-5" onSubmit={handleSubmit}>
                                 {/* Email Field */}
                                 <div>
-                                    <label className="block text-sm font-semibold mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                                    <label className="block text-sm font-semibold mb-2" style={{ color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(30, 41, 59, 0.8)' }}>
                                         Email Address
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(30, 41, 59, 0.4)' }}>
                                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z" />
                                             </svg>
@@ -224,9 +231,9 @@ export default function LoginPage() {
                                             onChange={handleChange}
                                             className="w-full pl-10 pr-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0cac78] focus:border-transparent"
                                             style={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                borderColor: 'rgba(12, 172, 120, 0.2)',
-                                                color: '#ffffff'
+                                                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(241, 245, 249, 0.8)',
+                                                borderColor: isDark ? 'rgba(12, 172, 120, 0.2)' : 'rgba(12, 172, 120, 0.3)',
+                                                color: isDark ? '#ffffff' : '#0f172a'
                                             }}
                                             placeholder="you@company.com"
                                         />
@@ -236,7 +243,7 @@ export default function LoginPage() {
                                 {/* Password Field */}
                                 <div>
                                     <div className="flex justify-between items-center mb-2">
-                                        <label className="block text-sm font-semibold" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                                        <label className="block text-sm font-semibold" style={{ color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(30, 41, 59, 0.8)' }}>
                                             Password
                                         </label>
                                         <Link to="/forgot-password"
@@ -246,7 +253,7 @@ export default function LoginPage() {
                                         </Link>
                                     </div>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(30, 41, 59, 0.4)' }}>
                                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                             </svg>
@@ -259,9 +266,9 @@ export default function LoginPage() {
                                             onChange={handleChange}
                                             className="w-full pl-10 pr-10 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0cac78] focus:border-transparent"
                                             style={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                borderColor: 'rgba(12, 172, 120, 0.2)',
-                                                color: '#ffffff'
+                                                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(241, 245, 249, 0.8)',
+                                                borderColor: isDark ? 'rgba(12, 172, 120, 0.2)' : 'rgba(12, 172, 120, 0.3)',
+                                                color: isDark ? '#ffffff' : '#0f172a'
                                             }}
                                             placeholder="••••••••"
                                         />
@@ -269,7 +276,7 @@ export default function LoginPage() {
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-100"
-                                            style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                                            style={{ color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(30, 41, 59, 0.5)' }}>
                                             {showPassword ? (
                                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
@@ -320,15 +327,15 @@ export default function LoginPage() {
                             </form>
 
                             {/* Footer Links - Consistent styling */}
-                            <div className="mt-8 pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+                            <div className="mt-8 pt-6 border-t" style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)' }}>
                                 <div className="relative">
                                     <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}></div>
+                                        <div className="w-full border-t" style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)' }}></div>
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase">
                                         <span className="px-3" style={{
-                                            backgroundColor: 'rgba(15, 42, 63, 0.85)',
-                                            color: 'rgba(255, 255, 255, 0.4)'
+                                            backgroundColor: isDark ? 'rgba(15, 42, 63, 0.85)' : 'rgba(255, 255, 255, 0.9)',
+                                            color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(30, 41, 59, 0.5)'
                                         }}>New here?</span>
                                     </div>
                                 </div>

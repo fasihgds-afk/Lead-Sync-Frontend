@@ -33,8 +33,8 @@ const AuthHeader = ({ isLandingPage = false }) => {
     return (
         <header className="fixed top-0 w-full z-50 py-4 px-6 flex items-center justify-between transition-all duration-300 backdrop-blur-md border-b"
             style={{
-                borderColor: 'rgba(12, 172, 120, 0.15)',
-                backgroundColor: 'rgba(15, 42, 63, 0.85)',
+                borderColor: theme === 'dark' ? 'rgba(12, 172, 120, 0.15)' : 'rgba(12, 172, 120, 0.25)',
+                backgroundColor: theme === 'dark' ? 'rgba(15, 42, 63, 0.85)' : 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
                 height: '70px'
@@ -52,21 +52,34 @@ const AuthHeader = ({ isLandingPage = false }) => {
             </Link>
 
             <div className="flex items-center gap-6 pr-8 relative z-10">
-                {/* Theme Toggle - Updated with green accent */}
+                {/* Theme Toggle - Highly Visible Pill Button */}
                 <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-lg hover:bg-[#0cac78]/10 transition-colors"
-                    style={{ color: 'var(--text-primary)' }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-xs uppercase tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                    style={{
+                        backgroundColor: theme === 'dark' ? 'rgba(255, 220, 60, 0.15)' : 'rgba(15, 42, 63, 0.12)',
+                        border: theme === 'dark' ? '1px solid rgba(255, 220, 60, 0.5)' : '1px solid rgba(15, 42, 63, 0.3)',
+                        color: theme === 'dark' ? '#ffd93d' : '#0f2a3f',
+                        boxShadow: theme === 'dark'
+                            ? '0 0 12px rgba(255, 220, 60, 0.2), 0 2px 8px rgba(0,0,0,0.3)'
+                            : '0 0 12px rgba(15, 42, 63, 0.1), 0 2px 8px rgba(0,0,0,0.1)'
+                    }}
                     title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                 >
                     {theme === 'dark' ? (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
+                        <>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <span>Light</span>
+                        </>
                     ) : (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
+                        <>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                            <span>Dark</span>
+                        </>
                     )}
                 </button>
 
@@ -74,7 +87,7 @@ const AuthHeader = ({ isLandingPage = false }) => {
                     isLoggedIn ? (
                         <div className="flex items-center gap-6">
                             <div className="hidden md:flex flex-col items-end">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Authenticated</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(30, 41, 59, 0.6)' }}>Authenticated</span>
                                 <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{user?.name || 'Authorized User'}</span>
                             </div>
                             <button
@@ -97,10 +110,10 @@ const AuthHeader = ({ isLandingPage = false }) => {
                             <Link to="/login"
                                 className="px-5 py-2.5 text-sm font-black uppercase tracking-widest transition-colors"
                                 style={{
-                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(30, 41, 59, 0.8)',
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.color = '#0cac78'}
-                                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(30, 41, 59, 0.8)'}
                             >
                                 Sign In
                             </Link>
@@ -121,7 +134,7 @@ const AuthHeader = ({ isLandingPage = false }) => {
                         style={{
                             borderColor: 'rgba(12, 172, 120, 0.2)',
                             backgroundColor: 'rgba(12, 172, 120, 0.05)',
-                            color: 'rgba(255, 255, 255, 0.8)'
+                            color: theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.85)'
                         }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = 'rgba(12, 172, 120, 0.15)';
