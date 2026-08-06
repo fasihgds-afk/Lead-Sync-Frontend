@@ -117,7 +117,7 @@ export const dashboardConfig = [
       { id: 'admin-dashboard', name: 'Dashboard', path: '', component: AdminDashboard, icon: <DashboardIcon />, showInSidebar: true },
       { id: 'admin-combined-leads', name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
       { id: 'admin-rejected-leads', name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
-      { id: 'admin-performance', name: 'Performance', path: 'performance', component: AdminPerformance, icon: <AnalyticsIcon />, showInSidebar: true },
+      { id: 'admin-performance', name: 'Performance', path: 'performance', component: AdminPerformance, icon: <AnalyticsIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
       { id: 'admin-pending-leads', name: 'Pending Leads', path: 'pending-leads', component: AdminPendingLeads, icon: <ClockIcon />, showInSidebar: true },
       { id: 'admin-paid-leads', name: 'Paid Leads', path: 'paid-leads', component: AdminPaidLeads, icon: <DollarIcon />, showInSidebar: true },
       { id: 'admin-manager-leads', name: 'Manager Leads', path: 'manager-leads', component: AdminManagerLeads, icon: <BriefcaseIcon />, showInSidebar: false },

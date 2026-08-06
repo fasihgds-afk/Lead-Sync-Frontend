@@ -14,8 +14,8 @@ const PAGE_SIZE = 20;
 // ─── StageBadge ──────────────────────────────────────────────────────────────
 function StageBadge({ stage }) {
   const map = {
-    ADMIN_REVIEW: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-    MANAGER:      'bg-blue-500/10  text-blue-600  border-blue-500/20',
+    ADMIN_REVIEW: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    MANAGER:      'bg-emerald-500/10  text-emerald-600  border-emerald-500/20',
     WRITER:       'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
   };
   return (
@@ -44,11 +44,11 @@ function AssignModal({ lead, managers, onConfirm, onCancel, isLoading }) {
   if (!lead) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-20 bg-black/60 backdrop-blur-sm">
+      <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fadeIn max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <p className="text-[10px] font-mono text-blue-500 font-bold">ASSIGN MANAGER</p>
+            <p className="text-[10px] font-mono text-emerald-500 font-bold">ASSIGN MANAGER</p>
             <h3 className="text-sm font-bold text-[var(--text-primary)] mt-0.5">{lead.fullName}</h3>
           </div>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 font-bold text-lg leading-none">✕</button>
@@ -62,7 +62,7 @@ function AssignModal({ lead, managers, onConfirm, onCancel, isLoading }) {
             <select
               value={managerId}
               onChange={e => setManagerId(e.target.value)}
-              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-black/10 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+              className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-black/10 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none"
             >
               <option value="">— Select Manager —</option>
               {managers.map(m => (
@@ -83,7 +83,7 @@ function AssignModal({ lead, managers, onConfirm, onCancel, isLoading }) {
             Cancel
           </button>
           <button onClick={() => managerId && onConfirm(managerId)} disabled={!managerId || isLoading}
-            className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold text-xs hover:bg-blue-600 transition-colors disabled:opacity-50 inline-flex items-center gap-2">
+            className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors disabled:opacity-50 inline-flex items-center gap-2">
             {isLoading ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : <FiCheckCircle className="w-3.5 h-3.5" />}
             Assign
           </button>
@@ -111,8 +111,8 @@ function DetailModal({ lead, onClose }) {
     { label: 'Created At',    value: lead.createdAt ? new Date(lead.createdAt).toLocaleString() : '—' },
   ];
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fadeIn max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-20 bg-black/60 backdrop-blur-sm">
+      <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fadeIn max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-start mb-5 border-b border-black/10 pb-4">
           <div>
             <p className="text-[10px] font-mono text-emerald-500 font-bold uppercase">Meta Lead</p>
@@ -226,7 +226,7 @@ export default function MetaLeads() {
       <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 shadow-xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/20">
+            <div className="p-3.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg shadow-emerald-500/20">
               <FiDatabase className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -299,7 +299,7 @@ export default function MetaLeads() {
                 <tr key={String(lead._id)} className="hover:bg-blue-50/20 dark:hover:bg-gray-800/30 transition-colors">
                   <td className="px-5 py-4">
                     <div className="font-bold text-[var(--text-primary)] max-w-[160px] truncate">{lead.fullName || '—'}</div>
-                    <div className="text-[10px] font-mono text-blue-500 mt-0.5">{String(lead._id).slice(-6).toUpperCase()}</div>
+                    <div className="text-[10px] font-mono text-emerald-500 mt-0.5">{String(lead._id).slice(-6).toUpperCase()}</div>
                   </td>
                   <td className="px-5 py-4">
                     <div className="text-[var(--text-secondary)] truncate max-w-[140px]">{lead.email || '—'}</div>
@@ -320,13 +320,13 @@ export default function MetaLeads() {
                   <td className="px-5 py-4 text-right whitespace-nowrap">
                     <div className="inline-flex items-center gap-2">
                       <button onClick={() => setViewLead(lead)}
-                        className="px-3 py-1.5 rounded-lg bg-black/5 hover:bg-blue-500 hover:text-white transition-all text-xs font-bold text-[var(--text-secondary)]">
+                        className="px-3 py-1.5 rounded-lg bg-black/5 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold text-[var(--text-secondary)]">
                         View
                       </button>
                       {lead.status === 'UNPAID' && (
                         <button onClick={() => setAssignLead(lead)}
                           disabled={loadingManagers}
-                          className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white transition-all text-xs font-bold disabled:opacity-40 inline-flex items-center gap-1.5">
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold disabled:opacity-40 inline-flex items-center gap-1.5">
                           <FiUserCheck className="w-3.5 h-3.5" />
                           Assign
                         </button>

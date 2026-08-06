@@ -109,7 +109,7 @@ export default function PendingLeads() {
       <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 shadow-xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl shadow-lg shadow-amber-500/20 text-white">
+            <div className="p-3.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg shadow-emerald-500/20 text-white">
               <FiClock className="w-6 h-6" />
             </div>
             <div>
@@ -140,7 +140,7 @@ export default function PendingLeads() {
             onClick={() => setActiveTab('normal')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'normal'
-                ? 'bg-blue-500 text-white shadow-md'
+                ? 'bg-emerald-500 text-white shadow-md'
                 : 'bg-black/5 text-[var(--text-secondary)] hover:bg-black/10'
             }`}
           >
@@ -152,7 +152,7 @@ export default function PendingLeads() {
             onClick={() => setActiveTab('recurring')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'recurring'
-                ? 'bg-blue-500 text-white shadow-md'
+                ? 'bg-emerald-500 text-white shadow-md'
                 : 'bg-black/5 text-[var(--text-secondary)] hover:bg-black/10'
             }`}
           >
@@ -169,7 +169,7 @@ export default function PendingLeads() {
             placeholder="Search name, email, program..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-1.5 text-xs rounded-xl bg-[var(--bg-tertiary)] border border-black/10 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-[var(--text-primary)]"
+            className="pl-9 pr-4 py-1.5 text-xs rounded-xl bg-[var(--bg-tertiary)] border border-black/10 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full text-[var(--text-primary)]"
           />
           {searchTerm && (
             <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -247,7 +247,7 @@ export default function PendingLeads() {
                       {/* Name + short ID */}
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="font-bold text-[var(--text-primary)]">{lead.fullName || '—'}</div>
-                        <div className="text-[10px] font-mono text-blue-500 mt-0.5">
+                        <div className="text-[10px] font-mono text-emerald-500 mt-0.5">
                           {String(leadId).slice(-8).toUpperCase()}
                         </div>
                       </td>
@@ -266,7 +266,7 @@ export default function PendingLeads() {
                       <td className="px-5 py-4 text-center whitespace-nowrap">
                         <button
                           onClick={() => setContactModalData(lead)}
-                          className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1.5"
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1.5"
                           title="View Contact Info"
                         >
                           <FiMail className="w-3.5 h-3.5" />
@@ -345,14 +345,14 @@ export default function PendingLeads() {
           <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fadeIn space-y-4">
             <div className="flex items-center justify-between border-b border-black/10 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-xl">
+                <div className="p-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl">
                   <FiUser className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[var(--text-primary)] leading-none">
                     Contact Details
                   </h3>
-                  <span className="text-[10px] font-mono text-blue-500 mt-1 block font-bold">
+                  <span className="text-[10px] font-mono text-emerald-500 mt-1 block font-bold">
                     {String(contactModalData._id).slice(-8).toUpperCase()}
                   </span>
                 </div>
@@ -415,7 +415,7 @@ export default function PendingLeads() {
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setContactModalData(null)}
-                className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold text-xs hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors"
               >
                 Close
               </button>

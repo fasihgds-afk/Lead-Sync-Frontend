@@ -27,9 +27,9 @@ const STATUS_BADGE = {
 };
 
 const STAGE_BADGE = {
-  MANAGER: 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20',
-  WRITER: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-  ADMIN_REVIEW: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  MANAGER: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+  WRITER: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+  ADMIN_REVIEW: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
 };
 
 function formatDate(value) {
@@ -262,7 +262,7 @@ export default function PaidLeads() {
                         {/* Lead ID + Name */}
                         <td className="px-5 py-4 whitespace-nowrap">
                           <div className="font-bold text-[var(--text-primary)]">{lead.fullName || '—'}</div>
-                          <div className="text-[10px] font-mono text-blue-500 mt-0.5">
+                          <div className="text-[10px] font-mono text-emerald-500 mt-0.5">
                             {String(leadId).slice(-8).toUpperCase()}
                           </div>
                         </td>
@@ -279,7 +279,7 @@ export default function PaidLeads() {
                         <td className="px-5 py-4 text-center whitespace-nowrap">
                           <button
                             onClick={() => setContactModalData(lead)}
-                            className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1.5"
+                            className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1.5"
                             title="View Contact Info"
                           >
                             <FiMail className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export default function PaidLeads() {
                             value={selectValue}
                             onChange={(e) => handleLeadTypeChange(leadId, e.target.value)}
                             disabled={isProcessing}
-                            className="px-3 py-1.5 rounded-xl bg-[var(--bg-tertiary)] border border-black/10 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                            className="px-3 py-1.5 rounded-xl bg-[var(--bg-tertiary)] border border-black/10 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
                           >
                             <option value="NONE">
                               {lead.leadType && lead.leadType !== 'NONE' ? `Current: ${lead.leadType}` : 'Select…'}
@@ -345,7 +345,7 @@ export default function PaidLeads() {
                           <td colSpan="8" className="px-6 py-4">
                             <div className="p-5 rounded-2xl bg-[var(--bg-secondary)] border border-black/10 shadow-xl animate-fadeIn max-w-md">
                               <div className="flex items-center justify-between pb-3 border-b border-black/10 mb-3">
-                                <span className="text-xs font-bold uppercase tracking-wider text-blue-500 flex items-center gap-2">
+                                <span className="text-xs font-bold uppercase tracking-wider text-emerald-500 flex items-center gap-2">
                                   <FiLayers className="w-4 h-4" />
                                   Send to Writers ({activePreview.type})
                                 </span>
@@ -376,7 +376,7 @@ export default function PaidLeads() {
                                     value={assignedDateInput}
                                     onChange={(e) => setAssignedDateInput(e.target.value)}
                                     disabled={isProcessing}
-                                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-tertiary)] border border-black/10 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-tertiary)] border border-black/10 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
                                   />
                                 </div>
                               )}
@@ -399,7 +399,7 @@ export default function PaidLeads() {
                                 <button
                                   onClick={() => confirmProcess(leadId)}
                                   disabled={isProcessing}
-                                  className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold text-xs hover:bg-blue-600 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                                  className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                                 >
                                   {isProcessing ? (
                                     <FiLoader className="w-3.5 h-3.5 animate-spin" />
@@ -452,14 +452,14 @@ export default function PaidLeads() {
           <div className="bg-[var(--bg-secondary)] border border-black/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fadeIn space-y-4">
             <div className="flex items-center justify-between border-b border-black/10 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-xl">
+                <div className="p-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl">
                   <FiUser className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[var(--text-primary)] leading-none">
                     Contact Details
                   </h3>
-                  <span className="text-[10px] font-mono text-blue-500 mt-1 block font-bold">
+                  <span className="text-[10px] font-mono text-emerald-500 mt-1 block font-bold">
                     {String(contactModalData._id).slice(-8).toUpperCase()}
                   </span>
                 </div>
@@ -520,7 +520,7 @@ export default function PaidLeads() {
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setContactModalData(null)}
-                className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold text-xs hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors"
               >
                 Close
               </button>
