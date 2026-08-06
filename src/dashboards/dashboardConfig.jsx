@@ -125,7 +125,7 @@ export const dashboardConfig = [
       { id: 'admin-meta-leads', name: 'Meta Leads', path: 'meta-leads', component: AdminMetaLeads, icon: <LayersIcon />, showInSidebar: true },
       { id: 'admin-lq-assign', name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
       { id: 'admin-pending-requests', name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
-      { id: 'admin-users-management', name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
+      { id: 'admin-users-management', name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false, allowedRoles: [ROLES.SUPER_ADMIN] },
     ],
   },
   {
