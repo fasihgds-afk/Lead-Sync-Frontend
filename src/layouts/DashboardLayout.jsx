@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 
 import DynamicSidebar from '../components/DynamicSidebar';
 import TokenStatus from '../components/TokenStatus';
+import HeaderNotificationMenu from '../components/HeaderNotificationMenu';
 import tokenManager from '../utils/tokenManager';
 import { dashboardConfig } from '../dashboards/dashboardConfig';
 import { getRoleDisplayName, getDashboardTitleFromPath } from '../utils/roleRedirect';
@@ -195,6 +196,9 @@ export default function DashboardLayout() {
                 </svg>
               )}
             </button>
+
+            {/* Notification Menu - For Writer, Admin, Super Admin */}
+            <HeaderNotificationMenu user={user} />
 
             {/* User Profile - Premium & Fully Visible */}
             <div className="flex items-center gap-5 border-l border-[var(--border-primary)] pl-6 ml-2">

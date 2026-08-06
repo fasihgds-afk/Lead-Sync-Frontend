@@ -1,165 +1,82 @@
 // ✅ Single Source of Truth for Departments & Roles
 //
-// ALL role strings in the app should be imported from here.
-// Change a name in ROLES once → it propagates everywhere automatically.
+// To add a role: add ONE entry to ROLE_DEFINITIONS below.
+// Everything else (ROLES, redirects, display names, abbreviations,
+// aliases, resolveRole) is derived automatically.
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ROLES — canonical string values used across dashboardConfig, hooks, etc.
-// ─────────────────────────────────────────────────────────────────────────────
-export const ROLES = {
-  SUPER_ADMIN:    'Super Admin',
-  ADMIN:          'Admin',
-  DATA_MINORS:    'Data Minors',
-  LEAD_QUALIFIERS:'Lead Qualifiers',
-  VERIFIER:       'Verifier',
-  MANAGER:        'Manager',
-  WRITERS:        'Writers',
-  WRITING:        'Writing',   // alias backend sends sometimes
-  WRITER:         'Writer',    // alias backend sends sometimes
-};
-
-// Departments available for User Signup
-export const SIGNUP_DEPARTMENTS = [
-  'RND',
-  'Quality Assurance',
-  'Sales',
-  ROLES.LEAD_QUALIFIERS,
-  ROLES.WRITING,
-];
-
-// System Roles available for Admin Assignment
-export const SYSTEM_ROLES = [
-  ROLES.DATA_MINORS,
-  ROLES.LEAD_QUALIFIERS,
-  ROLES.VERIFIER,
-  ROLES.MANAGER,
-  ROLES.WRITERS,
-  ROLES.ADMIN,
-  ROLES.SUPER_ADMIN,
-];
-
-// Department Badge Acronyms
-export const DEPARTMENT_ABBREVIATIONS = {
-  [ROLES.DATA_MINORS]:     'DM',
-  [ROLES.LEAD_QUALIFIERS]: 'LQ',
-  [ROLES.VERIFIER]:        'VER',
-  [ROLES.MANAGER]:         'MGR',
-  [ROLES.WRITING]:         'WRT',
-  [ROLES.WRITERS]:         'WRT',
-  [ROLES.ADMIN]:           'ADM',
-  [ROLES.SUPER_ADMIN]:     'SA',
-};
-
-export const getDepartmentAbbrev = (dept) => {
-  if (!dept) return 'N/A';
-  return DEPARTMENT_ABBREVIATIONS[dept] || dept.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase();
-};
-
-// ✅ Normalize role helper
-const normalizeRole = (role) =>
-  role?.toLowerCase().trim();
-
-// ✅ Central role config (Single Source of Truth)
-const ROLE_CONFIG = {
-  admin: {
-    redirect: '/gds/admin',
-    display: 'Admin',
-  },
-  'super admin': {
-    redirect: '/gds/admin',
-    display: 'Super Admin',
-  },
-  'lead qualifier': {
-    redirect: '/gds/lead-qualifier',
-    display: 'Lead Qualifier',
-  },
-  'data minor': {
-    redirect: '/gds/data-minor',
-    display: 'Data Minor',
-  },
-  verifier: {
-    redirect: '/gds/verifier',
-    display: 'Verifier',
-  },
-  manager: {
-    redirect: '/gds/manager',
-    display: 'Manager',
-  },
-  writer: {
-    redirect: '/gds/writer',
-    display: 'Writer',
-  },
-};
-
-// ✅ Role aliases (handles messy backend data)
-const ROLE_ALIASES = {
-  'lead qualifiers': 'lead qualifier',
-  'team lead( lead qualifiers,)': 'lead qualifier',
-  'data minors': 'data minor',
-  'team lead (data minors )': 'data minor',
-  'writers': 'writer',
-  'writing': 'writer',
-};
-
-// ✅ Resolve final role
-const resolveRole = (role) => {
-  const normalized = normalizeRole(role);
-  return ROLE_ALIASES[normalized] || normalized;
-};
-
-// 🔹 Redirect
-export const getRoleBasedRedirect = (userRole) => {
-  const role = resolveRole(userRole);
-  return ROLE_CONFIG[role]?.redirect || '/unauthorized';
-};
-
-// 🔹 Display Name
-export const getRoleDisplayName = (userRole) => {
-  const role = resolveRole(userRole);
-  return ROLE_CONFIG[role]?.display || 'User';
-};
-
-// 🔹 Dashboard Title
-export const getDashboardTitleFromPath = (pathname, userRole) => {
-  const role = resolveRole(userRole);
-
-  if (pathname?.startsWith('/gds/admin')) {
-    return role === 'super admin'
-      ? 'Super Admin Portal'
-      : 'Admin Dashboard';
-  }
-
-  const match = Object.values(ROLE_CONFIG).find(config =>
-    pathname?.startsWith(config.redirect)
-  );
-
-  return match
-    ? `${match.display} Dashboard`
-    : 'Dashboard';
-};
-
-// 🔹 Get user role
 import tokenManager from './tokenManager';
+
+const ROLE_DEFINITIONS = [
+  { id: 'superAdmin', canonical: 'Super Admin', redirect: '/gds/admin', abbrev: 'SA', aliases: [] },
+  { id: 'admin', canonical: 'Admin', redirect: '/gds/admin', abbrev: 'ADM', aliases: [] },
+  { id: 'dataMinors', canonical: 'Data Minors', redirect: '/gds/data-minor', abbrev: 'DM', aliases: ['data minors', 'team lead (data minors )'] },
+  { id: 'leadQualifiers', canonical: 'Lead Qualifiers', redirect: '/gds/lead-qualifier', abbrev: 'LQ', aliases: ['lead qualifiers', 'team lead( lead qualifiers,)'] },
+  { id: 'verifier', canonical: 'Verifier', redirect: '/gds/verifier', abbrev: 'VER', aliases: [] },
+  { id: 'manager', canonical: 'Manager', redirect: '/gds/manager', abbrev: 'MGR', aliases: [] },
+  { id: 'writer', canonical: 'Writer', redirect: '/gds/writer', abbrev: 'WRT', aliases: ['writers', 'writing', 'Writing'] },
+];
+
+const norm = (s) => s?.toLowerCase().trim();
+
+// Derived: { SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', ... }
+export const ROLES = Object.fromEntries(
+  ROLE_DEFINITIONS.map(r => [
+    r.id.replace(/([A-Z])/g, '_$1').toUpperCase(),
+    r.canonical,
+  ])
+);
+
+export const SYSTEM_ROLES = ROLE_DEFINITIONS.map(r => r.canonical);
+
+export const DEPARTMENT_ABBREVIATIONS = Object.fromEntries(
+  ROLE_DEFINITIONS.map(r => [r.canonical, r.abbrev])
+);
+
+// normalized-key -> definition (canonical form + all aliases point here)
+const ROLE_LOOKUP = new Map();
+for (const def of ROLE_DEFINITIONS) {
+  ROLE_LOOKUP.set(norm(def.canonical), def);
+  for (const alias of def.aliases) ROLE_LOOKUP.set(norm(alias), def);
+}
+
+export const resolveRole = (role) => ROLE_LOOKUP.get(norm(role)) ?? null;
+
+export const getRoleBasedRedirect = (userRole) =>
+  resolveRole(userRole)?.redirect ?? '/unauthorized';
+
+export const getRoleDisplayName = (userRole) =>
+  resolveRole(userRole)?.canonical ?? 'User';
+
+export const getDepartmentAbbrev = (dept) =>
+  resolveRole(dept)?.abbrev ?? (dept ? dept.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase() : 'N/A');
+
+export const hasRequiredRole = (userRole, requiredRoles) => {
+  if (!requiredRoles?.length) return true;
+  const target = resolveRole(userRole);
+  if (!target) return false;
+  return requiredRoles.some(r => resolveRole(r) === target);
+};
+
+export const getDashboardTitleFromPath = (pathname, userRole) => {
+  const target = resolveRole(userRole);
+  if (pathname?.startsWith('/gds/admin')) {
+    return target?.id === 'superAdmin' ? 'Super Admin Portal' : 'Admin Dashboard';
+  }
+  const match = ROLE_DEFINITIONS.find(def => pathname?.startsWith(def.redirect));
+  return match ? `${match.canonical} Dashboard` : 'Dashboard';
+};
 
 export const getUserRole = () => {
   const user = tokenManager.getUser();
   return user ? (user.role || user.department || null) : null;
 };
 
-// Role check (safe)
-export const hasRequiredRole = (userRole, requiredRoles) => {
-  if (!requiredRoles?.length) return true;
+// Departments available for User Signup.
+// These values MUST exactly match backend constants.js departments enum:
+// ["Development", "IT", "Marketing&SEO", "RND", "Quality Assurance", "Sales", "Writing"]
+export const SIGNUP_DEPARTMENTS = ['Development', 'IT', 'Marketing&SEO', 'RND', 'Quality Assurance', 'Sales', 'Writing'];
 
-  const role = resolveRole(userRole);
-
-  return requiredRoles
-    .map(r => resolveRole(r))
-    .includes(role);
-};
-
-// Public routes (Single Source of Truth)
 const PUBLIC_ROUTES = new Set(['/', '/login', '/signup', '/forgot-password']);
-
 export const isPublicRoute = (pathname) => {
   const path = pathname || window.location.pathname;
   const normalizedPath = path.toLowerCase().replace(/\/$/, '') || '/';

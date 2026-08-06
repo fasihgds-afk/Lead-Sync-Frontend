@@ -40,6 +40,7 @@ const ICON_PATHS = {
   dollar: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   clock: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
   pencil: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z",
+  layers: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
 };
 
 // Factory keeps the existing call sites unchanged: <DashboardIcon />
@@ -64,6 +65,7 @@ const UserCheckIcon = makeIcon(ICON_PATHS.userCheck);
 const DollarIcon = makeIcon(ICON_PATHS.dollar);
 const ClockIcon = makeIcon(ICON_PATHS.clock);
 const PencilIcon = makeIcon(ICON_PATHS.pencil);
+const LayersIcon = makeIcon(ICON_PATHS.layers);
 
 // =====================================================================
 // Lazy Loaded Components
@@ -88,6 +90,11 @@ const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersM
 const AdminRejectedLeads = lazy(() => import("../dashboards/admin/pages/rejectedleads"));
 const AdminPerformance = lazy(() => import("../dashboards/admin/pages/PerformanceDetails"));
 const SuperAdminPortal = lazy(() => import("../dashboards/admin/pages/SuperAdminPortal"));
+const AdminAddData = lazy(() => import("../dashboards/admin/pages/AddData"));
+const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLeads"));
+const AdminPaidLeads = lazy(() => import("../dashboards/admin/pages/PaidLeads"));
+const AdminPendingLeads = lazy(() => import("../dashboards/admin/pages/PendingLeads"));
+const AdminMetaLeads = lazy(() => import("../dashboards/admin/pages/MetaLeads"));
 
 // =====================================================================
 // Centralized Configuration
@@ -98,6 +105,7 @@ const SuperAdminPortal = lazy(() => import("../dashboards/admin/pages/SuperAdmin
 // whether it's a string or array. Double-check these values match your
 // backend's role strings exactly (case + plural/singular matters).
 // =====================================================================
+
 export const dashboardConfig = [
   {
     id: 'admin',
@@ -110,9 +118,14 @@ export const dashboardConfig = [
       { id: 'admin-combined-leads', name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
       { id: 'admin-rejected-leads', name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
       { id: 'admin-performance', name: 'Performance', path: 'performance', component: AdminPerformance, icon: <AnalyticsIcon />, showInSidebar: true },
+      { id: 'admin-pending-leads', name: 'Pending Leads', path: 'pending-leads', component: AdminPendingLeads, icon: <ClockIcon />, showInSidebar: true },
+      { id: 'admin-paid-leads', name: 'Paid Leads', path: 'paid-leads', component: AdminPaidLeads, icon: <DollarIcon />, showInSidebar: true },
+      { id: 'admin-manager-leads', name: 'Manager Leads', path: 'manager-leads', component: AdminManagerLeads, icon: <BriefcaseIcon />, showInSidebar: false },
+      { id: 'admin-add-data', name: 'Add Data', path: 'add-data', component: AdminAddData, icon: <PlusIcon />, showInSidebar: true },
+      { id: 'admin-meta-leads', name: 'Meta Leads', path: 'meta-leads', component: AdminMetaLeads, icon: <LayersIcon />, showInSidebar: true },
       { id: 'admin-lq-assign', name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
       { id: 'admin-pending-requests', name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
-      { id: 'admin-users-management', name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false, allowedRoles: [ROLES.SUPER_ADMIN] },
+      { id: 'admin-users-management', name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: true, allowedRoles: [ROLES.SUPER_ADMIN] },
     ],
   },
   {
