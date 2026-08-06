@@ -5,6 +5,7 @@ import { getRoleBasedRedirect } from "../utils/roleRedirect";
 import tokenManager from "../utils/tokenManager";
 import AuthHeader from "../components/AuthHeader";
 import { useTheme } from "../context/ThemeContext";
+import CosmicSpaceBackground from "../components/CosmicSpaceBackground";
 
 export default function LoginPage() {
     const { theme } = useTheme();
@@ -92,25 +93,8 @@ export default function LoginPage() {
     }, [formData, loading, navigate]);
 
     return (
-        <div className="min-h-screen flex flex-col pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300"
-            style={{
-                backgroundColor: isDark ? '#0f2a3f' : '#f8fafc',
-            }}>
-
-            {/* Dynamic Background - Matching Home Page */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full opacity-20 blur-[150px] animate-float-slow"
-                    style={{ background: 'radial-gradient(circle, #0cac78 0%, transparent 70%)' }}></div>
-                <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full opacity-15 blur-[130px] animate-float-delayed"
-                    style={{ background: 'radial-gradient(circle, #0cac78 0%, transparent 70%)' }}></div>
-                <div className="absolute top-[40%] right-[20%] w-[40%] h-[40%] rounded-full opacity-10 blur-[100px] animate-float-medium"
-                    style={{ background: 'radial-gradient(circle, #0cac78 0%, transparent 70%)' }}></div>
-                {/* Subtle grid pattern overlay */}
-                <div className="absolute inset-0 opacity-5" style={{
-                    backgroundImage: `radial-gradient(circle at 1px 1px, #0cac78 1px, transparent 0)`,
-                    backgroundSize: '40px 40px'
-                }}></div>
-            </div>
+        <div className="min-h-screen flex flex-col pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+            <CosmicSpaceBackground />
 
             <AuthHeader />
 
