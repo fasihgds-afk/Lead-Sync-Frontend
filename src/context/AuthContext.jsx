@@ -7,32 +7,29 @@ const AuthContext = createContext(null);
 const isProd = process.env.NODE_ENV === 'production';
 const log = (...args) => { if (!isProd) console.log(...args); };
 
-export function AuthProvider({ children }) {
-    const [authState, setAuthState] = useState({
-        status: 'checking', // 'checking' | 'authenticated' | 'unauthenticated'
-        user: null,
-    });
-
-    const loadAuth = useCallback(() => {
+const getInitialAuthState = () => {
+    try {
         const token = tokenManager.getToken();
-
         if (!token || !tokenManager.isCurrentTokenValid()) {
             tokenManager.clearAuthData();
-            setAuthState({ status: 'unauthenticated', user: null });
-            return;
+            return { status: 'unauthenticated', user: null };
         }
-
         const userData = tokenManager.getUser();
-
-        // Defensive: corrupted/missing user payload alongside a "valid" token
         if (!userData) {
-            log('AuthContext: token valid but user payload missing, clearing auth');
             tokenManager.clearAuthData();
-            setAuthState({ status: 'unauthenticated', user: null });
-            return;
+            return { status: 'unauthenticated', user: null };
         }
+        return { status: 'authenticated', user: userData };
+    } catch {
+        return { status: 'unauthenticated', user: null };
+    }
+};
 
-        setAuthState({ status: 'authenticated', user: userData });
+export function AuthProvider({ children }) {
+    const [authState, setAuthState] = useState(getInitialAuthState);
+
+    const loadAuth = useCallback(() => {
+        setAuthState(getInitialAuthState());
     }, []);
 
     // Run once on mount. Re-run on the custom tokenExpired event (fired by tokenManager's

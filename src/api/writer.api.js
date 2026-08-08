@@ -1,18 +1,17 @@
 import axiosInstance from './axiosInstance';
 
 /**
- * Writer API
- *
- * Endpoints (from writerController.js):
- *   GET  /api/writer/leads                  — all leads (NORMAL + RECURRING), optional ?leadType=
- *   GET  /api/writer/leads/normal            — NORMAL leads only
- *   GET  /api/writer/leads/recurring         — RECURRING leads only
+ * writer.api.js
+ * -----------------------------------------------------------------------
+ * Endpoints for Writer role (from writerController.js):
+ *   GET  /api/writer/leads                 — all leads (NORMAL + RECURRING), optional ?leadType=
+ *   GET  /api/writer/leads/normal           — NORMAL leads only
+ *   GET  /api/writer/leads/recurring        — RECURRING leads only
  *   PATCH /api/writer/leads/:source/:leadId/status  — set writerStatus PENDING | IN_PROGRESS
  *   PATCH /api/writer/leads/:source/:leadId/done    — mark lead DONE → moves to ADMIN_REVIEW
- *
- * Pagination params: ?limit=20&skip=0
- * source param: "LEAD" | "META_LEAD"
+ * -----------------------------------------------------------------------
  */
+
 export const writerAPI = {
   /**
    * Fetch all writer leads.
@@ -61,6 +60,16 @@ export const writerAPI = {
    * @param {string} leadId
    */
   markDone: async (source, leadId) => {
+    const response = await axiosInstance.patch(
+      `/api/writer/leads/${source}/${leadId}/done`
+    );
+    return response.data;
+  },
+
+  /**
+   * Alias for markDone for backward compatibility.
+   */
+  markLeadDone: async (source, leadId) => {
     const response = await axiosInstance.patch(
       `/api/writer/leads/${source}/${leadId}/done`
     );

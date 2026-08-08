@@ -7,8 +7,11 @@ import ProtectedRoute from './ProtectedRoute';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[60vh] w-full">
-    <SharedLoader />
+  <div className="flex items-center justify-center p-12 w-full">
+    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-500">
+      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+      <span>Loading page...</span>
+    </div>
   </div>
 );
 

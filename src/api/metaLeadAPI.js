@@ -1,5 +1,4 @@
-import axios from 'axios';
-import tokenManager from '../utils/tokenManager';
+import axiosInstance from './axiosInstance';
 
 /**
  * metaLeadAPI.js
@@ -8,82 +7,13 @@ import tokenManager from '../utils/tokenManager';
  * (adminController.js / writerController.js, mounted at
  * /api/admin/meta-leads and /api/writer/meta-leads in app.js).
  *
- * Auth: requireAuth on the backend expects a Bearer token. We read it
- * via tokenManager / storage.
+ * Auth & Request Lifecycle: Routed through the central axiosInstance.
  * -----------------------------------------------------------------------
  */
 
-const AUTH_TOKEN_KEY = 'authToken';
-
-const rawBaseUrl =
-  (typeof import.meta !== 'undefined' &&
-    import.meta.env &&
-    import.meta.env.VITE_API_BASE_URL) ||
-  'http://localhost:5000';
-
-const BASE_URL = rawBaseUrl.replace(/\/$/, '');
-
-const client = axios.create({
-  baseURL: BASE_URL,
-  timeout: 120000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Attach auth token (if present) to every request.
-client.interceptors.request.use((config) => {
-  const token =
-    tokenManager.getToken() ||
-    localStorage.getItem(AUTH_TOKEN_KEY) ||
-    sessionStorage.getItem('token') ||
-    localStorage.getItem('token');
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Normalize every error into a predictable shape:
-// { status, message, fieldErrors, isNetworkError }
-client.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (!error.response) {
-      // Network failure, CORS issue, server down, timeout, etc.
-      return Promise.reject({
-        status: 0,
-        message:
-          error.code === 'ECONNABORTED'
-            ? 'The request timed out. Please try again.'
-            : 'Unable to reach the server. Check your connection and try again.',
-        isNetworkError: true,
-        original: error,
-      });
-    }
-
-    const { status, data } = error.response;
-
-    if (status === 401) {
-      // Token missing/expired/invalid — clear it so the app can
-      // redirect to login instead of looping on 401s.
-      tokenManager.clearAuthData();
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-    }
-
-    return Promise.reject({
-      status,
-      message:
-        (data && (data.message || data.error)) ||
-        'Something went wrong. Please try again.',
-      fieldErrors: (data && data.errors) || null,
-      isNetworkError: false,
-      original: error,
-    });
-  }
-);
-
+/**
+ * Helper to construct query string from optional params object.
+ */
 function toQueryString(params = {}) {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -95,6 +25,40 @@ function toQueryString(params = {}) {
   return qs ? `?${qs}` : '';
 }
 
+/**
+ * Normalizes Axios errors into a consistent error structure
+ * { status, message, fieldErrors, isNetworkError, original }
+ */
+function handleApiError(error) {
+  if (error && error.status !== undefined && error.message) {
+    return Promise.reject(error);
+  }
+
+  if (!error.response) {
+    return Promise.reject({
+      status: 0,
+      message:
+        error.code === 'ECONNABORTED'
+          ? 'The request timed out. Please try again.'
+          : error.message || 'Unable to reach the server. Check your connection and try again.',
+      isNetworkError: true,
+      original: error,
+    });
+  }
+
+  const { status, data } = error.response;
+  return Promise.reject({
+    status,
+    message:
+      (data && (data.message || data.error || data.msg)) ||
+      error.message ||
+      'Something went wrong. Please try again.',
+    fieldErrors: (data && (data.errors || data.fieldErrors)) || null,
+    isNetworkError: false,
+    original: error,
+  });
+}
+
 export const metaLeadAPI = {
   // ---------------- Admin ----------------
 
@@ -103,18 +67,26 @@ export const metaLeadAPI = {
    * GET /api/admin/meta-leads
    * Params: { stage, status, assignedTo, limit, skip }
    */
-  getMetaLeads({ stage = '', status = '', assignedTo = '', limit = 20, skip = 0 } = {}) {
-    return client
-      .get(`/api/admin/meta-leads${toQueryString({ stage, status, assignedTo, limit, skip })}`)
-      .then((r) => r.data);
+  async getMetaLeads({ stage = '', status = '', assignedTo = '', limit = 20, skip = 0 } = {}) {
+    try {
+      const response = await axiosInstance.get(`/api/admin/meta-leads${toQueryString({ stage, status, assignedTo, limit, skip })}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   /**
    * Fetch all approved managers for the assignment dropdown.
    * GET /api/admin/managers
    */
-  getApprovedManagers() {
-    return client.get('/api/admin/managers').then((r) => r.data);
+  async getApprovedManagers() {
+    try {
+      const response = await axiosInstance.get('/api/admin/managers');
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   /**
@@ -123,8 +95,13 @@ export const metaLeadAPI = {
    * Required: date, program, school, fullName + (email OR number)
    * Optional: website
    */
-  createMetaLead(payload) {
-    return client.post('/api/admin/meta-leads', payload).then((r) => r.data);
+  async createMetaLead(payload) {
+    try {
+      const response = await axiosInstance.post('/api/admin/meta-leads', payload);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   /**
@@ -132,20 +109,26 @@ export const metaLeadAPI = {
    * PATCH /api/admin/meta-leads/:leadId/assign-manager
    * Body: { managerId }
    */
-  assignMetaLeadToManager(leadId, managerId) {
-    return client
-      .patch(`/api/admin/meta-leads/${leadId}/assign-manager`, { managerId })
-      .then((r) => r.data);
+  async assignMetaLeadToManager(leadId, managerId) {
+    try {
+      const response = await axiosInstance.patch(`/api/admin/meta-leads/${leadId}/assign-manager`, { managerId });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   /**
    * Fetch all PAID leads (both Lead + MetaLead models) for Admin queue.
    * GET /api/admin/paid-leads
    */
-  getPaidLeads({ limit = 20, skip = 0, source = 'ALL' } = {}) {
-    return client
-      .get(`/api/admin/paid-leads${toQueryString({ limit, skip, source })}`)
-      .then((r) => r.data);
+  async getPaidLeads({ limit = 20, skip = 0, source = 'ALL' } = {}) {
+    try {
+      const response = await axiosInstance.get(`/api/admin/paid-leads${toQueryString({ limit, skip, source })}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   /**
@@ -156,14 +139,17 @@ export const metaLeadAPI = {
    * leadType: 'NORMAL' | 'RECURRING'
    * adminAssignedDate: required (YYYY-MM-DD) only when leadType === 'NORMAL'
    */
-  processPaidLead(source, leadId, { leadType, adminAssignedDate } = {}) {
+  async processPaidLead(source, leadId, { leadType, adminAssignedDate } = {}) {
     const body = { leadType };
     if (leadType === 'NORMAL') {
       body.adminAssignedDate = adminAssignedDate;
     }
-    return client
-      .patch(`/api/admin/paid-leads/${source}/${leadId}/process`, body)
-      .then((r) => r.data);
+    try {
+      const response = await axiosInstance.patch(`/api/admin/paid-leads/${source}/${leadId}/process`, body);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   // ---------------- Writer ----------------
@@ -172,20 +158,26 @@ export const metaLeadAPI = {
    * Fetch NORMAL paid leads currently active for writers.
    * GET /api/writer/leads/normal
    */
-  getNormalLeads({ limit = 20, skip = 0 } = {}) {
-    return client
-      .get(`/api/writer/leads/normal${toQueryString({ limit, skip })}`)
-      .then((r) => r.data);
+  async getNormalLeads({ limit = 20, skip = 0 } = {}) {
+    try {
+      const response = await axiosInstance.get(`/api/writer/leads/normal${toQueryString({ limit, skip })}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   /**
    * Fetch RECURRING paid leads currently active for writers.
    * GET /api/writer/leads/recurring
    */
-  getRecurringLeads({ limit = 20, skip = 0 } = {}) {
-    return client
-      .get(`/api/writer/leads/recurring${toQueryString({ limit, skip })}`)
-      .then((r) => r.data);
+  async getRecurringLeads({ limit = 20, skip = 0 } = {}) {
+    try {
+      const response = await axiosInstance.get(`/api/writer/leads/recurring${toQueryString({ limit, skip })}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 
   /**
@@ -194,10 +186,13 @@ export const metaLeadAPI = {
    *
    * source: 'LEAD' | 'META_LEAD'
    */
-  markLeadDone(source, leadId) {
-    return client
-      .patch(`/api/writer/leads/${source}/${leadId}/done`)
-      .then((r) => r.data);
+  async markLeadDone(source, leadId) {
+    try {
+      const response = await axiosInstance.patch(`/api/writer/leads/${source}/${leadId}/done`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error);
+    }
   },
 };
 

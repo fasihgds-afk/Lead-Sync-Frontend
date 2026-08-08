@@ -1,5 +1,12 @@
 import axiosInstance from './axiosInstance';
 
+/**
+ * combined.api.js
+ * -----------------------------------------------------------------------
+ * API endpoints for combined leads retrieval and searching.
+ * -----------------------------------------------------------------------
+ */
+
 export const combinedAPI = {
   // Get all leads with optional filtering and pagination
   getAllLeadsCombined: async (limit = 20, skip = 0, filters = {}) => {
@@ -25,3 +32,5 @@ export const combinedAPI = {
     return response.data;
   }
 };
+
+export default combinedAPI;

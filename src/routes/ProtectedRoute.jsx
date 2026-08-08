@@ -48,7 +48,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }, [status, isAuthorized, rolesKey, navigate]);
 
     if (status === 'checking') {
-        return <SharedLoader />;
+        return null;
     }
 
     if (!isAuthenticated || !isAuthorized) {

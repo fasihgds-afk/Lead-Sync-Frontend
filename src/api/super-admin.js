@@ -1,61 +1,30 @@
-import axiosInstance from './axiosInstance';
+import { adminAPI } from './admin.api';
+
+/**
+ * super-admin.js
+ * -----------------------------------------------------------------------
+ * Re-exports & exposes Super Admin API operations from admin.api.js
+ * maintaining 100% backward compatibility for all existing callers.
+ * -----------------------------------------------------------------------
+ */
 
 export const superAdminAPI = {
-    // Pending Requests Management
-    getPendingRequests: async () => {
-        const response = await axiosInstance.get('/api/superadmin/requests/pending');
-        return response.data;
-    },
+  // Pending Requests Management
+  getPendingRequests: adminAPI.getPendingRequests,
+  approveRequest: adminAPI.approveRequest,
+  rejectRequest: adminAPI.rejectRequest,
 
-    approveRequest: async (requestId, role) => {
-        const response = await axiosInstance.patch(`/api/superadmin/requests/${requestId}/approve`, { role });
-        return response.data;
-    },
+  // Manager & LQ Assignments
+  getManagersWithLQs: adminAPI.getManagersWithLQs,
+  getManagersWithoutLQs: adminAPI.getManagersWithoutLQs,
+  getUnassignedLeadQualifiers: adminAPI.getUnassignedLeadQualifiers,
+  assignLqsToManager: adminAPI.assignLqsToManager,
+  unassignLqs: adminAPI.unassignLqs,
 
-    rejectRequest: async (requestId) => {
-        const response = await axiosInstance.delete(`/api/superadmin/requests/${requestId}/reject`);
-        return response.data;
-    },
-
-    // Manager & LQ Assignments
-    getManagersWithLQs: async () => {
-        const response = await axiosInstance.get('/api/superadmin/managers/with-lqs');
-        return response.data;
-    },
-
-    getManagersWithoutLQs: async () => {
-        const response = await axiosInstance.get('/api/superadmin/managers/without-lqs');
-        return response.data;
-    },
-
-    getUnassignedLeadQualifiers: async () => {
-        const response = await axiosInstance.get('/api/superadmin/lead-qualifiers/unassigned');
-        return response.data;
-    },
-
-    assignLqsToManager: async (managerId, lqIds) => {
-        const response = await axiosInstance.patch(`/api/superadmin/managers/${managerId}/assign-lqs`, { lqIds });
-        return response.data;
-    },
-
-    unassignLqs: async (lqIds) => {
-        const response = await axiosInstance.patch('/api/superadmin/lead-qualifiers/unassign', { lqIds });
-        return response.data;
-    },
-
-    // Rejection Request Management
-    getRejectionRequests: async () => {
-        const response = await axiosInstance.get('/api/superadmin/rejection-requests');
-        return response.data;
-    },
-    decideRejectionRequest: async (leadId, decision, comment) => {
-        const response = await axiosInstance.patch(
-            `/api/superadmin/rejection-requests/${leadId}/decision`,
-            { decision, comment }
-        );
-
-        return response.data;
-    }
+  // Rejection Request Management
+  getRejectionRequests: adminAPI.getRejectionRequests,
+  decideRejectionRequest: adminAPI.decideRejectionRequest,
+  decideLeadRejection: adminAPI.decideLeadRejection,
 };
 
 export default superAdminAPI;

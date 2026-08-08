@@ -1,5 +1,12 @@
 import axiosInstance from './axiosInstance';
 
+/**
+ * data-minor.js
+ * -----------------------------------------------------------------------
+ * API endpoints for Data Minor & Verifier roles.
+ * -----------------------------------------------------------------------
+ */
+
 export const dataMinorAPI = {
     // Get stats for the logged-in Data Minor
     getMyStats: async (params = {}) => {

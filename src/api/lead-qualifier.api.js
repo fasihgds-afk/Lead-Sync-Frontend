@@ -1,5 +1,12 @@
 import axiosInstance from './axiosInstance';
 
+/**
+ * lead-qualifier.api.js
+ * -----------------------------------------------------------------------
+ * API endpoints for Lead Qualifier role operations.
+ * -----------------------------------------------------------------------
+ */
+
 export const lqAPI = {
     // Get leads assigned to the current Lead Qualifier with filters
     getMyLeads: async (limit = 20, skip = 0, filters = {}, signal = null) => {
@@ -19,7 +26,6 @@ export const lqAPI = {
 
     // Bulk update the status of multiple leads
     updateBulkStatus: async (leadIds, lqStatus) => {
-        // We use 'bulk' as the ID to bypass any router parameter requirement and hit the same controller
         const response = await axiosInstance.patch(`/api/lq/leads/bulk/status`, { lqStatus, leadIds });
         return response.data;
     },

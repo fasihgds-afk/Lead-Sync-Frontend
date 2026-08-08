@@ -1,51 +1,100 @@
 import axiosInstance from './axiosInstance';
 
+/**
+ * admin.api.js
+ * -----------------------------------------------------------------------
+ * Central Admin & Super Admin API services.
+ * Integrates dashboard metrics, signup requests approval/rejection,
+ * lead stage filtering, manager/LQ assignments, and lead rejection requests.
+ * -----------------------------------------------------------------------
+ */
+
 export const adminAPI = {
-  // Get overview stats
+  // --- Overview & Dashboard Metrics ---
   getOverview: async (params = {}) => {
-    try {
-      const response = await axiosInstance.get('/api/superadmin/overview', { params });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await axiosInstance.get('/api/superadmin/overview', { params });
+    return response.data;
   },
 
-  // Get all pending requests
+  // --- User Signup Requests Management ---
   getPendingRequests: async () => {
     const response = await axiosInstance.get('/api/superadmin/requests/pending');
     return response.data;
   },
 
-  // Approve a pending request
   approveRequest: async (requestId, role) => {
     const response = await axiosInstance.patch(`/api/superadmin/requests/${requestId}/approve`, { role });
     return response.data;
   },
 
-  // Reject a pending request
   rejectRequest: async (requestId) => {
     const response = await axiosInstance.delete(`/api/superadmin/requests/${requestId}/reject`);
     return response.data;
   },
 
-  // Reject with decision and comment (Frontend uses the unified flow)
-  decideRejectionRequest: async (requestId) => {
-    // The current backend uses DELETE for registration rejections and deletes the user immediately.
-    // We match that behavior while maintaining the frontend's high-end rejection flow.
+  rejectSignupRequest: async (requestId) => {
     const response = await axiosInstance.delete(`/api/superadmin/requests/${requestId}/reject`);
     return response.data;
   },
 
-  // --- Leads Management ---
+  // --- Lead Rejection Request Management ---
+  getRejectionRequests: async () => {
+    const response = await axiosInstance.get('/api/superadmin/rejection-requests');
+    return response.data;
+  },
+
+  decideLeadRejection: async (leadId, decision, comment) => {
+    const response = await axiosInstance.patch(
+      `/api/superadmin/rejection-requests/${leadId}/decision`,
+      { decision, comment }
+    );
+    return response.data;
+  },
 
   /**
-   * Generic helper to fetch leads by stage with pagination
-   * @param {string|null} stage - The specific stage (e.g., 'DM', 'LQ', 'Manager') or null for all
-   * @param {number} limit - Number of items per page
-   * @param {number} skip - Number of items to skip
-   * @param {object} extraFilters - Additional query parameters
+   * Polymorphic helper for decideRejectionRequest:
+   *  - If decision parameter is provided: Decides on a lead rejection request (PATCH /api/superadmin/rejection-requests/:leadId/decision)
+   *  - If single argument provided: Rejects a user signup request (DELETE /api/superadmin/requests/:requestId/reject)
    */
+  decideRejectionRequest: async (leadIdOrRequestId, decision, comment) => {
+    if (decision !== undefined && decision !== null) {
+      const response = await axiosInstance.patch(
+        `/api/superadmin/rejection-requests/${leadIdOrRequestId}/decision`,
+        { decision, comment }
+      );
+      return response.data;
+    }
+    const response = await axiosInstance.delete(`/api/superadmin/requests/${leadIdOrRequestId}/reject`);
+    return response.data;
+  },
+
+  // --- Manager & LQ Assignment Management ---
+  getManagersWithLQs: async () => {
+    const response = await axiosInstance.get('/api/superadmin/managers/with-lqs');
+    return response.data;
+  },
+
+  getManagersWithoutLQs: async () => {
+    const response = await axiosInstance.get('/api/superadmin/managers/without-lqs');
+    return response.data;
+  },
+
+  getUnassignedLeadQualifiers: async () => {
+    const response = await axiosInstance.get('/api/superadmin/lead-qualifiers/unassigned');
+    return response.data;
+  },
+
+  assignLqsToManager: async (managerId, lqIds) => {
+    const response = await axiosInstance.patch(`/api/superadmin/managers/${managerId}/assign-lqs`, { lqIds });
+    return response.data;
+  },
+
+  unassignLqs: async (lqIds) => {
+    const response = await axiosInstance.patch('/api/superadmin/lead-qualifiers/unassign', { lqIds });
+    return response.data;
+  },
+
+  // --- Leads Management ---
   getLeadsByStage: async (stage, limit = 20, skip = 0, extraFilters = {}) => {
     const params = { limit, skip, ...extraFilters };
     if (stage) params.stage = stage;
@@ -53,7 +102,6 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Role-specific lead fetchers (Shorthands)
   getAllLeads: async (limit = 20, skip = 0, filters = {}) =>
     adminAPI.getLeadsByStage(null, limit, skip, filters),
 
@@ -76,11 +124,6 @@ export const adminAPI = {
     adminAPI.getLeadsByStage('REJECTED', limit, skip, filters),
 
   // --- Analytics & Performance ---
-
-  /**
-   * Get performance metrics for a specific role
-   * @param {string} role - The role to fetch performance for
-   */
   getPerformance: async (role, extraParams = {}) => {
     const params = { role, ...extraParams };
     const response = await axiosInstance.get('/api/superadmin/performance', { params });
@@ -88,18 +131,12 @@ export const adminAPI = {
   },
 
   // --- User Management ---
-
-  /**
-   * Promote a user to Super Admin status
-   */
   makeSuperAdmin: async (userId) => {
     const response = await axiosInstance.patch(`/api/superadmin/users/${userId}/make-super-admin`);
     return response.data;
   },
 
-  /**
-   * Debug utility to retrieve and analyze lead stages
-   */
+  // --- Debug Utilities ---
   getStagesDebug: async () => {
     const response = await axiosInstance.get('/api/superadmin/leads', {
       params: { limit: 1000, skip: 0 }

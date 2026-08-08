@@ -1,6 +1,13 @@
 import axiosInstance from './axiosInstance';
 import tokenManager from '../utils/tokenManager';
 
+/**
+ * manager.api.js
+ * -----------------------------------------------------------------------
+ * API endpoints for Manager role operations.
+ * -----------------------------------------------------------------------
+ */
+
 const isProd = import.meta.env.PROD;
 const logError = (...args) => { if (!isProd) console.error(...args); };
 
