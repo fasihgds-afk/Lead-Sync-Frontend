@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { lqAPI } from '../../../api/lead-qualifier.api';
 
 const isProd = import.meta.env.PROD;
+const log = (...args) => { if (!isProd) console.log(...args); };
+const logError = (...args) => { if (!isProd) console.error(...args); };
 
 const SEARCH_DEBOUNCE_MS = 400;
 
