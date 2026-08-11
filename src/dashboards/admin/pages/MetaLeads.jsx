@@ -46,9 +46,9 @@ function CopyableText({ text, className = '' }) {
 // ─── StageBadge ──────────────────────────────────────────────────────────────
 function StageBadge({ stage }) {
   const map = {
-    ADMIN_REVIEW: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-    MANAGER: 'bg-emerald-500/10  text-emerald-600  border-emerald-500/20',
-    WRITER: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    ADMIN_REVIEW: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    MANAGER: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+    WRITER: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
   };
   return (
     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${map[stage] ?? 'bg-gray-500/10 text-gray-500 border-gray-500/20'}`}>
@@ -178,9 +178,10 @@ function DetailModal({ lead, onClose }) {
           <div>
             <p className="text-[10px] font-mono text-emerald-500 font-bold uppercase">Meta Lead</p>
             <h3 className="text-base font-bold text-[var(--text-primary)] mt-0.5">{lead.fullName}</h3>
-            <div className="flex items-center gap-1.5 mt-1.5">
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <StageBadge stage={lead.stage} />
               <StatusBadge status={lead.status} />
+              {lead.writerVisible && <WriterStatusBadge status={lead.writerStatus} />}
             </div>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-bold text-lg leading-none">✕</button>
@@ -387,11 +388,20 @@ export default function MetaLeads() {
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">View, filter, and assign meta leads to managers</p>
             </div>
           </div>
-          <button onClick={() => { setSkip(0); fetchLeads(0); }} disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-black/5 hover:bg-black/10 text-xs font-bold text-[var(--text-secondary)] transition-all disabled:opacity-50">
-            <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="px-4 py-2 rounded-xl bg-black/5 text-center min-w-[84px]">
+              <div className="text-lg font-black text-[var(--text-primary)] leading-none">
+                {loading && total === 0 ? '—' : total}
+              </div>
+              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Total Leads</div>
+            </div>
+            <button onClick={() => { setSkip(0); fetchLeads(0); }} disabled={loading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-black/5 hover:bg-black/10 text-xs font-bold text-[var(--text-secondary)] transition-all disabled:opacity-50">
+              <FiRefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
@@ -486,7 +496,12 @@ export default function MetaLeads() {
                     <div className="text-[var(--text-secondary)] truncate max-w-[140px]">{lead.program || '—'}</div>
                     <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[140px]">{lead.school || '—'}</div>
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap"><StageBadge stage={lead.stage} /></td>
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <div className="flex flex-col gap-1 items-start">
+                      <StageBadge stage={lead.stage} />
+                      {lead.writerVisible && <WriterStatusBadge status={lead.writerStatus} />}
+                    </div>
+                  </td>
                   <td className="px-5 py-4 whitespace-nowrap"><StatusBadge status={lead.status} /></td>
                   <td className="px-5 py-4 text-[var(--text-secondary)] whitespace-nowrap">
                     {lead.assignedTo?.name ?? <span className="text-gray-400 italic">Unassigned</span>}
