@@ -3,24 +3,22 @@ import dataMinorAPI from '../../../api/data-minor';
 import LeadCard from '../components/LeadCard';
 import { Toast, VALID_STATUSES } from '../components/VerifierUI';
 
-// ── Cookie helpers ──────────────────────────────────────────────────────────
-const getCookie = (name) => {
-    const parts = `; ${document.cookie}`.split(`; ${name}=`);
-    if (parts.length !== 2) return null;
+// ── SessionStorage helpers ──────────────────────────────────────────────────
+const getSession = (name) => {
     try {
-        return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
+        const raw = sessionStorage.getItem(name);
+        return raw ? JSON.parse(raw) : null;
     } catch {
         return null;
     }
 };
 
-const setCookie = (name, value, days = 7) => {
-    const exp = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${exp}; path=/`;
+const setSession = (name, value) => {
+    sessionStorage.setItem(name, JSON.stringify(value));
 };
 
-const deleteCookie = (name) => {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+const removeSession = (name) => {
+    sessionStorage.removeItem(name);
 };
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -70,18 +68,18 @@ const VerifierLeads = () => {
         }
     }, []);
 
-    // Cookie sync: load pending changes once on mount
+    // SessionStorage sync: load pending changes once on mount
     useEffect(() => {
-        const saved = getCookie(COOKIE_NAME);
+        const saved = getSession(COOKIE_NAME);
         if (saved) setPendingChanges(saved);
     }, []);
 
-    // Cookie sync: persist pending changes whenever they change
+    // SessionStorage sync: persist pending changes whenever they change
     useEffect(() => {
         if (Object.keys(pendingChanges).length > 0) {
-            setCookie(COOKIE_NAME, pendingChanges);
+            setSession(COOKIE_NAME, pendingChanges);
         } else {
-            deleteCookie(COOKIE_NAME);
+            removeSession(COOKIE_NAME);
         }
     }, [pendingChanges]);
 
