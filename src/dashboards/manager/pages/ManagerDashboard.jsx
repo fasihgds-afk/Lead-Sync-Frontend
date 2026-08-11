@@ -31,6 +31,7 @@ const StatCard = ({ title, value, subValue, icon, trend, colorClass, onClick }) 
 export default function ManagerDashboard() {
     const [statsData, setStatsData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
     const [isFiltered, setIsFiltered] = useState(false);
     const navigate = useNavigate();
@@ -43,6 +44,7 @@ export default function ManagerDashboard() {
     const fetchData = async (isInitial = false) => {
         try {
             setLoading(true);
+            setError(null);
             const params = {
                 // Return stats for today by default on initial load
                 today: isInitial && !dateRange.from && !dateRange.to,
@@ -57,7 +59,7 @@ export default function ManagerDashboard() {
                 setStatsData(response.stats);
             }
         } catch (err) {
-            console.error("Dashboard fetch error", err);
+            setError(err.response?.data?.message || 'Failed to load dashboard data.');
         } finally {
             setLoading(false);
         }
@@ -99,6 +101,26 @@ export default function ManagerDashboard() {
     ];
 
     if (loading && !statsData) return <SharedLoader />;
+
+    if (error) return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center">
+                <svg className="w-7 h-7 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div className="text-center space-y-1">
+                <p className="text-sm font-bold text-[var(--text-primary)]">Failed to load dashboard</p>
+                <p className="text-xs text-[var(--text-secondary)] max-w-xs">{error}</p>
+            </div>
+            <button
+                onClick={() => fetchData(true)}
+                className="px-5 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white text-xs font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all"
+            >
+                Retry
+            </button>
+        </div>
+    );
 
     return (
         <div className="space-y-8 animate-fadeIn max-w-[1600px] mx-auto px-6 py-8">
